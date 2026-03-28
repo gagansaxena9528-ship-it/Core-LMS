@@ -2,7 +2,7 @@ import express from 'express';
 console.log('--- SERVER.TS STARTING ---');
 import path from 'path';
 import { fileURLToPath } from 'url';
-import Database from 'better-sqlite3';
+// Removed static import to use dynamic import inside startServer
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import cookieParser from 'cookie-parser';
@@ -49,16 +49,23 @@ async function startServer() {
   app.get('/api/debug', (req, res) => res.send('Server is alive'));
 
   console.log('Connecting to database...');
-  let db: Database.Database;
+  let db: any;
   try {
-    db = new Database('database.sqlite');
+    const DatabaseModule = await import('better-sqlite3');
+    const DbClass = DatabaseModule.default || DatabaseModule;
+    db = new DbClass('database.sqlite');
     console.log('Database connected successfully (PERSISTENT).');
   } catch (err) {
-    console.error('--- DATABASE ERROR ---');
-    console.error('Failed to connect to SQLite. This is likely a native module issue on Hostinger.');
+    console.error('--- DATABASE CONNECTION ERROR ---');
+    console.error('Failed to load or connect to better-sqlite3.');
     console.error(err);
-    // We must exit or handle this, otherwise the app will crash on the first query
-    process.exit(1); 
+    console.log('Server will continue to run without database for debugging.');
+    
+    // Mock DB to prevent crashes on startup queries
+    db = {
+      prepare: () => ({ get: () => ({ count: 0 }), all: () => [], run: () => {} }),
+      exec: () => {}
+    };
   }
 
   // Create Tables
