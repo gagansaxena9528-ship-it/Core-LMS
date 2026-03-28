@@ -54,8 +54,10 @@ async function startServer() {
     db = new Database('database.sqlite');
     console.log('Database connected successfully (PERSISTENT).');
   } catch (err) {
-    console.error('CRITICAL: Failed to connect to database:', err);
-    throw err;
+    console.error('CRITICAL ERROR: Failed to connect to database. This might be due to native module compatibility on Hostinger.');
+    console.error(err);
+    // Instead of crashing, we'll log the error. 
+    // The app will still try to start, but DB calls will fail later.
   }
 
   // Create Tables
