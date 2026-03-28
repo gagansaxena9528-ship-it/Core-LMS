@@ -3,12 +3,11 @@
   "private": true,
   "version": "0.0.0",
   "type": "module",
+  "main": "index.js",
   "scripts": {
     "dev": "NODE_ENV=development tsx server.ts",
-    "build:client": "vite build",
-    "build:server": "esbuild server.ts --bundle --platform=node --format=esm --outfile=dist/server.js --external:better-sqlite3 --external:fsevents",
-    "build": "npm run build:client && npm run build:server",
-    "start": "NODE_ENV=production node dist/server.js",
+    "build": "vite build && esbuild server.ts --bundle --platform=node --format=esm --outfile=dist/server.js --external:better-sqlite3 --external:fsevents",
+    "start": "NODE_ENV=production node index.js",
     "clean": "rm -rf dist",
     "lint": "tsc --noEmit"
   },
