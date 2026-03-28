@@ -54,10 +54,11 @@ async function startServer() {
     db = new Database('database.sqlite');
     console.log('Database connected successfully (PERSISTENT).');
   } catch (err) {
-    console.error('CRITICAL ERROR: Failed to connect to database. This might be due to native module compatibility on Hostinger.');
+    console.error('--- DATABASE ERROR ---');
+    console.error('Failed to connect to SQLite. This is likely a native module issue on Hostinger.');
     console.error(err);
-    // Instead of crashing, we'll log the error. 
-    // The app will still try to start, but DB calls will fail later.
+    // We must exit or handle this, otherwise the app will crash on the first query
+    process.exit(1); 
   }
 
   // Create Tables
@@ -327,7 +328,22 @@ async function startServer() {
 }
 
 try {
-  await startServer();
+  await // Global error handlers for debugging
+process.on('uncaughtException', (err) => {
+  console.error('--- UNCAUGHT EXCEPTION ---');
+  console.error(err);
+});
+
+process.on('unhandledRejection', (reason, promise) => {
+  console.error('--- UNHANDLED REJECTION ---');
+  console.error('Reason:', reason);
+});
+
+startServer().catch(err => {
+  console.error('--- STARTUP ERROR ---');
+  console.error(err);
+  process.exit(1);
+});
 } catch (err) {
   console.error('Failed to start server:', err);
   process.exit(1);
