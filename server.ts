@@ -327,8 +327,7 @@ async function startServer() {
   });
 }
 
-try {
-  await // Global error handlers for debugging
+// Global error handlers for debugging
 process.on('uncaughtException', (err) => {
   console.error('--- UNCAUGHT EXCEPTION ---');
   console.error(err);
@@ -339,12 +338,9 @@ process.on('unhandledRejection', (reason, promise) => {
   console.error('Reason:', reason);
 });
 
+// Start the server
 startServer().catch(err => {
   console.error('--- STARTUP ERROR ---');
   console.error(err);
   process.exit(1);
 });
-} catch (err) {
-  console.error('Failed to start server:', err);
-  process.exit(1);
-}
