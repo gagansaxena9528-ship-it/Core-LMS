@@ -1,0 +1,57 @@
+@import "tailwindcss";
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,100..1000;1,9..40,100..1000&family=Syne:wght@400..800&display=swap');
+
+@theme {
+  --font-sans: "DM Sans", ui-sans-serif, system-ui, sans-serif;
+  --font-syne: "Syne", sans-serif;
+  
+  --color-background: #0b0e17;
+  --color-card: #131726;
+  --color-primary: #f75f6a;
+  --color-secondary: #4f8ef7;
+  --color-accent: #7c5fe6;
+  --color-success: #2ecc8a;
+  --color-warning: #f7d04f;
+  --color-muted: #6b7599;
+  --color-border: #242b40;
+}
+
+@layer base {
+  body {
+    @apply bg-background text-[#e8ecf5] font-sans antialiased;
+    background-color: #0b0e17 !important; /* Force background for testing */
+  }
+  
+  ::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+  
+  ::-webkit-scrollbar-track {
+    @apply bg-background;
+  }
+  
+  ::-webkit-scrollbar-thumb {
+    @apply bg-border rounded-full hover:bg-muted/50 transition-colors;
+  }
+}
+
+.font-syne {
+  font-family: var(--font-syne);
+}
+
+.glass-card {
+  @apply bg-card/80 backdrop-blur-md border border-border;
+}
+
+.gradient-text {
+  @apply bg-clip-text text-transparent bg-gradient-to-r from-primary to-accent;
+}
+
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}
+.scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}

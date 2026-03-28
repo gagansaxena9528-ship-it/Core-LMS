@@ -1,0 +1,5 @@
+{
+  "name": "CoreLMS",
+  "description": "A professional Learning Management System with Admin, Teacher, and Student portals, featuring course management, exams, live classes, and payments.",
+  "requestFramePermissions": []
+}

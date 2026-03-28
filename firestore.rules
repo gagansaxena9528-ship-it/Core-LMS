@@ -1,0 +1,133 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // ===============================================================
+    // Assumed Data Model
+    // ===============================================================
+    //
+    // Collection: users
+    // Fields: uid, name, email, role, phone, status, joined, av, color
+    //
+    // Collection: students
+    // Fields: uid, courseId, batchId, teacherId, progress, fee, paid
+    //
+    // Collection: teachers
+    // Fields: uid, bio, rating, coursesCount, batchesCount, studentsCount
+    //
+    // Collection: courses
+    // Fields: title, category, teacherId, price, duration, level, status, emoji, description, keyPoints
+    //
+    // Collection: modules
+    // Fields: courseId, title, description, thumbnail, videoUrl, videoType, keyPoints
+    //
+    // Collection: exams
+    // Fields: courseId, moduleId, title, duration, totalMarks, passingMarks, status, type
+    //
+    // Collection: questions
+    // Fields: examId, question, options, answerIndex
+    //
+    // Collection: attendance
+    // Fields: studentId, courseId, batchId, date, status
+    //
+    // Collection: payments
+    // Fields: studentId, courseId, total, paid, pending, mode, date, status
+    //
+    // Collection: liveClasses
+    // Fields: courseId, batchId, teacherId, title, date, time, status, zoomLink, zoomPassword, meetLink
+    //
+    // ===============================================================
+
+    // Helper Functions
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+
+    function isAdmin() {
+      return isAuthenticated() && 
+        ((exists(/databases/$(database)/documents/users/$(request.auth.uid)) && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin') ||
+         (request.auth.token.email == "gagansaxena9528@gmail.com" && request.auth.token.email_verified == true));
+    }
+
+    function isTeacher() {
+      return isAuthenticated() && 
+             exists(/databases/$(database)/documents/users/$(request.auth.uid)) && 
+             get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'teacher';
+    }
+
+    function isStudent() {
+      return isAuthenticated() && 
+             exists(/databases/$(database)/documents/users/$(request.auth.uid)) && 
+             get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'student';
+    }
+
+    // User Validation
+    function isValidUser(data) {
+      return data.keys().hasAll(['uid', 'name', 'email', 'role']) &&
+             data.uid is string &&
+             data.name is string && data.name.size() > 0 && data.name.size() < 100 &&
+             data.email is string && data.role in ['admin', 'teacher', 'student'];
+    }
+
+    match /users/{userId} {
+      allow read: if isAuthenticated();
+      allow create: if isAuthenticated() && isValidUser(request.resource.data) && isOwner(userId) && 
+                    (request.resource.data.role == 'student' || isAdmin());
+      allow update: if isAuthenticated() && isValidUser(request.resource.data) && 
+                    ((isOwner(userId) && request.resource.data.role == resource.data.role) || isAdmin());
+      allow delete: if isAdmin();
+    }
+
+    match /students/{userId} {
+      allow read: if isAuthenticated();
+      allow write: if isAdmin() || isOwner(userId);
+    }
+
+    match /teachers/{userId} {
+      allow read: if isAuthenticated();
+      allow write: if isAdmin() || isOwner(userId);
+    }
+
+    match /courses/{courseId} {
+      allow read: if isAuthenticated();
+      allow write: if isAdmin();
+    }
+
+    match /courses/{courseId}/modules/{moduleId} {
+      allow read: if isAuthenticated();
+      allow write: if isAdmin() || isTeacher();
+    }
+
+    match /exams/{examId} {
+      allow read: if isAuthenticated();
+      allow write: if isAdmin() || isTeacher();
+    }
+
+    match /exams/{examId}/questions/{questionId} {
+      allow read: if isAuthenticated();
+      allow write: if isAdmin() || isTeacher();
+    }
+
+    match /attendance/{attendanceId} {
+      allow read: if isAuthenticated();
+      allow write: if isAdmin() || isTeacher();
+    }
+
+    match /payments/{paymentId} {
+      allow read: if isAuthenticated() && (isAdmin() || isOwner(resource.data.studentId));
+      allow write: if isAdmin();
+    }
+
+    match /liveClasses/{classId} {
+      allow read: if isAuthenticated();
+      allow write: if isAdmin() || isTeacher();
+    }
+    
+    match /test/connection {
+      allow read: if true;
+    }
+  }
+}

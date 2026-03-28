@@ -1,0 +1,161 @@
+{
+  "entities": {
+    "User": {
+      "title": "User",
+      "description": "Base user profile for authentication and role-based access.",
+      "type": "object",
+      "properties": {
+        "uid": { "type": "string" },
+        "name": { "type": "string" },
+        "email": { "type": "string", "format": "email" },
+        "role": { "type": "string", "enum": ["admin", "teacher", "student"] },
+        "phone": { "type": "string" },
+        "status": { "type": "string", "enum": ["Active", "Inactive"] },
+        "joined": { "type": "string", "format": "date-time" },
+        "av": { "type": "string" },
+        "color": { "type": "string" }
+      },
+      "required": ["uid", "name", "email", "role"]
+    },
+    "Student": {
+      "title": "Student",
+      "description": "Detailed student information.",
+      "type": "object",
+      "properties": {
+        "uid": { "type": "string" },
+        "courseId": { "type": "string" },
+        "batchId": { "type": "string" },
+        "teacherId": { "type": "string" },
+        "progress": { "type": "number" },
+        "fee": { "type": "number" },
+        "paid": { "type": "number" }
+      }
+    },
+    "Teacher": {
+      "title": "Teacher",
+      "description": "Detailed teacher information.",
+      "type": "object",
+      "properties": {
+        "uid": { "type": "string" },
+        "bio": { "type": "string" },
+        "rating": { "type": "number" },
+        "coursesCount": { "type": "number" },
+        "batchesCount": { "type": "number" },
+        "studentsCount": { "type": "number" }
+      }
+    },
+    "Course": {
+      "title": "Course",
+      "description": "Course details.",
+      "type": "object",
+      "properties": {
+        "title": { "type": "string" },
+        "category": { "type": "string" },
+        "teacherId": { "type": "string" },
+        "price": { "type": "number" },
+        "duration": { "type": "string" },
+        "level": { "type": "string", "enum": ["Beginner", "Intermediate", "Advanced"] },
+        "status": { "type": "string", "enum": ["Active", "Draft"] },
+        "emoji": { "type": "string" },
+        "description": { "type": "string" },
+        "keyPoints": { "type": "array", "items": { "type": "string" } }
+      }
+    },
+    "Module": {
+      "title": "Module",
+      "description": "Module within a course.",
+      "type": "object",
+      "properties": {
+        "courseId": { "type": "string" },
+        "title": { "type": "string" },
+        "description": { "type": "string" },
+        "thumbnail": { "type": "string" },
+        "videoUrl": { "type": "string" },
+        "videoType": { "type": "string", "enum": ["youtube", "vimeo", "upload"] },
+        "keyPoints": { "type": "array", "items": { "type": "string" } }
+      }
+    },
+    "Exam": {
+      "title": "Exam",
+      "description": "Exam or quiz details.",
+      "type": "object",
+      "properties": {
+        "courseId": { "type": "string" },
+        "moduleId": { "type": "string" },
+        "title": { "type": "string" },
+        "duration": { "type": "number" },
+        "totalMarks": { "type": "number" },
+        "passingMarks": { "type": "number" },
+        "status": { "type": "string", "enum": ["Active", "Draft", "Completed"] },
+        "type": { "type": "string", "enum": ["Practice", "Final"] }
+      }
+    },
+    "Question": {
+      "title": "Question",
+      "description": "Objective question for an exam.",
+      "type": "object",
+      "properties": {
+        "examId": { "type": "string" },
+        "question": { "type": "string" },
+        "options": { "type": "array", "items": { "type": "string" } },
+        "answerIndex": { "type": "number" }
+      }
+    },
+    "Attendance": {
+      "title": "Attendance",
+      "description": "Daily attendance record.",
+      "type": "object",
+      "properties": {
+        "studentId": { "type": "string" },
+        "courseId": { "type": "string" },
+        "batchId": { "type": "string" },
+        "date": { "type": "string", "format": "date" },
+        "status": { "type": "string", "enum": ["Present", "Absent"] }
+      }
+    },
+    "Payment": {
+      "title": "Payment",
+      "description": "Fee payment record.",
+      "type": "object",
+      "properties": {
+        "studentId": { "type": "string" },
+        "courseId": { "type": "string" },
+        "total": { "type": "number" },
+        "paid": { "type": "number" },
+        "pending": { "type": "number" },
+        "mode": { "type": "string" },
+        "date": { "type": "string", "format": "date" },
+        "status": { "type": "string", "enum": ["Paid", "Partial", "Pending"] }
+      }
+    },
+    "LiveClass": {
+      "title": "LiveClass",
+      "description": "Scheduled live session.",
+      "type": "object",
+      "properties": {
+        "courseId": { "type": "string" },
+        "batchId": { "type": "string" },
+        "teacherId": { "type": "string" },
+        "title": { "type": "string" },
+        "date": { "type": "string", "format": "date" },
+        "time": { "type": "string" },
+        "status": { "type": "string", "enum": ["Live", "Upcoming", "Completed"] },
+        "zoomLink": { "type": "string" },
+        "zoomPassword": { "type": "string" },
+        "meetLink": { "type": "string" }
+      }
+    }
+  },
+  "firestore": {
+    "/users/{userId}": { "schema": "User", "description": "User profiles" },
+    "/students/{userId}": { "schema": "Student", "description": "Student specific data" },
+    "/teachers/{userId}": { "schema": "Teacher", "description": "Teacher specific data" },
+    "/courses/{courseId}": { "schema": "Course", "description": "Course information" },
+    "/courses/{courseId}/modules/{moduleId}": { "schema": "Module", "description": "Modules within a course" },
+    "/exams/{examId}": { "schema": "Exam", "description": "Exams" },
+    "/exams/{examId}/questions/{questionId}": { "schema": "Question", "description": "Questions for an exam" },
+    "/attendance/{attendanceId}": { "schema": "Attendance", "description": "Attendance records" },
+    "/payments/{paymentId}": { "schema": "Payment", "description": "Payment records" },
+    "/liveClasses/{classId}": { "schema": "LiveClass", "description": "Live class sessions" }
+  }
+}
