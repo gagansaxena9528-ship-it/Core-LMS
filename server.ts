@@ -26,8 +26,9 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key-change-this';
-const PORT = 3000;
+const PORT = process.env.PORT || 3000;
 
+console.log(`--- SERVER CONFIG: PORT=${PORT}, NODE_ENV=${process.env.NODE_ENV} ---`);
 console.log('Starting server...');
 async function startServer() {
   console.log('Initializing express...');
@@ -316,7 +317,7 @@ async function startServer() {
     });
   }
 
-  app.listen(PORT, '0.0.0.0', () => {
+  app.listen(Number(PORT), '0.0.0.0', () => {
     console.log(`--- SERVER IS READY AND LISTENING ON PORT ${PORT} ---`);
     console.log(`--- ACCESS AT http://0.0.0.0:${PORT} ---`);
   });
