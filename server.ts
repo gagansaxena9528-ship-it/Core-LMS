@@ -310,16 +310,17 @@ async function startServer() {
     console.log('Vite middleware attached.');
   } else {
     console.log('Starting in production mode...');
-    const distPath = path.join(process.cwd(), 'dist');
+    // In production, server.js is inside the dist folder along with index.html
+    const distPath = __dirname; 
+    console.log(`Serving static files from: ${distPath}`);
     app.use(express.static(distPath));
     app.get('*', (req, res) => {
       res.sendFile(path.join(distPath, 'index.html'));
     });
   }
 
-  app.listen(Number(PORT), '0.0.0.0', () => {
+  app.listen(Number(PORT), () => {
     console.log(`--- SERVER IS READY AND LISTENING ON PORT ${PORT} ---`);
-    console.log(`--- ACCESS AT http://0.0.0.0:${PORT} ---`);
   });
 }
 
