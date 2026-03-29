@@ -94,6 +94,9 @@ async function startServer() {
       fee REAL,
       paid REAL,
       progress INTEGER,
+      courseId TEXT,
+      batchId TEXT,
+      teacherId TEXT,
       createdAt DATETIME DEFAULT CURRENT_TIMESTAMP
     );
 
@@ -119,7 +122,10 @@ async function startServer() {
     { name: 'address', type: 'TEXT' },
     { name: 'fee', type: 'REAL' },
     { name: 'paid', type: 'REAL' },
-    { name: 'progress', type: 'INTEGER' }
+    { name: 'progress', type: 'INTEGER' },
+    { name: 'courseId', type: 'TEXT' },
+    { name: 'batchId', type: 'TEXT' },
+    { name: 'teacherId', type: 'TEXT' }
   ];
 
   for (const col of columnsToAdd) {
