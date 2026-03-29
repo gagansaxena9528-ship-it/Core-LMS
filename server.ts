@@ -286,7 +286,9 @@ async function startServer() {
 
   // Email Transporter
   const transporter = nodemailer.createTransport({
-    service: 'gmail',
+    host: 'smtp.gmail.com',
+    port: 465,
+    secure: true, // use SSL
     auth: {
       user: process.env.EMAIL_USER || 'gagansaxena9528@gmail.com',
       pass: process.env.EMAIL_PASS
