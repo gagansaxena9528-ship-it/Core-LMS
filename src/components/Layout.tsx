@@ -203,7 +203,7 @@ const Layout: React.FC<LayoutProps> = ({ user }) => {
       </aside>
 
       {/* Main Container */}
-      <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
+      <div className="flex-1 flex flex-col min-w-0 overflow-hidden md:ml-[240px]">
         {/* Header */}
         <header className="h-[60px] bg-[#131726] border-b border-[#242b40] flex items-center px-4 md:px-6 gap-4 z-40 sticky top-0">
           <button 

@@ -22,7 +22,7 @@ export const Card: React.FC<CardProps> = ({ children, className, title, headerAc
           {headerAction}
         </div>
       )}
-      <div className="p-6">{children}</div>
+      <div className="p-4 md:p-6">{children}</div>
     </div>
   );
 };
@@ -58,15 +58,15 @@ export const StatCard: React.FC<StatCardProps> = ({ icon, value, label, change, 
     <div 
       onClick={onClick}
       className={cn(
-        "bg-card border border-border rounded-2xl p-6 relative overflow-hidden transition-all duration-300 group cursor-pointer hover:-translate-y-1.5 shadow-lg shadow-black/10",
+        "bg-card border border-border rounded-2xl p-4 md:p-6 relative overflow-hidden transition-all duration-300 group cursor-pointer hover:-translate-y-1.5 shadow-lg shadow-black/10",
         colorMap[color],
         "after:content-[''] after:absolute after:-top-8 after:-right-8 after:w-24 after:h-24 after:rounded-full after:opacity-[0.08] after:blur-xl"
       )}
     >
-      <div className={cn("text-2xl mb-4 p-3 rounded-xl bg-white/5 w-fit transition-transform group-hover:scale-110 duration-300", iconColorMap[color])}>
+      <div className={cn("text-xl md:text-2xl mb-3 md:mb-4 p-2 md:p-3 rounded-xl bg-white/5 w-fit transition-transform group-hover:scale-110 duration-300", iconColorMap[color])}>
         {icon}
       </div>
-      <div className="font-syne font-extrabold text-3xl mb-1 text-white tracking-tight">{value}</div>
+      <div className="font-syne font-extrabold text-2xl md:text-3xl mb-1 text-white tracking-tight">{value}</div>
       <div className="text-[11px] text-muted font-bold uppercase tracking-wider">{label}</div>
       {change && (
         <div className={cn(
