@@ -57,14 +57,17 @@ async function startServer() {
     console.log('Database connected successfully (PERSISTENT).');
   } catch (err) {
     console.error('--- DATABASE CONNECTION ERROR ---');
-    console.error('Failed to load or connect to better-sqlite3.');
     console.error(err);
-    console.log('Server will continue to run without database for debugging.');
+    console.log('Server will continue to run with a MOCK database for debugging.');
     
-    // Mock DB to prevent crashes on startup queries
+    // Mock DB to prevent crashes
     db = {
-      prepare: () => ({ get: () => ({ count: 0 }), all: () => [], run: () => {} }),
-      exec: () => {}
+      prepare: () => ({ 
+        get: () => ({ count: 0 }), 
+        all: () => [], 
+        run: () => ({ lastInsertRowid: 0, changes: 0 }) 
+      }),
+      exec: () => { console.log('Mock DB: exec called'); }
     };
   }
 
@@ -349,5 +352,5 @@ process.on('unhandledRejection', (reason, promise) => {
 startServer().catch(err => {
   console.error('--- STARTUP ERROR ---');
   console.error(err);
-  process.exit(1);
+  // Do NOT exit, let the process stay alive so we can see logs
 });
