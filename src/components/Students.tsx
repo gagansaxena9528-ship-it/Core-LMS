@@ -75,7 +75,7 @@ const Students: React.FC = () => {
 
   const sendWelcomeEmail = async (studentData: any, password: string) => {
     try {
-      await fetch('/api/email/send', {
+      const response = await fetch('/api/email/send', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -109,6 +109,12 @@ const Students: React.FC = () => {
           `
         })
       });
+      const result = await response.json();
+      if (result.success) {
+        console.log('Welcome email sent successfully');
+      } else {
+        console.warn('Email skipped or failed:', result.message);
+      }
     } catch (err) {
       console.error('Failed to send welcome email:', err);
     }

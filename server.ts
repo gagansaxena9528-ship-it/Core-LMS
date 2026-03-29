@@ -296,23 +296,25 @@ async function startServer() {
   // Email Route
   app.post('/api/email/send', authenticate, async (req, res) => {
     const { to, subject, text, html } = req.body;
+    console.log(`Attempting to send email to: ${to}`);
     
     if (!process.env.EMAIL_PASS) {
-      console.warn('EMAIL_PASS not set. Skipping email send.');
+      console.warn('EMAIL_PASS not set in environment. Skipping email send.');
       return res.status(200).json({ success: true, message: 'Email skipped (no credentials)' });
     }
 
     try {
-      await transporter.sendMail({
+      const info = await transporter.sendMail({
         from: `"Core LMS" <${process.env.EMAIL_USER || 'gagansaxena9528@gmail.com'}>`,
         to,
         subject,
         text,
         html
       });
-      res.json({ success: true });
+      console.log(`Email sent successfully: ${info.messageId}`);
+      res.json({ success: true, messageId: info.messageId });
     } catch (err: any) {
-      console.error('Email Error:', err);
+      console.error('Email Error Details:', err);
       res.status(500).json({ error: 'Failed to send email: ' + err.message });
     }
   });
