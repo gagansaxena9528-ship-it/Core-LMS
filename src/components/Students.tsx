@@ -57,7 +57,7 @@ const Students: React.FC = () => {
           setEmailStatus('ok');
         } else {
           setEmailStatus('error');
-          setEmailError(data.error);
+          setEmailError(data.error + (data.debug ? ` (User: ${data.debug.user}, PassLen: ${data.debug.passLength})` : ''));
         }
       } catch (err: any) {
         setEmailStatus('error');

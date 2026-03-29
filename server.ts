@@ -285,13 +285,18 @@ async function startServer() {
   });
 
   // Email Transporter
+  const EMAIL_USER = process.env.EMAIL_USER || 'gagansaxena9528@gmail.com';
+  const EMAIL_PASS = process.env.EMAIL_PASS || 'koerolmvlembloev'; // Fallback to provided app password
+
+  console.log('--- EMAIL CONFIG CHECK ---');
+  console.log('EMAIL_USER:', EMAIL_USER);
+  console.log('EMAIL_PASS length:', EMAIL_PASS ? EMAIL_PASS.length : 0);
+
   const transporter = nodemailer.createTransport({
-    host: 'smtp.gmail.com',
-    port: 465,
-    secure: true, // use SSL
+    service: 'gmail',
     auth: {
-      user: process.env.EMAIL_USER || 'gagansaxena9528@gmail.com',
-      pass: process.env.EMAIL_PASS
+      user: EMAIL_USER,
+      pass: EMAIL_PASS
     }
   });
 
@@ -309,9 +314,22 @@ async function startServer() {
   app.get('/api/email/health', authenticate, (req, res) => {
     transporter.verify((error, success) => {
       if (error) {
-        res.status(500).json({ status: 'error', error: error.message });
+        res.status(500).json({ 
+          status: 'error', 
+          error: error.message,
+          debug: {
+            user: EMAIL_USER,
+            passLength: EMAIL_PASS ? EMAIL_PASS.length : 0
+          }
+        });
       } else {
-        res.json({ status: 'ok', user: process.env.EMAIL_USER });
+        res.json({ 
+          status: 'ok', 
+          user: EMAIL_USER,
+          debug: {
+            passLength: EMAIL_PASS ? EMAIL_PASS.length : 0
+          }
+        });
       }
     });
   });
@@ -321,14 +339,14 @@ async function startServer() {
     const { to, subject, text, html } = req.body;
     console.log(`Attempting to send email to: ${to}`);
     
-    if (!process.env.EMAIL_PASS) {
-      console.warn('EMAIL_PASS not set in environment. Skipping email send.');
+    if (!EMAIL_PASS) {
+      console.warn('EMAIL_PASS not set. Skipping email send.');
       return res.status(200).json({ success: true, message: 'Email skipped (no credentials)' });
     }
 
     try {
       const info = await transporter.sendMail({
-        from: `"Core LMS" <${process.env.EMAIL_USER || 'gagansaxena9528@gmail.com'}>`,
+        from: `"Core LMS" <${EMAIL_USER}>`,
         to,
         subject,
         text,
