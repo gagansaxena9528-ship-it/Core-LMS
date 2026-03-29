@@ -257,6 +257,10 @@ const Students: React.FC = () => {
       console.error(err);
       let message = err.message || 'Failed to save student';
       
+      if (message.includes('UNIQUE constraint failed: users.email') || message.includes('email address is already registered')) {
+        message = 'This email address is already registered. Please use a different email.';
+      }
+      
       if (message.includes('auth/operation-not-allowed')) {
         message = 'Student creation failed: Email/Password provider is disabled in Firebase Console. Please enable it.';
       } else if (message.includes('auth/email-already-in-use')) {

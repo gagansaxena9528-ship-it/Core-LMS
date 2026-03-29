@@ -415,6 +415,9 @@ async function startServer() {
       res.json({ id });
     } catch (err: any) {
       console.error('POST Data Error:', err);
+      if (err.message.includes('UNIQUE constraint failed: users.email')) {
+        return res.status(400).json({ error: 'This email address is already registered. Please use a different email.' });
+      }
       res.status(500).json({ error: err.message });
     }
   });
