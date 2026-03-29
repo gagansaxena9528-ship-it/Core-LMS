@@ -14,6 +14,7 @@ import {
   BookOpen
 } from 'lucide-react';
 import { subscribeToCollection, createDoc, updateDocument, deleteDocument } from '../services/firestore';
+import { sendEmail, getTeacherWelcomeEmailTemplate, getUpdateNotificationTemplate } from '../services/emailService';
 import { adminCreateUser } from '../services/auth';
 import { User, Teacher } from '../types';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -94,6 +95,11 @@ const Teachers: React.FC = () => {
         
         await updateDocument('users', editingTeacher.uid, userUpdateData);
         await updateDocument('teachers', editingTeacher.uid, { bio });
+
+        // Send update notification
+        const details = `Your teacher profile has been updated by the administrator. Bio: ${formData.bio.substring(0, 50)}...`;
+        const html = getUpdateNotificationTemplate(formData.name, 'Teacher Profile', 'updated', details);
+        await sendEmail(formData.email, 'Account Update Notification - Core LMS', html);
       } else {
         // Create Account via custom backend
         await adminCreateUser(formData.email, formData.password, formData.name);
@@ -120,6 +126,10 @@ const Teachers: React.FC = () => {
             batchesCount: 0,
             studentsCount: 0
           }, newUser.uid);
+
+          // Send welcome email
+          const html = getTeacherWelcomeEmailTemplate(formData.name, formData.email, formData.password, '', formData.phone);
+          await sendEmail(formData.email, 'Welcome to Core LMS - Teacher Portal', html);
         }
       }
       setShowModal(false);

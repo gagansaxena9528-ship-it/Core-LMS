@@ -17,9 +17,11 @@ import {
   BookOpen
 } from 'lucide-react';
 import { subscribeToCollection, updateDoc, addDoc } from '../services/firestore';
+import { sendEmail, getPaymentEmailTemplate } from '../services/emailService';
 import { Payment, Course, User as UserType, Student } from '../types';
 import { motion, AnimatePresence } from 'framer-motion';
 import { cn } from '../lib/utils';
+import { X } from 'lucide-react';
 
 const Payments: React.FC = () => {
   const [payments, setPayments] = useState<Payment[]>([]);
@@ -29,6 +31,14 @@ const Payments: React.FC = () => {
   const [filter, setFilter] = useState<'All' | 'Paid' | 'Partial' | 'Pending'>('All');
   const [showModal, setShowModal] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [formData, setFormData] = useState({
+    studentId: '',
+    courseId: '',
+    total: 0,
+    paid: 0,
+    method: 'Cash',
+    status: 'Pending' as const
+  });
 
   useEffect(() => {
     const unsubPayments = subscribeToCollection('payments', setPayments);
@@ -62,8 +72,57 @@ const Payments: React.FC = () => {
   const handleUpdateStatus = async (id: string, status: 'Paid' | 'Partial' | 'Pending') => {
     try {
       await updateDoc('payments', id, { status });
+      
+      // Notify student about payment status update
+      const payment = payments.find(p => p.id === id);
+      if (payment) {
+        const student = students.find(s => s.id === payment.studentId);
+        if (student) {
+          const html = getPaymentEmailTemplate(
+            student.name,
+            payment.paid.toString(),
+            payment.date,
+            payment.method,
+            status
+          );
+          await sendEmail(student.email, `Payment Status Updated: ${status}`, html);
+        }
+      }
     } catch (err) {
       console.error(err);
+    }
+  };
+
+  const handleSavePayment = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+    try {
+      const newPayment = {
+        ...formData,
+        date: new Date().toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }),
+        pending: formData.total - formData.paid
+      };
+      const docRef = await addDoc('payments', newPayment);
+      
+      // Notify student about new payment record
+      const student = students.find(s => s.id === formData.studentId);
+      if (student) {
+        const html = getPaymentEmailTemplate(
+          student.name,
+          formData.paid.toString(),
+          newPayment.date,
+          formData.method,
+          formData.status
+        );
+        await sendEmail(student.email, 'Payment Receipt - Core LMS', html);
+      }
+
+      setShowModal(false);
+      setFormData({ studentId: '', courseId: '', total: 0, paid: 0, method: 'Cash', status: 'Pending' });
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -206,14 +265,24 @@ const Payments: React.FC = () => {
                     </div>
                   </td>
                   <td className="px-6 py-4">
-                    <span className={cn(
-                      "px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider",
-                      p.status === 'Paid' ? "bg-[#2ecc8a]/10 text-[#2ecc8a]" : 
-                      p.status === 'Partial' ? "bg-orange-500/10 text-orange-500" : 
-                      "bg-red-500/10 text-red-500"
-                    )}>
-                      {p.status}
-                    </span>
+                    <div className="flex items-center gap-2">
+                      {['Paid', 'Partial', 'Pending'].map((s) => (
+                        <button
+                          key={s}
+                          onClick={() => handleUpdateStatus(p.id, s as any)}
+                          className={cn(
+                            "px-2 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-wider transition-all",
+                            p.status === s ? (
+                              s === 'Paid' ? "bg-[#2ecc8a] text-white" : 
+                              s === 'Partial' ? "bg-orange-500 text-white" : 
+                              "bg-red-500 text-white"
+                            ) : "bg-[#1a2035] text-[#6b7599] hover:text-white"
+                          )}
+                        >
+                          {s}
+                        </button>
+                      ))}
+                    </div>
                   </td>
                   <td className="px-6 py-4 text-right">
                     <button className="p-2 hover:bg-[#1a2035] rounded-lg text-[#6b7599] transition-colors">
@@ -235,6 +304,122 @@ const Payments: React.FC = () => {
           </tbody>
         </table>
       </div>
+
+      {/* Add Payment Modal */}
+      <AnimatePresence>
+        {showModal && (
+          <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+            <motion.div 
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setShowModal(false)}
+              className="absolute inset-0 bg-black/70 backdrop-blur-sm"
+            />
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 20 }}
+              className="relative w-full max-w-lg bg-[#131726] border border-[#242b40] rounded-2xl shadow-2xl p-8"
+            >
+              <div className="flex items-center justify-between mb-6">
+                <h3 className="text-xl font-extrabold font-syne">Add New Payment</h3>
+                <button onClick={() => setShowModal(false)} className="p-2 hover:bg-red-500/10 text-[#6b7599] hover:text-red-500 rounded-full transition-colors">
+                  <X size={20} />
+                </button>
+              </div>
+
+              <form onSubmit={handleSavePayment} className="space-y-4">
+                <div className="grid grid-cols-1 gap-4">
+                  <div>
+                    <label className="block text-[11px] font-bold text-[#6b7599] uppercase tracking-wider mb-1.5 ml-1">Student</label>
+                    <select 
+                      required
+                      value={formData.studentId}
+                      onChange={(e) => setFormData({...formData, studentId: e.target.value})}
+                      className="w-full bg-[#1a2035] border border-[#242b40] rounded-xl px-4 py-3 text-sm outline-none focus:border-[#4f8ef7] transition-colors text-white"
+                    >
+                      <option value="">Select Student</option>
+                      {students.map(s => <option key={s.id} value={s.id}>{s.name} ({s.email})</option>)}
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-[11px] font-bold text-[#6b7599] uppercase tracking-wider mb-1.5 ml-1">Course</label>
+                    <select 
+                      required
+                      value={formData.courseId}
+                      onChange={(e) => setFormData({...formData, courseId: e.target.value})}
+                      className="w-full bg-[#1a2035] border border-[#242b40] rounded-xl px-4 py-3 text-sm outline-none focus:border-[#4f8ef7] transition-colors text-white"
+                    >
+                      <option value="">Select Course</option>
+                      {courses.map(c => <option key={c.id} value={c.id}>{c.title}</option>)}
+                    </select>
+                  </div>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-[11px] font-bold text-[#6b7599] uppercase tracking-wider mb-1.5 ml-1">Total Fee</label>
+                      <input 
+                        type="number" 
+                        required
+                        value={formData.total}
+                        onChange={(e) => setFormData({...formData, total: parseFloat(e.target.value)})}
+                        className="w-full bg-[#1a2035] border border-[#242b40] rounded-xl px-4 py-3 text-sm outline-none focus:border-[#4f8ef7] transition-colors text-white"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-[11px] font-bold text-[#6b7599] uppercase tracking-wider mb-1.5 ml-1">Paid Amount</label>
+                      <input 
+                        type="number" 
+                        required
+                        value={formData.paid}
+                        onChange={(e) => setFormData({...formData, paid: parseFloat(e.target.value)})}
+                        className="w-full bg-[#1a2035] border border-[#242b40] rounded-xl px-4 py-3 text-sm outline-none focus:border-[#4f8ef7] transition-colors text-white"
+                      />
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-[11px] font-bold text-[#6b7599] uppercase tracking-wider mb-1.5 ml-1">Method</label>
+                      <select 
+                        value={formData.method}
+                        onChange={(e) => setFormData({...formData, method: e.target.value})}
+                        className="w-full bg-[#1a2035] border border-[#242b40] rounded-xl px-4 py-3 text-sm outline-none focus:border-[#4f8ef7] transition-colors text-white"
+                      >
+                        <option value="Cash">Cash</option>
+                        <option value="Online">Online</option>
+                        <option value="Bank Transfer">Bank Transfer</option>
+                        <option value="UPI">UPI</option>
+                      </select>
+                    </div>
+                    <div>
+                      <label className="block text-[11px] font-bold text-[#6b7599] uppercase tracking-wider mb-1.5 ml-1">Status</label>
+                      <select 
+                        value={formData.status}
+                        onChange={(e) => setFormData({...formData, status: e.target.value as any})}
+                        className="w-full bg-[#1a2035] border border-[#242b40] rounded-xl px-4 py-3 text-sm outline-none focus:border-[#4f8ef7] transition-colors text-white"
+                      >
+                        <option value="Paid">Paid</option>
+                        <option value="Partial">Partial</option>
+                        <option value="Pending">Pending</option>
+                      </select>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="pt-4">
+                  <button 
+                    type="submit"
+                    disabled={loading}
+                    className="w-full bg-[#4f8ef7] hover:bg-[#3a7ae8] text-white py-3.5 rounded-xl font-bold text-sm transition-all shadow-lg shadow-blue-500/20 disabled:opacity-50"
+                  >
+                    {loading ? 'Processing...' : 'Record Payment'}
+                  </button>
+                </div>
+              </form>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
     </div>
   );
 };

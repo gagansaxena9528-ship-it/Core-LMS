@@ -15,6 +15,7 @@ import {
   MoreVertical
 } from 'lucide-react';
 import { subscribeToCollection, addDoc, updateDoc, deleteDoc, subscribeToQuery } from '../services/firestore';
+import { sendEmail, getAttendanceEmailTemplate } from '../services/emailService';
 import { Attendance, Batch, Course, User as UserType, Student } from '../types';
 import { motion, AnimatePresence } from 'framer-motion';
 import { cn } from '../lib/utils';
@@ -84,6 +85,14 @@ const AttendanceComponent: React.FC<AttendanceProps> = ({ user }) => {
           await deleteDoc('attendance', existingRecord.id);
         } else {
           await updateDoc('attendance', existingRecord.id, { status });
+          
+          // Notify student about attendance update
+          const student = students.find(s => s.id === studentId);
+          const batch = batches.find(b => b.id === selectedBatchId);
+          if (student && batch) {
+            const html = getAttendanceEmailTemplate(student.name, selectedDate, status, batch.name);
+            await sendEmail(student.email, `Attendance Update: ${status}`, html);
+          }
         }
       } else {
         const batch = batches.find(b => b.id === selectedBatchId);
@@ -94,6 +103,13 @@ const AttendanceComponent: React.FC<AttendanceProps> = ({ user }) => {
           date: selectedDate,
           status
         });
+
+        // Notify student about attendance marked
+        const student = students.find(s => s.id === studentId);
+        if (student && batch) {
+          const html = getAttendanceEmailTemplate(student.name, selectedDate, status, batch.name);
+          await sendEmail(student.email, `Attendance Marked: ${status}`, html);
+        }
       }
     } catch (err) {
       console.error(err);
@@ -119,8 +135,21 @@ const AttendanceComponent: React.FC<AttendanceProps> = ({ user }) => {
             date: selectedDate,
             status
           });
+
+          // Notify student
+          if (batch) {
+            const html = getAttendanceEmailTemplate(student.name, selectedDate, status, batch.name);
+            await sendEmail(student.email, `Attendance Marked: ${status}`, html);
+          }
         } else if (existingRecord.status !== status) {
           await updateDoc('attendance', existingRecord.id, { status });
+
+          // Notify student
+          const batch = batches.find(b => b.id === selectedBatchId);
+          if (batch) {
+            const html = getAttendanceEmailTemplate(student.name, selectedDate, status, batch.name);
+            await sendEmail(student.email, `Attendance Update: ${status}`, html);
+          }
         }
       }
       setSuccess(true);

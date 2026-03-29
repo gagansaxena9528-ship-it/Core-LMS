@@ -15,7 +15,8 @@ import {
   X
 } from 'lucide-react';
 import { subscribeToCollection, addDoc, updateDoc, deleteDoc } from '../services/firestore';
-import { LiveClass, Course, Batch, User as UserType } from '../types';
+import { sendEmail, getNewRecordTemplate } from '../services/emailService';
+import { LiveClass, Course, Batch, User as UserType, Student } from '../types';
 import { motion, AnimatePresence } from 'framer-motion';
 import { cn } from '../lib/utils';
 
@@ -27,6 +28,7 @@ const LiveClasses: React.FC<LiveClassesProps> = ({ user }) => {
   const [liveClasses, setLiveClasses] = useState<LiveClass[]>([]);
   const [courses, setCourses] = useState<Course[]>([]);
   const [batches, setBatches] = useState<Batch[]>([]);
+  const [students, setStudents] = useState<Student[]>([]);
   const [showModal, setShowModal] = useState(false);
   const [loading, setLoading] = useState(false);
   const [search, setSearch] = useState('');
@@ -35,11 +37,15 @@ const LiveClasses: React.FC<LiveClassesProps> = ({ user }) => {
     const unsubLive = subscribeToCollection('live_classes', setLiveClasses);
     const unsubCourses = subscribeToCollection('courses', setCourses);
     const unsubBatches = subscribeToCollection('batches', setBatches);
+    const unsubStudents = subscribeToCollection('users', (data) => {
+      setStudents(data.filter(u => u.role === 'student') as Student[]);
+    });
 
     return () => {
       unsubLive();
       unsubCourses();
       unsubBatches();
+      unsubStudents();
     };
   }, []);
 
@@ -60,7 +66,17 @@ const LiveClasses: React.FC<LiveClassesProps> = ({ user }) => {
     };
 
     try {
-      await addDoc('live_classes', newClass);
+      const docRef = await addDoc('live_classes', newClass);
+      
+      // Notify students about new live class
+      const batchStudents = students.filter(s => s.batchId === newClass.batchId || !newClass.batchId);
+      for (const student of batchStudents) {
+        const course = courses.find(c => c.id === newClass.courseId);
+        const details = `A new live class "${newClass.title}" has been scheduled for course "${course?.title || 'Unknown'}". Date: ${newClass.date}, Time: ${newClass.time}. Join Link: ${newClass.meetLink}`;
+        const html = getNewRecordTemplate('Live Class', student.name, details);
+        await sendEmail(student.email, `New Live Class Scheduled: ${newClass.title}`, html);
+      }
+
       setShowModal(false);
     } catch (err) {
       console.error(err);

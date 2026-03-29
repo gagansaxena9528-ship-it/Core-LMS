@@ -14,7 +14,8 @@ import {
   Filter
 } from 'lucide-react';
 import { subscribeToCollection, addDoc, updateDoc } from '../services/firestore';
-import { Assignment, AssignmentSubmission, User } from '../types';
+import { sendEmail, getNewRecordTemplate } from '../services/emailService';
+import { Assignment, AssignmentSubmission, User, Student } from '../types';
 import { motion, AnimatePresence } from 'framer-motion';
 
 interface AssignmentsProps {
@@ -28,13 +29,18 @@ const Assignments: React.FC<AssignmentsProps> = ({ user }) => {
   const [showSubmitModal, setShowSubmitModal] = useState(false);
   const [selectedAssignment, setSelectedAssignment] = useState<Assignment | null>(null);
   const [loading, setLoading] = useState(false);
+  const [students, setStudents] = useState<Student[]>([]);
 
   useEffect(() => {
     const unsubAssignments = subscribeToCollection('assignments', setAssignments);
     const unsubSubmissions = subscribeToCollection('submissions', setSubmissions);
+    const unsubStudents = subscribeToCollection('users', (data) => {
+      setStudents(data.filter(u => u.role === 'student') as Student[]);
+    });
     return () => {
       unsubAssignments();
       unsubSubmissions();
+      unsubStudents();
     };
   }, []);
 
@@ -51,7 +57,16 @@ const Assignments: React.FC<AssignmentsProps> = ({ user }) => {
       courseId: 'c1', // Mock
       batchId: 'b1', // Mock
     };
-    await addDoc('assignments', newAssignment);
+    const docRef = await addDoc('assignments', newAssignment);
+    
+    // Notify students about new assignment
+    const batchStudents = students.filter(s => s.batchId === newAssignment.batchId || !newAssignment.batchId);
+    for (const student of batchStudents) {
+      const details = `A new assignment "${newAssignment.title}" has been posted. Due Date: ${new Date(newAssignment.dueDate!).toLocaleDateString()}. Description: ${newAssignment.description}`;
+      const html = getNewRecordTemplate('New Assignment', student.name, details);
+      await sendEmail(student.email, `New Assignment: ${newAssignment.title}`, html);
+    }
+
     setLoading(false);
     setShowAddModal(false);
   };

@@ -14,6 +14,7 @@ import {
   Trash2
 } from 'lucide-react';
 import { subscribeToCollection, createDoc, updateDocument, deleteDocument } from '../services/firestore';
+import { sendEmail, getNewRecordTemplate, getUpdateNotificationTemplate } from '../services/emailService';
 import { Batch, Course, Teacher } from '../types';
 import { motion, AnimatePresence } from 'framer-motion';
 
@@ -80,8 +81,26 @@ const Batches: React.FC = () => {
     try {
       if (editingBatch) {
         await updateDocument('batches', editingBatch.id, formData);
+        
+        // Notify teacher about batch update
+        const teacher = teachers.find(t => t.id === formData.teacherId);
+        if (teacher) {
+          const course = courses.find(c => c.id === formData.courseId);
+          const details = `The batch "${formData.name}" for course "${course?.title || 'Unknown'}" has been updated. Schedule: ${formData.startTime} - ${formData.endTime}.`;
+          const html = getUpdateNotificationTemplate(teacher.name, 'Batch', 'updated', details);
+          await sendEmail(teacher.email, `Batch Update: ${formData.name}`, html);
+        }
       } else {
         await createDoc('batches', formData);
+
+        // Notify teacher about new batch assignment
+        const teacher = teachers.find(t => t.id === formData.teacherId);
+        if (teacher) {
+          const course = courses.find(c => c.id === formData.courseId);
+          const details = `You have been assigned to a new batch: "${formData.name}" for course "${course?.title || 'Unknown'}". Schedule: ${formData.startTime} - ${formData.endTime}.`;
+          const html = getNewRecordTemplate('Batch Assignment', teacher.name, details);
+          await sendEmail(teacher.email, `New Batch Assigned: ${formData.name}`, html);
+        }
       }
       setShowModal(false);
       setEditingBatch(null);

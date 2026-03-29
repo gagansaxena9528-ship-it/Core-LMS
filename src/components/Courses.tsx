@@ -12,6 +12,7 @@ import {
   X
 } from 'lucide-react';
 import { subscribeToCollection, createDoc, updateDocument, deleteDocument } from '../services/firestore';
+import { sendEmail, getNewRecordTemplate, getUpdateNotificationTemplate } from '../services/emailService';
 import { cn } from '../lib/utils';
 import { Course, User } from '../types';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -84,12 +85,28 @@ const Courses: React.FC = () => {
     try {
       if (editingCourse) {
         await updateDocument('courses', editingCourse.id, formData);
+        
+        // Notify teacher about course update
+        const teacher = teachers.find(t => t.uid === formData.teacherId);
+        if (teacher) {
+          const details = `The course "${formData.title}" assigned to you has been updated. Status: ${formData.status}, Price: ₹${formData.price}.`;
+          const html = getUpdateNotificationTemplate(teacher.name, 'Course', 'updated', details);
+          await sendEmail(teacher.email, `Course Update: ${formData.title}`, html);
+        }
       } else {
         await createDoc('courses', {
           ...formData,
           studentsCount: 0,
           keyPoints: []
         });
+
+        // Notify teacher about new course assignment
+        const teacher = teachers.find(t => t.uid === formData.teacherId);
+        if (teacher) {
+          const details = `You have been assigned as the instructor for the new course: "${formData.title}". Category: ${formData.category}, Duration: ${formData.duration}.`;
+          const html = getNewRecordTemplate('Course Assignment', teacher.name, details);
+          await sendEmail(teacher.email, `New Course Assigned: ${formData.title}`, html);
+        }
       }
       setShowModal(false);
       setEditingCourse(null);

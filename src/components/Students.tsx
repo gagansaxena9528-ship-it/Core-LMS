@@ -14,6 +14,7 @@ import {
   X
 } from 'lucide-react';
 import { subscribeToCollection, createDoc, updateDocument, deleteDocument } from '../services/firestore';
+import { sendEmail, getWelcomeEmailTemplate, getUpdateNotificationTemplate } from '../services/emailService';
 import { adminCreateUser } from '../services/auth';
 import { User, Course, Batch } from '../types';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -96,50 +97,15 @@ const Students: React.FC = () => {
   };
 
   const sendWelcomeEmail = async (studentData: any, password: string) => {
-    try {
-      const response = await fetch('/api/email/send', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          to: studentData.email,
-          subject: 'Welcome to Core LMS - Your Account Details',
-          html: `
-            <div style="font-family: sans-serif; color: #333; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #eee; border-radius: 10px;">
-              <h2 style="color: #4f8ef7;">Welcome to Core LMS!</h2>
-              <p>Hello <strong>${studentData.name}</strong>,</p>
-              <p>Your student account has been successfully created. You can now log in to access your courses and learning materials.</p>
-              
-              <div style="background: #f9f9f9; padding: 15px; border-radius: 8px; margin: 20px 0;">
-                <h3 style="margin-top: 0; font-size: 16px;">Your Login Credentials:</h3>
-                <p style="margin: 5px 0;"><strong>Email:</strong> ${studentData.email}</p>
-                <p style="margin: 5px 0;"><strong>Password:</strong> ${password}</p>
-              </div>
-
-              <p><strong>Additional Details:</strong></p>
-              <ul>
-                <li><strong>Course:</strong> ${studentData.course || 'N/A'}</li>
-                <li><strong>Batch:</strong> ${studentData.batch || 'N/A'}</li>
-                <li><strong>Phone:</strong> ${studentData.phone || 'N/A'}</li>
-              </ul>
-
-              <p>Please keep your password secure. We recommend changing it after your first login.</p>
-              
-              <div style="margin-top: 30px; padding-top: 20px; border-top: 1px solid #eee; font-size: 12px; color: #888;">
-                <p>Sent from Core LMS Admin Panel</p>
-              </div>
-            </div>
-          `
-        })
-      });
-      const result = await response.json();
-      if (result.success) {
-        console.log('Welcome email sent successfully');
-      } else {
-        console.warn('Email skipped or failed:', result.message);
-      }
-    } catch (err) {
-      console.error('Failed to send welcome email:', err);
-    }
+    const html = getWelcomeEmailTemplate(
+      studentData.name,
+      studentData.email,
+      password,
+      studentData.course,
+      studentData.batch,
+      studentData.phone
+    );
+    await sendEmail(studentData.email, 'Welcome to Core LMS - Your Account Details', html);
   };
 
   const handleImport = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -243,6 +209,11 @@ const Students: React.FC = () => {
           ...updateData,
           fee: parseFloat(formData.fee) || 0
         });
+        
+        // Send update notification
+        const details = `Your profile has been updated by the administrator. Course: ${formData.course}, Batch: ${formData.batch}.`;
+        const html = getUpdateNotificationTemplate(formData.name, 'Student Profile', 'updated', details);
+        await sendEmail(formData.email, 'Account Update Notification - Core LMS', html);
       } else {
         // Create Account via custom backend
         const userCredential = await adminCreateUser(formData.email, formData.password, formData.name);
@@ -344,17 +315,19 @@ const Students: React.FC = () => {
         <div className="flex gap-2">
           <button 
             onClick={handleExport}
-            className="p-2.5 bg-[#131726] border border-[#242b40] rounded-xl text-[#6b7599] hover:text-[#e8ecf5] hover:bg-[#242b40] transition-all"
+            className="flex items-center gap-2 px-4 py-2.5 bg-[#131726] border border-[#242b40] rounded-xl text-[#6b7599] hover:text-[#e8ecf5] hover:bg-[#242b40] transition-all"
             title="Export to Excel"
           >
             <Download size={18} />
+            <span className="text-sm font-bold hidden md:inline">Export</span>
           </button>
           <button 
             onClick={() => document.getElementById('csv-import')?.click()}
-            className="p-2.5 bg-[#131726] border border-[#242b40] rounded-xl text-[#6b7599] hover:text-[#e8ecf5] hover:bg-[#242b40] transition-all"
+            className="flex items-center gap-2 px-4 py-2.5 bg-[#131726] border border-[#242b40] rounded-xl text-[#6b7599] hover:text-[#e8ecf5] hover:bg-[#242b40] transition-all"
             title="Import from CSV"
           >
             <Upload size={18} />
+            <span className="text-sm font-bold hidden md:inline">Import</span>
           </button>
           <input 
             id="csv-import"

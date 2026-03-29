@@ -16,13 +16,15 @@ import {
   Eye
 } from 'lucide-react';
 import { subscribeToCollection, addDoc, updateDoc, deleteDoc } from '../services/firestore';
-import { Module, Course } from '../types';
+import { sendEmail, getNewRecordTemplate } from '../services/emailService';
+import { Module, Course, Student } from '../types';
 import { motion, AnimatePresence } from 'framer-motion';
 import { cn } from '../lib/utils';
 
 const Content: React.FC = () => {
   const [modules, setModules] = useState<Module[]>([]);
   const [courses, setCourses] = useState<Course[]>([]);
+  const [students, setStudents] = useState<Student[]>([]);
   const [selectedCourseId, setSelectedCourseId] = useState<string>('');
   const [showModal, setShowModal] = useState(false);
   const [editingModule, setEditingModule] = useState<Module | null>(null);
@@ -42,10 +44,14 @@ const Content: React.FC = () => {
   useEffect(() => {
     const unsubModules = subscribeToCollection('modules', setModules);
     const unsubCourses = subscribeToCollection('courses', setCourses);
+    const unsubStudents = subscribeToCollection('users', (data) => {
+      setStudents(data.filter(u => u.role === 'student') as Student[]);
+    });
 
     return () => {
       unsubModules();
       unsubCourses();
+      unsubStudents();
     };
   }, []);
 
@@ -91,7 +97,19 @@ const Content: React.FC = () => {
       if (editingModule) {
         await updateDoc('modules', editingModule.id, formData);
       } else {
-        await addDoc('modules', { ...formData, courseId: selectedCourseId });
+        const docRef = await addDoc('modules', { ...formData, courseId: selectedCourseId });
+        
+        // Notify students about new module
+        const course = courses.find(c => c.id === selectedCourseId);
+        if (course) {
+          // Find students enrolled in this course (based on batch or direct enrollment if available)
+          // For now, we'll notify all students as a fallback or if we had more specific enrollment data
+          for (const student of students) {
+            const details = `A new module "${formData.title}" has been added to your course "${course.title}". You can now access the new content in your dashboard.`;
+            const html = getNewRecordTemplate('Course Content', student.name, details);
+            await sendEmail(student.email, `New Content Added: ${course.title}`, html);
+          }
+        }
       }
       setShowModal(false);
       setEditingModule(null);
