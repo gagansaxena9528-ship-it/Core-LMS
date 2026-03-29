@@ -9,7 +9,11 @@ import {
   IndianRupee, 
   ClipboardList,
   ArrowUpRight,
-  TrendingUp
+  TrendingUp,
+  Clock,
+  CheckCircle2,
+  AlertCircle,
+  Calendar
 } from 'lucide-react';
 import { 
   BarChart, 
@@ -19,10 +23,15 @@ import {
   CartesianGrid, 
   Tooltip, 
   ResponsiveContainer,
-  Cell
+  Cell,
+  LineChart,
+  Line,
+  AreaChart,
+  Area
 } from 'recharts';
 import { subscribeToCollection } from '../services/firestore';
 import { User, Course, Batch } from '../types';
+import Modal from './ui/Modal';
 
 interface DashboardProps {
   user: User;
@@ -34,6 +43,12 @@ const Dashboard: React.FC<DashboardProps> = ({ user }) => {
   const [teachers, setTeachers] = useState<User[]>([]);
   const [courses, setCourses] = useState<Course[]>([]);
   const [batches, setBatches] = useState<Batch[]>([]);
+
+  // Modal States
+  const [isRevenueModalOpen, setIsRevenueModalOpen] = useState(false);
+  const [isTasksModalOpen, setIsTasksModalOpen] = useState(false);
+  const [isActivityModalOpen, setIsActivityModalOpen] = useState(false);
+  const [selectedMonthData, setSelectedMonthData] = useState<any>(null);
 
   useEffect(() => {
     const unsubUsers = subscribeToCollection('users', (data) => {
@@ -123,12 +138,14 @@ const Dashboard: React.FC<DashboardProps> = ({ user }) => {
           change="18%" 
           trend="up" 
           color="green"
+          onClick={() => navigate('/payments')}
         />
         <StatCard 
           icon={<ClipboardList className="text-[#f75f6a]" />} 
           value="47" 
           label="Pending Tasks" 
           color="red"
+          onClick={() => setIsTasksModalOpen(true)}
         />
       </div>
 
@@ -136,7 +153,15 @@ const Dashboard: React.FC<DashboardProps> = ({ user }) => {
         <Card title="Revenue (12 Months)" headerAction={<span className="text-[11px] font-bold text-[#4f8ef7] bg-blue-500/10 px-2 py-1 rounded-full">₹38.4L Total</span>}>
           <div className="h-[250px] md:h-[300px] w-full mt-4">
             <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={revenueData}>
+              <BarChart 
+                data={revenueData}
+                onClick={(data: any) => {
+                  if (data && data.activePayload) {
+                    setSelectedMonthData(data.activePayload[0].payload);
+                    setIsRevenueModalOpen(true);
+                  }
+                }}
+              >
                 <CartesianGrid strokeDasharray="3 3" stroke="#242b40" vertical={false} />
                 <XAxis 
                   dataKey="month" 
@@ -190,11 +215,131 @@ const Dashboard: React.FC<DashboardProps> = ({ user }) => {
               </div>
             ))}
           </div>
-          <button className="w-full mt-6 py-2.5 text-[12px] font-bold text-[#4f8ef7] bg-blue-500/5 hover:bg-blue-500/10 rounded-xl transition-colors flex items-center justify-center gap-2">
+          <button 
+            onClick={() => setIsActivityModalOpen(true)}
+            className="w-full mt-6 py-2.5 text-[12px] font-bold text-[#4f8ef7] bg-blue-500/5 hover:bg-blue-500/10 rounded-xl transition-colors flex items-center justify-center gap-2"
+          >
             View All Activity <ArrowUpRight size={14} />
           </button>
         </Card>
       </div>
+
+      {/* Modals */}
+      <Modal 
+        isOpen={isRevenueModalOpen} 
+        onClose={() => setIsRevenueModalOpen(false)} 
+        title={`Revenue Details - ${selectedMonthData?.month || ''}`}
+      >
+        <div className="space-y-6">
+          <div className="grid grid-cols-2 gap-4">
+            <div className="p-4 bg-[#1a2035] border border-[#242b40] rounded-2xl">
+              <div className="text-[11px] text-[#6b7599] font-bold uppercase mb-1">Total Revenue</div>
+              <div className="text-2xl font-bold text-white">₹{selectedMonthData?.revenue.toLocaleString()}</div>
+            </div>
+            <div className="p-4 bg-[#1a2035] border border-[#242b40] rounded-2xl">
+              <div className="text-[11px] text-[#6b7599] font-bold uppercase mb-1">Growth</div>
+              <div className="text-2xl font-bold text-[#2ecc8a]">+12.5%</div>
+            </div>
+          </div>
+          
+          <div className="space-y-4">
+            <h4 className="text-sm font-bold text-white">Top Revenue Sources</h4>
+            {[
+              { source: 'Course Sales', amount: '₹1,85,000', color: '#4f8ef7' },
+              { source: 'Renewals', amount: '₹85,000', color: '#7c5fe6' },
+              { source: 'Certifications', amount: '₹50,000', color: '#2ecc8a' },
+            ].map((s, i) => (
+              <div key={i} className="flex items-center justify-between p-3 bg-white/5 rounded-xl">
+                <div className="flex items-center gap-3">
+                  <div className="w-2 h-2 rounded-full" style={{ backgroundColor: s.color }} />
+                  <span className="text-sm text-[#e8ecf5]">{s.source}</span>
+                </div>
+                <span className="text-sm font-bold text-white">{s.amount}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      </Modal>
+
+      <Modal 
+        isOpen={isTasksModalOpen} 
+        onClose={() => setIsTasksModalOpen(false)} 
+        title="Pending Tasks"
+      >
+        <div className="space-y-4">
+          {[
+            { title: 'Approve 12 new student registrations', priority: 'High', icon: <Users size={16} />, color: '#f75f6a' },
+            { title: 'Update Digital Marketing course content', priority: 'Medium', icon: <BookOpen size={16} />, color: '#f7924f' },
+            { title: 'Review pending payment from Arjun', priority: 'High', icon: <IndianRupee size={16} />, color: '#f75f6a' },
+            { title: 'Schedule batch DM-2026-March orientation', priority: 'Low', icon: <Calendar size={16} />, color: '#4f8ef7' },
+            { title: 'Verify teacher certifications for new joiners', priority: 'Medium', icon: <CheckCircle2 size={16} />, color: '#f7924f' },
+          ].map((task, i) => (
+            <div key={i} className="group p-4 bg-[#1a2035] border border-[#242b40] rounded-2xl hover:border-blue-500/30 transition-all cursor-pointer">
+              <div className="flex items-start gap-4">
+                <div className="p-2 rounded-xl bg-white/5 text-[#6b7599] group-hover:text-blue-500 transition-colors">
+                  {task.icon}
+                </div>
+                <div className="flex-1">
+                  <div className="flex items-center justify-between mb-1">
+                    <span className="text-sm font-medium text-[#e8ecf5]">{task.title}</span>
+                    <span className="text-[10px] font-bold px-2 py-0.5 rounded-full uppercase" style={{ backgroundColor: `${task.color}15`, color: task.color }}>
+                      {task.priority}
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-2 text-[11px] text-[#6b7599]">
+                    <Clock size={12} /> Due in 2 days
+                  </div>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      </Modal>
+
+      <Modal 
+        isOpen={isActivityModalOpen} 
+        onClose={() => setIsActivityModalOpen(false)} 
+        title="All System Activity"
+      >
+        <div className="space-y-6">
+          {[
+            { date: 'Today', items: [
+              { color: '#4f8ef7', msg: 'Priya enrolled in Digital Marketing', time: '2 min ago', type: 'Enrollment' },
+              { color: '#2ecc8a', msg: 'New video uploaded — SEO Strategies', time: '20 min ago', type: 'Content' },
+              { color: '#f7924f', msg: 'Payment received from Arjun ₹4,999', time: '1 hr ago', type: 'Payment' },
+            ]},
+            { date: 'Yesterday', items: [
+              { color: '#7c5fe6', msg: 'Batch DM-2026-March class scheduled', time: 'Yesterday, 4:30 PM', type: 'Batch' },
+              { color: '#f75f6a', msg: 'Assignment #4 deadline tomorrow', time: 'Yesterday, 2:15 PM', type: 'Assignment' },
+              { color: '#4f8ef7', msg: 'New teacher account created: Sarah Johnson', time: 'Yesterday, 11:00 AM', type: 'User' },
+            ]},
+          ].map((group, i) => (
+            <div key={i} className="space-y-4">
+              <div className="text-[11px] font-bold text-[#6b7599] uppercase tracking-widest flex items-center gap-2">
+                <div className="h-px flex-1 bg-[#242b40]" />
+                {group.date}
+                <div className="h-px flex-1 bg-[#242b40]" />
+              </div>
+              <div className="space-y-4">
+                {group.items.map((item, j) => (
+                  <div key={j} className="flex gap-4 items-start p-3 hover:bg-white/[0.02] rounded-xl transition-colors">
+                    <div className="w-10 h-10 rounded-xl bg-white/5 flex items-center justify-center flex-shrink-0" style={{ color: item.color }}>
+                      <TrendingUp size={18} />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center justify-between mb-1">
+                        <span className="text-[11px] font-bold uppercase tracking-wider" style={{ color: item.color }}>{item.type}</span>
+                        <span className="text-[11px] text-[#6b7599]">{item.time}</span>
+                      </div>
+                      <div className="text-[13.5px] font-medium text-[#e8ecf5]">{item.msg}</div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          ))}
+        </div>
+      </Modal>
 
       <Card 
         title="Recent Students" 
