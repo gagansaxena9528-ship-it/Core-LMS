@@ -62,7 +62,7 @@ const Login: React.FC = () => {
         className="w-full max-w-[1000px] min-h-[600px] bg-[#131726] border border-[#242b40] rounded-none sm:rounded-[32px] shadow-2xl overflow-hidden flex flex-col lg:flex-row relative z-10"
       >
         {/* Left Side - Welcome Panel */}
-        <div className="lg:w-[42%] bg-gradient-to-br from-[#4f8ef7] to-[#7c5fe6] p-8 sm:p-12 flex flex-col justify-between relative overflow-hidden">
+        <div className="lg:w-[45%] bg-gradient-to-br from-[#4f8ef7] to-[#7c5fe6] p-8 sm:p-12 lg:pr-20 flex flex-col justify-between relative overflow-hidden">
           {/* Decorative Elements */}
           <div className="absolute top-0 right-0 w-64 h-64 bg-white/10 blur-3xl rounded-full -mr-32 -mt-32" />
           <div className="absolute bottom-0 left-0 w-48 h-48 bg-black/10 blur-2xl rounded-full -ml-24 -mb-24" />
@@ -76,10 +76,10 @@ const Login: React.FC = () => {
             </div>
 
             <div className="space-y-6">
-              <h2 className="text-4xl xl:text-5xl font-extrabold text-white font-syne leading-[1.1] tracking-tight">
+              <h2 className="text-3xl sm:text-4xl xl:text-5xl font-extrabold text-white font-syne leading-[1.1] tracking-tight max-w-[320px]">
                 Welcome <br /> to <span className="text-white/80">CoreLMS</span>
               </h2>
-              <p className="text-white/70 text-sm xl:text-base leading-relaxed max-w-[280px]">
+              <p className="text-white/70 text-sm xl:text-base leading-relaxed max-w-[260px]">
                 Empowering education through technology. Access your courses, track progress, and achieve your goals.
               </p>
             </div>
