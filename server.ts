@@ -87,6 +87,13 @@ async function startServer() {
       joined TEXT,
       av TEXT,
       color TEXT,
+      fatherName TEXT,
+      motherName TEXT,
+      dob TEXT,
+      address TEXT,
+      fee REAL,
+      paid REAL,
+      progress INTEGER,
       createdAt DATETIME DEFAULT CURRENT_TIMESTAMP
     );
 
@@ -103,6 +110,28 @@ async function startServer() {
       value TEXT
     );
   `);
+
+  // Migration: Add missing columns to users table if they don't exist
+  const columnsToAdd = [
+    { name: 'fatherName', type: 'TEXT' },
+    { name: 'motherName', type: 'TEXT' },
+    { name: 'dob', type: 'TEXT' },
+    { name: 'address', type: 'TEXT' },
+    { name: 'fee', type: 'REAL' },
+    { name: 'paid', type: 'REAL' },
+    { name: 'progress', type: 'INTEGER' }
+  ];
+
+  for (const col of columnsToAdd) {
+    try {
+      db.prepare(`ALTER TABLE users ADD COLUMN ${col.name} ${col.type}`).run();
+      console.log(`Added column ${col.name} to users table.`);
+    } catch (err: any) {
+      if (!err.message.includes('duplicate column name')) {
+        console.warn(`Could not add column ${col.name}: ${err.message}`);
+      }
+    }
+  }
 
   // Seed Initial Data if empty
   const userCount = db.prepare('SELECT COUNT(*) as count FROM users').get() as { count: number };
@@ -290,59 +319,98 @@ async function startServer() {
 
   // Generic CRUD Routes
   app.get('/api/data/:colPath', authenticate, async (req, res) => {
-    const { colPath } = req.params;
-    if (colPath === 'users') {
-      const users = db.prepare('SELECT uid, name, email, role, phone, course, batch, status, joined, av, color FROM users').all();
-      return res.json(users);
+    try {
+      const { colPath } = req.params;
+      if (colPath === 'users') {
+        const users = db.prepare('SELECT * FROM users').all();
+        // Remove passwords for security
+        return res.json(users.map((u: any) => {
+          const { password, ...rest } = u;
+          return rest;
+        }));
+      }
+      const items = db.prepare('SELECT * FROM collections WHERE colPath = ?').all(colPath) as any[];
+      res.json(items.map(item => ({ id: item.id, ...JSON.parse(item.data) })));
+    } catch (err: any) {
+      console.error('GET Data Error:', err);
+      res.status(500).json({ error: err.message });
     }
-    const items = db.prepare('SELECT * FROM collections WHERE colPath = ?').all(colPath) as any[];
-    res.json(items.map(item => ({ id: item.id, ...JSON.parse(item.data) })));
   });
 
   app.post('/api/data/:colPath', authenticate, async (req, res) => {
-    const { colPath } = req.params;
-    const data = req.body;
-    const id = data.id || Math.random().toString(36).substring(2, 15);
-    
-    if (colPath === 'users') {
-      const { email, password, name, role, ...rest } = data;
-      const hashedPassword = password ? await bcrypt.hash(password, 10) : null;
-      db.prepare(
-        'INSERT INTO users (uid, email, password, name, role, phone, course, batch, status, joined, av, color) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)'
-      ).run(id, email, hashedPassword, name, role, rest.phone, rest.course, rest.batch, rest.status || 'Active', rest.joined || new Date().toISOString(), name.charAt(0).toUpperCase(), rest.color || '#4f8ef7');
-      return res.json({ id });
-    }
+    try {
+      const { colPath } = req.params;
+      const data = req.body;
+      const id = data.id || Math.random().toString(36).substring(2, 15);
+      
+      if (colPath === 'users') {
+        const { email, password, name, role, ...rest } = data;
+        const hashedPassword = password ? await bcrypt.hash(password, 10) : null;
+        
+        const fields = ['uid', 'email', 'password', 'name', 'role', 'status', 'joined', 'av', 'color', ...Object.keys(rest)];
+        const placeholders = fields.map(() => '?').join(', ');
+        const values = [
+          id, 
+          email, 
+          hashedPassword, 
+          name, 
+          role, 
+          rest.status || 'Active', 
+          rest.joined || new Date().toISOString(), 
+          name.charAt(0).toUpperCase(), 
+          rest.color || '#4f8ef7',
+          ...Object.values(rest)
+        ];
 
-    db.prepare('INSERT INTO collections (id, colPath, data) VALUES (?, ?, ?)')
-      .run(id, colPath, JSON.stringify(data));
-    res.json({ id });
+        const query = `INSERT INTO users (${fields.join(', ')}) VALUES (${placeholders})`;
+        db.prepare(query).run(...values);
+        return res.json({ id });
+      }
+
+      db.prepare('INSERT INTO collections (id, colPath, data) VALUES (?, ?, ?)')
+        .run(id, colPath, JSON.stringify(data));
+      res.json({ id });
+    } catch (err: any) {
+      console.error('POST Data Error:', err);
+      res.status(500).json({ error: err.message });
+    }
   });
 
   app.put('/api/data/:colPath/:id', authenticate, async (req, res) => {
-    const { colPath, id } = req.params;
-    const data = req.body;
+    try {
+      const { colPath, id } = req.params;
+      const data = req.body;
 
-    if (colPath === 'users') {
-      const fields = Object.keys(data).filter(k => k !== 'uid' && k !== 'password');
-      const values = fields.map(f => data[f]);
-      const query = `UPDATE users SET ${fields.map(f => `${f} = ?`).join(', ')} WHERE uid = ?`;
-      db.prepare(query).run(...values, id);
-      return res.json({ success: true });
+      if (colPath === 'users') {
+        const fields = Object.keys(data).filter(k => k !== 'uid' && k !== 'password');
+        const values = fields.map(f => data[f]);
+        const query = `UPDATE users SET ${fields.map(f => `${f} = ?`).join(', ')} WHERE uid = ?`;
+        db.prepare(query).run(...values, id);
+        return res.json({ success: true });
+      }
+
+      db.prepare('UPDATE collections SET data = ?, updatedAt = CURRENT_TIMESTAMP WHERE id = ? AND colPath = ?')
+        .run(JSON.stringify(data), id, colPath);
+      res.json({ success: true });
+    } catch (err: any) {
+      console.error('PUT Data Error:', err);
+      res.status(500).json({ error: err.message });
     }
-
-    db.prepare('UPDATE collections SET data = ?, updatedAt = CURRENT_TIMESTAMP WHERE id = ? AND colPath = ?')
-      .run(JSON.stringify(data), id, colPath);
-    res.json({ success: true });
   });
 
   app.delete('/api/data/:colPath/:id', authenticate, async (req, res) => {
-    const { colPath, id } = req.params;
-    if (colPath === 'users') {
-      db.prepare('DELETE FROM users WHERE uid = ?').run(id);
-    } else {
-      db.prepare('DELETE FROM collections WHERE id = ? AND colPath = ?').run(id, colPath);
+    try {
+      const { colPath, id } = req.params;
+      if (colPath === 'users') {
+        db.prepare('DELETE FROM users WHERE uid = ?').run(id);
+      } else {
+        db.prepare('DELETE FROM collections WHERE id = ? AND colPath = ?').run(id, colPath);
+      }
+      res.json({ success: true });
+    } catch (err: any) {
+      console.error('DELETE Data Error:', err);
+      res.status(500).json({ error: err.message });
     }
-    res.json({ success: true });
   });
 
   // Vite middleware for development
