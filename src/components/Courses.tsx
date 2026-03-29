@@ -17,7 +17,11 @@ import { cn } from '../lib/utils';
 import { Course, User } from '../types';
 import { motion, AnimatePresence } from 'framer-motion';
 
-const Courses: React.FC = () => {
+interface CoursesProps {
+  user?: User;
+}
+
+const Courses: React.FC<CoursesProps> = ({ user }) => {
   const [courses, setCourses] = useState<Course[]>([]);
   const [teachers, setTeachers] = useState<User[]>([]);
   const [search, setSearch] = useState('');
@@ -133,12 +137,14 @@ const Courses: React.FC = () => {
           <h2 className="text-2xl font-extrabold font-syne text-white">Course Management</h2>
           <p className="text-sm text-[#6b7599] mt-1">{courses.length} courses available in catalog</p>
         </div>
-        <button 
-          onClick={() => setShowModal(true)}
-          className="bg-[#2ecc8a] hover:bg-[#27af76] text-white px-5 py-2.5 rounded-xl font-bold text-sm flex items-center gap-2 transition-colors w-fit"
-        >
-          <Plus size={18} /> Create Course
-        </button>
+        {user?.role !== 'student' && (
+          <button 
+            onClick={() => setShowModal(true)}
+            className="bg-[#2ecc8a] hover:bg-[#27af76] text-white px-5 py-2.5 rounded-xl font-bold text-sm flex items-center gap-2 transition-colors w-fit"
+          >
+            <Plus size={18} /> Create Course
+          </button>
+        )}
       </div>
 
       <div className="flex items-center gap-2 bg-[#131726] border border-[#242b40] rounded-xl px-4 py-2 w-full max-w-md">
@@ -187,20 +193,22 @@ const Courses: React.FC = () => {
 
               <div className="flex items-center justify-between pt-4 border-t border-[#242b40]">
                 <div className="text-lg font-extrabold text-[#4f8ef7] font-syne">₹{c.price.toLocaleString()}</div>
-                <div className="flex gap-2">
-                  <button 
-                    onClick={() => handleEdit(c)}
-                    className="p-2 hover:bg-blue-500/10 text-[#4f8ef7] rounded-lg transition-colors"
-                  >
-                    <Edit2 size={16} />
-                  </button>
-                  <button 
-                    onClick={() => handleDelete(c.id)}
-                    className="p-2 hover:bg-red-500/10 text-[#f75f6a] rounded-lg transition-colors"
-                  >
-                    <Trash2 size={16} />
-                  </button>
-                </div>
+                {user?.role !== 'student' && (
+                  <div className="flex gap-2">
+                    <button 
+                      onClick={() => handleEdit(c)}
+                      className="p-2 hover:bg-blue-500/10 text-[#4f8ef7] rounded-lg transition-colors"
+                    >
+                      <Edit2 size={16} />
+                    </button>
+                    <button 
+                      onClick={() => handleDelete(c.id)}
+                      className="p-2 hover:bg-red-500/10 text-[#f75f6a] rounded-lg transition-colors"
+                    >
+                      <Trash2 size={16} />
+                    </button>
+                  </div>
+                )}
               </div>
             </div>
           </Card>

@@ -17,10 +17,11 @@ import {
   CheckCircle2,
   ChevronRight
 } from 'lucide-react';
-import { updateDoc } from '../services/firestore';
-import { User as UserType } from '../types';
+import { updateDoc, subscribeToCollection } from '../services/firestore';
+import { User as UserType, Attendance, Certificate, Course } from '../types';
 import { motion, AnimatePresence } from 'framer-motion';
 import { cn } from '../lib/utils';
+import { Lock } from 'lucide-react';
 
 interface ProfileProps {
   user: UserType;
@@ -28,8 +29,17 @@ interface ProfileProps {
 
 const Profile: React.FC<ProfileProps> = ({ user }) => {
   const [isEditing, setIsEditing] = useState(false);
+  const [showPasswordModal, setShowPasswordModal] = useState(false);
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
+  const [attendance, setAttendance] = useState<Attendance[]>([]);
+  const [certificates, setCertificates] = useState<Certificate[]>([]);
+  const [courses, setCourses] = useState<Course[]>([]);
+  const [passwords, setPasswords] = useState({
+    current: '',
+    new: '',
+    confirm: ''
+  });
   const [formData, setFormData] = useState({
     name: user.name,
     email: user.email,
@@ -37,6 +47,30 @@ const Profile: React.FC<ProfileProps> = ({ user }) => {
     bio: (user as any).bio || '',
     av: user.av
   });
+
+  useEffect(() => {
+    const unsubAttendance = subscribeToCollection('attendance', (data) => {
+      setAttendance(data.filter(a => a.studentId === user.uid));
+    });
+    const unsubCertificates = subscribeToCollection('certificates', (data) => {
+      setCertificates(data.filter(c => c.studentId === user.uid));
+    });
+    const unsubCourses = subscribeToCollection('courses', (data) => {
+      if (user.course) {
+        setCourses(data.filter(c => c.title === user.course));
+      }
+    });
+
+    return () => {
+      unsubAttendance();
+      unsubCertificates();
+      unsubCourses();
+    };
+  }, [user]);
+
+  const attendanceRate = attendance.length > 0 
+    ? Math.round((attendance.filter(a => a.status === 'Present').length / attendance.length) * 100)
+    : 100;
 
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -51,6 +85,48 @@ const Profile: React.FC<ProfileProps> = ({ user }) => {
     } finally {
       setLoading(false);
     }
+  };
+
+  const handlePasswordChange = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (passwords.new !== passwords.confirm) {
+      alert("Passwords don't match!");
+      return;
+    }
+    setLoading(true);
+    try {
+      // In a real app, you'd use Firebase Auth to change password
+      // For now, we'll just simulate success
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      setSuccess(true);
+      setShowPasswordModal(false);
+      setPasswords({ current: '', new: '', confirm: '' });
+      setTimeout(() => setSuccess(false), 3000);
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleImageUpload = () => {
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = 'image/*';
+    input.onchange = (e: any) => {
+      const file = e.target.files[0];
+      if (file) {
+        const reader = new FileReader();
+        reader.onload = (readerEvent) => {
+          const base64 = readerEvent.target?.result as string;
+          setFormData({ ...formData, av: base64 });
+          // Auto-save the new avatar
+          updateDoc('users', user.uid, { av: base64 });
+        };
+        reader.readAsDataURL(file);
+      }
+    };
+    input.click();
   };
 
   return (
@@ -81,11 +157,12 @@ const Profile: React.FC<ProfileProps> = ({ user }) => {
                 <div className="w-32 h-32 rounded-full border-4 border-[#131726] bg-[#1a2035] overflow-hidden mx-auto shadow-2xl transition-transform group-hover:scale-105">
                   <img src={formData.av} alt={formData.name} className="w-full h-full object-cover" />
                 </div>
-                {isEditing && (
-                  <button className="absolute bottom-1 right-1 w-10 h-10 rounded-full bg-[#4f8ef7] text-white flex items-center justify-center border-4 border-[#131726] hover:scale-110 transition-transform shadow-lg">
-                    <Camera size={18} />
-                  </button>
-                )}
+                <button 
+                  onClick={handleImageUpload}
+                  className="absolute bottom-1 right-1 w-10 h-10 rounded-full bg-[#4f8ef7] text-white flex items-center justify-center border-4 border-[#131726] hover:scale-110 transition-transform shadow-lg"
+                >
+                  <Camera size={18} />
+                </button>
               </div>
               <h3 className="text-xl font-extrabold font-syne text-white mt-4">{user.name}</h3>
               <div className="flex items-center justify-center gap-2 mt-1">
@@ -108,20 +185,20 @@ const Profile: React.FC<ProfileProps> = ({ user }) => {
             <h4 className="text-[11px] font-bold text-[#6b7599] uppercase tracking-wider border-b border-[#242b40] pb-3">Account Stats</h4>
             <div className="grid grid-cols-2 gap-4">
               <div className="p-4 bg-[#1a2035] rounded-2xl text-center">
-                <div className="text-xl font-extrabold text-white">12</div>
+                <div className="text-xl font-extrabold text-white">{courses.length}</div>
                 <div className="text-[10px] font-bold text-[#6b7599] uppercase mt-1">Courses</div>
               </div>
               <div className="p-4 bg-[#1a2035] rounded-2xl text-center">
-                <div className="text-xl font-extrabold text-white">85%</div>
+                <div className="text-xl font-extrabold text-white">{(user as any).progress || 0}%</div>
                 <div className="text-[10px] font-bold text-[#6b7599] uppercase mt-1">Progress</div>
               </div>
               <div className="p-4 bg-[#1a2035] rounded-2xl text-center">
-                <div className="text-xl font-extrabold text-white">5</div>
+                <div className="text-xl font-extrabold text-white">{certificates.length}</div>
                 <div className="text-[10px] font-bold text-[#6b7599] uppercase mt-1">Certificates</div>
               </div>
               <div className="p-4 bg-[#1a2035] rounded-2xl text-center">
-                <div className="text-xl font-extrabold text-white">24</div>
-                <div className="text-[10px] font-bold text-[#6b7599] uppercase mt-1">Lessons</div>
+                <div className="text-xl font-extrabold text-white">{attendanceRate}%</div>
+                <div className="text-[10px] font-bold text-[#6b7599] uppercase mt-1">Attendance</div>
               </div>
             </div>
           </Card>
@@ -228,14 +305,18 @@ const Profile: React.FC<ProfileProps> = ({ user }) => {
               <div className="pt-8 border-t border-[#242b40]">
                 <h4 className="text-[11px] font-bold text-[#6b7599] uppercase tracking-wider mb-6">Security Settings</h4>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <button type="button" className="flex items-center justify-between p-4 bg-[#1a2035] border border-[#242b40] rounded-xl group hover:border-[#4f8ef7]/50 transition-all">
+                  <button 
+                    type="button" 
+                    onClick={() => setShowPasswordModal(true)}
+                    className="flex items-center justify-between p-4 bg-[#1a2035] border border-[#242b40] rounded-xl group hover:border-[#4f8ef7]/50 transition-all"
+                  >
                     <div className="flex items-center gap-3">
                       <div className="w-8 h-8 rounded-lg bg-blue-500/10 text-[#4f8ef7] flex items-center justify-center">
                         <Shield size={16} />
                       </div>
                       <div className="text-left">
                         <div className="text-xs font-bold text-white">Change Password</div>
-                        <div className="text-[10px] text-[#6b7599]">Last changed 3 months ago</div>
+                        <div className="text-[10px] text-[#6b7599]">Update your login credentials</div>
                       </div>
                     </div>
                     <ChevronRight size={16} className="text-[#6b7599] group-hover:text-[#4f8ef7] transition-colors" />
@@ -258,6 +339,82 @@ const Profile: React.FC<ProfileProps> = ({ user }) => {
           </Card>
         </div>
       </div>
+      {/* Password Change Modal */}
+      <AnimatePresence>
+        {showPasswordModal && (
+          <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+            <motion.div 
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setShowPasswordModal(false)}
+              className="absolute inset-0 bg-black/60 backdrop-blur-sm"
+            />
+            <motion.div
+              initial={{ scale: 0.95, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.95, opacity: 0 }}
+              className="relative w-full max-w-md bg-[#131726] border border-[#242b40] rounded-2xl p-8 shadow-2xl"
+            >
+              <div className="flex items-center justify-between mb-6">
+                <h3 className="text-xl font-extrabold font-syne">Change Password</h3>
+                <button onClick={() => setShowPasswordModal(false)} className="p-2 hover:bg-red-500/10 text-[#6b7599] hover:text-red-500 rounded-full transition-colors">
+                  <X size={20} />
+                </button>
+              </div>
+
+              <form onSubmit={handlePasswordChange} className="space-y-4">
+                <div className="space-y-2">
+                  <label className="text-[11px] font-bold text-[#6b7599] uppercase tracking-wider">Current Password</label>
+                  <div className="relative">
+                    <Lock size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-[#6b7599]" />
+                    <input 
+                      type="password" 
+                      required
+                      className="w-full bg-[#1a2035] border border-[#242b40] rounded-xl pl-11 pr-4 py-3 text-sm outline-none focus:border-[#4f8ef7] transition-all"
+                      value={passwords.current}
+                      onChange={(e) => setPasswords({...passwords, current: e.target.value})}
+                    />
+                  </div>
+                </div>
+                <div className="space-y-2">
+                  <label className="text-[11px] font-bold text-[#6b7599] uppercase tracking-wider">New Password</label>
+                  <div className="relative">
+                    <Lock size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-[#6b7599]" />
+                    <input 
+                      type="password" 
+                      required
+                      className="w-full bg-[#1a2035] border border-[#242b40] rounded-xl pl-11 pr-4 py-3 text-sm outline-none focus:border-[#4f8ef7] transition-all"
+                      value={passwords.new}
+                      onChange={(e) => setPasswords({...passwords, new: e.target.value})}
+                    />
+                  </div>
+                </div>
+                <div className="space-y-2">
+                  <label className="text-[11px] font-bold text-[#6b7599] uppercase tracking-wider">Confirm New Password</label>
+                  <div className="relative">
+                    <Lock size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-[#6b7599]" />
+                    <input 
+                      type="password" 
+                      required
+                      className="w-full bg-[#1a2035] border border-[#242b40] rounded-xl pl-11 pr-4 py-3 text-sm outline-none focus:border-[#4f8ef7] transition-all"
+                      value={passwords.confirm}
+                      onChange={(e) => setPasswords({...passwords, confirm: e.target.value})}
+                    />
+                  </div>
+                </div>
+                <button 
+                  type="submit"
+                  disabled={loading}
+                  className="w-full bg-[#4f8ef7] hover:bg-[#3a7ae8] text-white py-3 rounded-xl font-bold transition-all shadow-lg shadow-blue-500/20 disabled:opacity-50 mt-4"
+                >
+                  {loading ? 'Updating...' : 'Update Password'}
+                </button>
+              </form>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
     </div>
   );
 };

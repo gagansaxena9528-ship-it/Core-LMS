@@ -23,7 +23,11 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { cn } from '../lib/utils';
 import { X } from 'lucide-react';
 
-const Payments: React.FC = () => {
+interface PaymentsProps {
+  user?: UserType;
+}
+
+const Payments: React.FC<PaymentsProps> = ({ user }) => {
   const [payments, setPayments] = useState<Payment[]>([]);
   const [courses, setCourses] = useState<Course[]>([]);
   const [students, setStudents] = useState<Student[]>([]);
@@ -55,6 +59,9 @@ const Payments: React.FC = () => {
   }, []);
 
   const filteredPayments = payments.filter(p => {
+    // If student, only show their own payments
+    if (user?.role === 'student' && p.studentId !== user.uid) return false;
+
     const student = students.find(s => s.id === p.studentId);
     const matchesSearch = student?.name.toLowerCase().includes(search.toLowerCase()) || 
                           p.id.toLowerCase().includes(search.toLowerCase());
@@ -68,6 +75,8 @@ const Payments: React.FC = () => {
     totalTransactions: payments.length,
     successRate: Math.round((payments.filter(p => p.status === 'Paid').length / (payments.length || 1)) * 100)
   };
+
+  const userRole = (window as any).userRole || 'admin'; // Fallback if not passed, but we should use props
 
   const handleUpdateStatus = async (id: string, status: 'Paid' | 'Partial' | 'Pending') => {
     try {
@@ -154,7 +163,7 @@ const Payments: React.FC = () => {
             </div>
             <span className="text-[10px] font-bold text-[#2ecc8a] bg-[#2ecc8a]/10 px-2 py-0.5 rounded-full">+12%</span>
           </div>
-          <div className="text-2xl font-extrabold text-white">${stats.totalRevenue.toLocaleString()}</div>
+          <div className="text-2xl font-extrabold text-white">₹{stats.totalRevenue.toLocaleString()}</div>
           <div className="text-[11px] font-bold text-[#6b7599] uppercase tracking-wider mt-1">Total Revenue</div>
         </Card>
 
@@ -165,7 +174,7 @@ const Payments: React.FC = () => {
             </div>
             <span className="text-[10px] font-bold text-red-500 bg-red-500/10 px-2 py-0.5 rounded-full">-5%</span>
           </div>
-          <div className="text-2xl font-extrabold text-white">${stats.pendingRevenue.toLocaleString()}</div>
+          <div className="text-2xl font-extrabold text-white">₹{stats.pendingRevenue.toLocaleString()}</div>
           <div className="text-[11px] font-bold text-[#6b7599] uppercase tracking-wider mt-1">Pending Dues</div>
         </Card>
 
@@ -260,8 +269,8 @@ const Payments: React.FC = () => {
                   </td>
                   <td className="px-6 py-4">
                     <div>
-                      <div className="text-sm font-bold text-[#2ecc8a]">${p.paid}</div>
-                      <div className="text-[10px] text-[#6b7599]">of ${p.total}</div>
+                      <div className="text-sm font-bold text-[#2ecc8a]">₹{p.paid}</div>
+                      <div className="text-[10px] text-[#6b7599]">of ₹{p.total}</div>
                     </div>
                   </td>
                   <td className="px-6 py-4">
@@ -327,6 +336,12 @@ const Payments: React.FC = () => {
                 <button onClick={() => setShowModal(false)} className="p-2 hover:bg-red-500/10 text-[#6b7599] hover:text-red-500 rounded-full transition-colors">
                   <X size={20} />
                 </button>
+              </div>
+
+              <div className="mb-6 p-4 bg-[#4f8ef7]/10 border border-[#4f8ef7]/20 rounded-xl">
+                <p className="text-xs text-[#4f8ef7] font-bold uppercase tracking-wider mb-2">UPI Payment Details</p>
+                <p className="text-sm text-white font-medium">UPI ID: <span className="text-[#4f8ef7]">gagansaxena7212@naviaxis</span></p>
+                <p className="text-[11px] text-[#6b7599] mt-1">Please pay the amount and enter details below.</p>
               </div>
 
               <form onSubmit={handleSavePayment} className="space-y-4">

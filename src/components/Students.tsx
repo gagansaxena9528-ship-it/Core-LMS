@@ -205,9 +205,15 @@ const Students: React.FC = () => {
     try {
       if (editingStudent) {
         const { password, ...updateData } = formData;
+        const selectedBatch = batches.find(b => b.name === formData.batch);
+        const selectedCourse = courses.find(c => c.title === formData.course);
+        
         await updateDocument('users', editingStudent.uid, {
           ...updateData,
-          fee: parseFloat(formData.fee) || 0
+          fee: parseFloat(formData.fee) || 0,
+          courseId: selectedCourse?.id || '',
+          batchId: selectedBatch?.id || '',
+          teacherId: selectedBatch?.teacherId || ''
         });
         
         // Send update notification
@@ -221,6 +227,9 @@ const Students: React.FC = () => {
         // Update the newly created user with additional details
         if (userCredential?.uid) {
           const { password, ...additionalData } = formData;
+          const selectedBatch = batches.find(b => b.name === formData.batch);
+          const selectedCourse = courses.find(c => c.title === formData.course);
+
           await updateDocument('users', userCredential.uid, {
             ...additionalData,
             role: 'student',
@@ -228,7 +237,10 @@ const Students: React.FC = () => {
             joined: new Date().toISOString(),
             progress: 0,
             fee: parseFloat(formData.fee) || 0,
-            paid: 0
+            paid: 0,
+            courseId: selectedCourse?.id || '',
+            batchId: selectedBatch?.id || '',
+            teacherId: selectedBatch?.teacherId || ''
           });
 
           // Send welcome email

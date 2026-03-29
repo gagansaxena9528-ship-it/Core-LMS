@@ -58,10 +58,11 @@ const AttendanceComponent: React.FC<AttendanceProps> = ({ user }) => {
     }
   }, [batches]);
 
-  const filteredStudents = students.filter(s => 
-    s.batchId === selectedBatchId && 
-    s.name.toLowerCase().includes(search.toLowerCase())
-  );
+  const filteredStudents = students.filter(s => {
+    if (user.role === 'student') return s.uid === user.uid;
+    return s.batchId === selectedBatchId && 
+           s.name.toLowerCase().includes(search.toLowerCase());
+  });
 
   const getAttendanceStatus = (studentId: string) => {
     const record = attendanceRecords.find(r => 
@@ -194,55 +195,74 @@ const AttendanceComponent: React.FC<AttendanceProps> = ({ user }) => {
       <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
         {/* Filters Sidebar */}
         <div className="lg:col-span-1 space-y-6">
-          <Card className="p-6 space-y-6">
-            <div className="space-y-4">
-              <div className="space-y-2">
-                <label className="text-[11px] font-bold text-[#6b7599] uppercase tracking-wider">Select Batch</label>
-                <select 
-                  value={selectedBatchId}
-                  onChange={(e) => setSelectedBatchId(e.target.value)}
-                  className="w-full bg-[#1a2035] border border-[#242b40] rounded-xl px-4 py-3 text-sm outline-none focus:border-[#4f8ef7] transition-colors"
-                >
-                  {batches.map(b => (
-                    <option key={b.id} value={b.id}>{b.name}</option>
-                  ))}
-                </select>
-              </div>
+          {user.role !== 'student' ? (
+            <Card className="p-6 space-y-6">
+              <div className="space-y-4">
+                <div className="space-y-2">
+                  <label className="text-[11px] font-bold text-[#6b7599] uppercase tracking-wider">Select Batch</label>
+                  <select 
+                    value={selectedBatchId}
+                    onChange={(e) => setSelectedBatchId(e.target.value)}
+                    className="w-full bg-[#1a2035] border border-[#242b40] rounded-xl px-4 py-3 text-sm outline-none focus:border-[#4f8ef7] transition-colors"
+                  >
+                    {batches.map(b => (
+                      <option key={b.id} value={b.id}>{b.name}</option>
+                    ))}
+                  </select>
+                </div>
 
-              <div className="space-y-2">
-                <label className="text-[11px] font-bold text-[#6b7599] uppercase tracking-wider">Select Date</label>
-                <div className="relative">
-                  <Calendar size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-[#6b7599]" />
-                  <input 
-                    type="date" 
-                    value={selectedDate}
-                    onChange={(e) => setSelectedDate(e.target.value)}
-                    className="w-full bg-[#1a2035] border border-[#242b40] rounded-xl pl-11 pr-4 py-3 text-sm outline-none focus:border-[#4f8ef7] transition-colors"
-                  />
+                <div className="space-y-2">
+                  <label className="text-[11px] font-bold text-[#6b7599] uppercase tracking-wider">Select Date</label>
+                  <div className="relative">
+                    <Calendar size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-[#6b7599]" />
+                    <input 
+                      type="date" 
+                      value={selectedDate}
+                      onChange={(e) => setSelectedDate(e.target.value)}
+                      className="w-full bg-[#1a2035] border border-[#242b40] rounded-xl pl-11 pr-4 py-3 text-sm outline-none focus:border-[#4f8ef7] transition-colors"
+                    />
+                  </div>
                 </div>
               </div>
-            </div>
 
-            <div className="pt-6 border-t border-[#242b40] space-y-4">
-              <h4 className="text-[11px] font-bold text-[#6b7599] uppercase tracking-wider">Quick Actions</h4>
-              <div className="grid grid-cols-2 gap-3">
-                <button 
-                  onClick={() => handleMarkAll('Present')}
-                  disabled={loading || filteredStudents.length === 0}
-                  className="bg-[#2ecc8a]/10 hover:bg-[#2ecc8a]/20 text-[#2ecc8a] py-3 rounded-xl text-xs font-bold transition-all border border-[#2ecc8a]/20 disabled:opacity-50"
-                >
-                  Mark All Present
-                </button>
-                <button 
-                  onClick={() => handleMarkAll('Absent')}
-                  disabled={loading || filteredStudents.length === 0}
-                  className="bg-red-500/10 hover:bg-red-500/20 text-red-500 py-3 rounded-xl text-xs font-bold transition-all border border-red-500/20 disabled:opacity-50"
-                >
-                  Mark All Absent
-                </button>
+              <div className="pt-6 border-t border-[#242b40] space-y-4">
+                <h4 className="text-[11px] font-bold text-[#6b7599] uppercase tracking-wider">Quick Actions</h4>
+                <div className="grid grid-cols-2 gap-3">
+                  <button 
+                    onClick={() => handleMarkAll('Present')}
+                    disabled={loading || filteredStudents.length === 0}
+                    className="bg-[#2ecc8a]/10 hover:bg-[#2ecc8a]/20 text-[#2ecc8a] py-3 rounded-xl text-xs font-bold transition-all border border-[#2ecc8a]/20 disabled:opacity-50"
+                  >
+                    Mark All Present
+                  </button>
+                  <button 
+                    onClick={() => handleMarkAll('Absent')}
+                    disabled={loading || filteredStudents.length === 0}
+                    className="bg-red-500/10 hover:bg-red-500/20 text-red-500 py-3 rounded-xl text-xs font-bold transition-all border border-red-500/20 disabled:opacity-50"
+                  >
+                    Mark All Absent
+                  </button>
+                </div>
               </div>
-            </div>
-          </Card>
+            </Card>
+          ) : (
+            <Card className="p-6 space-y-6">
+              <div className="text-center py-4">
+                <div className="w-16 h-16 rounded-full bg-[#4f8ef7]/10 text-[#4f8ef7] flex items-center justify-center mx-auto mb-4">
+                  <Calendar size={32} />
+                </div>
+                <h3 className="text-lg font-bold text-white">Mark Attendance</h3>
+                <p className="text-xs text-[#6b7599] mt-2">Mark your presence for today: {new Date().toLocaleDateString()}</p>
+              </div>
+              <button 
+                onClick={() => handleMarkAttendance(user.uid, 'Present')}
+                disabled={getAttendanceStatus(user.uid) === 'Present'}
+                className="w-full bg-[#2ecc8a] hover:bg-[#27af76] text-white py-4 rounded-xl font-bold transition-all shadow-lg shadow-green-500/20 disabled:opacity-50"
+              >
+                {getAttendanceStatus(user.uid) === 'Present' ? 'Already Marked Present' : 'Mark Present Today'}
+              </button>
+            </Card>
+          )}
 
           <Card className="p-6">
             <h4 className="text-[11px] font-bold text-[#6b7599] uppercase tracking-wider mb-4">Summary for Today</h4>

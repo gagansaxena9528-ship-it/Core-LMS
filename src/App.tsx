@@ -60,13 +60,13 @@ const App: React.FC = () => {
           {/* Admin & Shared Routes */}
           <Route path="/students" element={<Students />} />
           <Route path="/teachers" element={<Teachers />} />
-          <Route path="/courses" element={<Courses />} />
+          <Route path="/courses" element={<Courses user={user!} />} />
           <Route path="/batches" element={<Batches />} />
           <Route path="/content" element={<Content />} />
           <Route path="/exams" element={<Exams user={user!} />} />
           <Route path="/assignments" element={<Assignments user={user!} />} />
           <Route path="/live-classes" element={<LiveClasses user={user!} />} />
-          <Route path="/payments" element={<Payments />} />
+          <Route path="/payments" element={<Payments user={user!} />} />
           <Route path="/attendance" element={<Attendance user={user!} />} />
           <Route path="/settings" element={<Settings />} />
           <Route path="/profile" element={<Profile user={user!} />} />

@@ -25,6 +25,7 @@ export interface Student extends User {
   progress: number;
   fee: number;
   paid: number;
+  attendanceRate?: number;
 }
 
 export interface Teacher extends User {
@@ -177,6 +178,7 @@ export interface Certificate {
   issueDate: string;
   certificateId: string; // Auto-generated
   grade?: string;
+  url?: string;
 }
 
 export interface Notification {

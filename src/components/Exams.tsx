@@ -142,9 +142,21 @@ const Exams: React.FC<ExamsProps> = ({ user }) => {
     return `${mins}:${secs.toString().padStart(2, '0')}`;
   };
 
-  const filteredExams = exams.filter(e => 
-    e.title.toLowerCase().includes(search.toLowerCase())
-  );
+  const filteredExams = exams.filter(e => {
+    const matchesSearch = e.title.toLowerCase().includes(search.toLowerCase());
+    if (user.role === 'student') {
+      const studentCourseId = (user as any).courseId;
+      const matchesCourse = !e.courseId || e.courseId === studentCourseId || e.courseId === user.course;
+      return matchesSearch && e.status === 'Active' && matchesCourse;
+    }
+    return matchesSearch;
+  });
+
+  const myResults = results.filter(r => r.studentId === user.uid);
+  const passedExams = myResults.filter(r => r.status === 'Pass').length;
+  const avgScore = myResults.length > 0 
+    ? Math.round(myResults.reduce((acc, curr) => acc + curr.percentage, 0) / myResults.length) 
+    : 0;
 
   const handleEdit = (exam: Exam) => {
     setEditingExam(exam);
@@ -177,20 +189,21 @@ const Exams: React.FC<ExamsProps> = ({ user }) => {
       if (editingExam) {
         await updateDocument('exams', editingExam.id, formData);
         
-        // Notify students about exam update (optional, but requested "every action")
-        // For simplicity, we'll just log or notify the admin/teacher
-        console.log(`Exam ${formData.title} updated`);
+        // Notify students about exam update
+        const course = courses.find(c => c.id === formData.courseId);
+        const details = `The exam "${formData.title}" for course "${course?.title || 'General'}" has been updated. Duration: ${formData.duration} min, Total Marks: ${formData.totalMarks}.`;
+        const html = getUpdateNotificationTemplate('Student', 'Exam Update', 'updated', details);
+        // In a real app, we'd notify enrolled students. For now, notifying admin.
+        await sendEmail('gagansaxena9528@gmail.com', `Exam Updated: ${formData.title}`, html);
       } else {
         await createDoc('exams', formData);
         
         // Notify students about new exam
-        // We'll need to fetch students for the course
         const course = courses.find(c => c.id === formData.courseId);
-        if (course) {
-          // In a real app, we'd fetch students enrolled in this course
-          // For now, we'll just log it or send a generic notification if we had a student list here
-          console.log(`New exam ${formData.title} created for course ${course.title}`);
-        }
+        const details = `A new exam "${formData.title}" has been scheduled for course "${course?.title || 'General'}". Duration: ${formData.duration} min, Total Marks: ${formData.totalMarks}.`;
+        const html = getNewRecordTemplate('Exam', 'Student', details);
+        // In a real app, we'd notify enrolled students. For now, notifying admin.
+        await sendEmail('gagansaxena9528@gmail.com', `New Exam Scheduled: ${formData.title}`, html);
       }
       setShowModal(false);
       setEditingExam(null);
@@ -369,8 +382,8 @@ const Exams: React.FC<ExamsProps> = ({ user }) => {
           <div className="flex items-center gap-3">
             <div className="p-2 bg-blue-500/10 text-[#4f8ef7] rounded-lg"><FileText size={20} /></div>
             <div>
-              <div className="text-lg font-bold font-syne">{exams.length}</div>
-              <div className="text-[10px] text-[#6b7599] uppercase font-bold tracking-wider">Total Exams</div>
+              <div className="text-lg font-bold font-syne">{user.role === 'student' ? filteredExams.length : exams.length}</div>
+              <div className="text-[10px] text-[#6b7599] uppercase font-bold tracking-wider">{user.role === 'student' ? 'My Exams' : 'Total Exams'}</div>
             </div>
           </div>
         </Card>
@@ -378,8 +391,8 @@ const Exams: React.FC<ExamsProps> = ({ user }) => {
           <div className="flex items-center gap-3">
             <div className="p-2 bg-green-500/10 text-[#2ecc8a] rounded-lg"><CheckCircle2 size={20} /></div>
             <div>
-              <div className="text-lg font-bold font-syne">{exams.filter(e => e.status === 'Active').length}</div>
-              <div className="text-[10px] text-[#6b7599] uppercase font-bold tracking-wider">Active</div>
+              <div className="text-lg font-bold font-syne">{user.role === 'student' ? passedExams : exams.filter(e => e.status === 'Active').length}</div>
+              <div className="text-[10px] text-[#6b7599] uppercase font-bold tracking-wider">{user.role === 'student' ? 'Passed' : 'Active'}</div>
             </div>
           </div>
         </Card>
@@ -387,17 +400,17 @@ const Exams: React.FC<ExamsProps> = ({ user }) => {
           <div className="flex items-center gap-3">
             <div className="p-2 bg-orange-500/10 text-[#f7924f] rounded-lg"><BarChart3 size={20} /></div>
             <div>
-              <div className="text-lg font-bold font-syne">78%</div>
-              <div className="text-[10px] text-[#6b7599] uppercase font-bold tracking-wider">Avg Pass Rate</div>
+              <div className="text-lg font-bold font-syne">{user.role === 'student' ? `${avgScore}%` : '78%'}</div>
+              <div className="text-[10px] text-[#6b7599] uppercase font-bold tracking-wider">{user.role === 'student' ? 'Avg Score' : 'Avg Pass Rate'}</div>
             </div>
           </div>
         </Card>
         <Card className="p-4 bg-purple-500/5 border-purple-500/20">
           <div className="flex items-center gap-3">
-            <div className="p-2 bg-purple-500/10 text-[#7c5fe6] rounded-lg"><HelpCircle size={20} /></div>
+            <div className="p-2 bg-purple-500/10 text-[#7c5fe6] rounded-lg"><Trophy size={20} /></div>
             <div>
-              <div className="text-lg font-bold font-syne">342</div>
-              <div className="text-[10px] text-[#6b7599] uppercase font-bold tracking-wider">Total Attempts</div>
+              <div className="text-lg font-bold font-syne">{user.role === 'student' ? myResults.length : '342'}</div>
+              <div className="text-[10px] text-[#6b7599] uppercase font-bold tracking-wider">{user.role === 'student' ? 'Attempts' : 'Total Attempts'}</div>
             </div>
           </div>
         </Card>

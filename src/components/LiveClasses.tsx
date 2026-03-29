@@ -87,9 +87,19 @@ const LiveClasses: React.FC<LiveClassesProps> = ({ user }) => {
 
   const isAdminOrTeacher = user.role === 'admin' || user.role === 'teacher';
 
-  const filteredClasses = liveClasses.filter(c => 
-    c.title.toLowerCase().includes(search.toLowerCase())
-  );
+  const filteredClasses = liveClasses.filter(c => {
+    const matchesSearch = c.title.toLowerCase().includes(search.toLowerCase());
+    if (user.role === 'student') {
+      const student = students.find(s => s.uid === user.uid);
+      if (!student) return false;
+      
+      const matchesCourse = !c.courseId || c.courseId === student.courseId;
+      const matchesBatch = !c.batchId || c.batchId === student.batchId;
+      
+      return matchesSearch && matchesCourse && matchesBatch;
+    }
+    return matchesSearch;
+  });
 
   return (
     <div className="space-y-6">
@@ -200,6 +210,7 @@ const LiveClasses: React.FC<LiveClassesProps> = ({ user }) => {
               ) : (
                 <button 
                   disabled={c.status === 'Completed'}
+                  onClick={() => c.meetLink && window.open(c.meetLink, '_blank')}
                   className={cn(
                     "px-6 py-2 rounded-xl font-bold text-sm transition-all",
                     c.status === 'Upcoming' ? "bg-[#1a2035] border border-[#242b40] text-[#e8ecf5] hover:bg-[#242b40]" : "bg-[#1a2035] text-[#6b7599] cursor-not-allowed"

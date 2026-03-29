@@ -11,8 +11,8 @@ import {
   FileText,
   Video
 } from 'lucide-react';
-import { subscribeToCollection } from '../services/firestore';
-import { Course, User } from '../types';
+import { subscribeToCollection, subscribeToQuery } from '../services/firestore';
+import { Course, User, LiveClass, Assignment, Exam, Attendance, Certificate, Teacher } from '../types';
 import { useNavigate } from 'react-router-dom';
 
 interface StudentDashboardProps {
@@ -22,15 +22,92 @@ interface StudentDashboardProps {
 const StudentDashboard: React.FC<StudentDashboardProps> = ({ user }) => {
   const navigate = useNavigate();
   const [courses, setCourses] = useState<Course[]>([]);
+  const [liveClasses, setLiveClasses] = useState<LiveClass[]>([]);
+  const [assignments, setAssignments] = useState<Assignment[]>([]);
+  const [exams, setExams] = useState<Exam[]>([]);
+  const [attendance, setAttendance] = useState<Attendance[]>([]);
+  const [certificates, setCertificates] = useState<Certificate[]>([]);
+  const [teacher, setTeacher] = useState<Teacher | null>(null);
 
   useEffect(() => {
-    // In real app, fetch only enrolled courses
-    const unsubCourses = subscribeToCollection('courses', setCourses);
+    // Fetch enrolled courses
+    const unsubCourses = subscribeToCollection('courses', (data) => {
+      const studentCourseId = (user as any).courseId;
+      if (studentCourseId || user.course) {
+        setCourses(data.filter(c => c.id === studentCourseId || c.title === user.course));
+      } else {
+        setCourses([]);
+      }
+    });
+
+    // Fetch live classes for user's batch
+    const unsubLive = subscribeToCollection('live_classes', (data) => {
+      if (user.batch) {
+        setLiveClasses(data.filter(c => c.status !== 'Completed'));
+      }
+    });
+
+    // Fetch assignments
+    const unsubAssignments = subscribeToCollection('assignments', (data) => {
+      const studentCourseId = (user as any).courseId;
+      const studentBatchId = (user as any).batchId;
+      setAssignments(data.filter(a => 
+        a.status === 'Active' && 
+        (a.courseId === studentCourseId || a.batchId === studentBatchId)
+      ));
+    });
+
+    // Fetch exams
+    const unsubExams = subscribeToCollection('exams', (data) => {
+      setExams(data.filter(e => e.status === 'Active'));
+    });
+
+    // Fetch attendance for this student
+    const unsubAttendance = subscribeToCollection('attendance', (data) => {
+      setAttendance(data.filter(a => a.studentId === user.uid));
+    });
+
+    // Fetch certificates
+    const unsubCertificates = subscribeToCollection('certificates', (data) => {
+      setCertificates(data.filter(c => c.studentId === user.uid));
+    });
+
+    // Fetch teacher info if available
+    if ((user as any).teacherId) {
+      const unsubTeacher = subscribeToCollection('users', (data) => {
+        const t = data.find(u => u.uid === (user as any).teacherId && u.role === 'teacher');
+        if (t) setTeacher(t as Teacher);
+      });
+      return () => {
+        unsubCourses();
+        unsubLive();
+        unsubAssignments();
+        unsubExams();
+        unsubAttendance();
+        unsubCertificates();
+        unsubTeacher();
+      };
+    }
 
     return () => {
       unsubCourses();
+      unsubLive();
+      unsubAssignments();
+      unsubExams();
+      unsubAttendance();
+      unsubCertificates();
     };
-  }, []);
+  }, [user]);
+
+  const attendanceRate = attendance.length > 0 
+    ? Math.round((attendance.filter(a => a.status === 'Present').length / attendance.length) * 100)
+    : 100;
+
+  const upcomingEvents = [
+    ...liveClasses.map(c => ({ icon: <Video size={16} />, title: `Live: ${c.title}`, sub: `${c.date} ${c.time}`, color: '#f75f6a', type: 'live' })),
+    ...exams.map(e => ({ icon: <FileText size={16} />, title: `Exam: ${e.title}`, sub: `Duration: ${e.duration}m`, color: '#f7924f', type: 'exam' })),
+    ...assignments.map(a => ({ icon: <Calendar size={16} />, title: `Task: ${a.title}`, sub: `Due: ${a.dueDate}`, color: '#4f8ef7', type: 'assignment' })),
+  ].sort((a, b) => a.sub.localeCompare(b.sub)).slice(0, 5);
 
   return (
     <div className="space-y-8">
@@ -49,8 +126,8 @@ const StudentDashboard: React.FC<StudentDashboardProps> = ({ user }) => {
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <StatCard 
           icon={<BookOpen className="text-[#4f8ef7]" />} 
-          value="1" 
-          label="Active Course" 
+          value={courses.length.toString()} 
+          label="Active Courses" 
           color="blue"
         />
         <StatCard 
@@ -61,17 +138,30 @@ const StudentDashboard: React.FC<StudentDashboardProps> = ({ user }) => {
         />
         <StatCard 
           icon={<CheckCircle2 className="text-[#f7924f]" />} 
-          value="85%" 
+          value={`${attendanceRate}%`} 
           label="Attendance" 
           color="orange"
         />
         <StatCard 
           icon={<Award className="text-[#7c5fe6]" />} 
-          value="1" 
+          value={certificates.length.toString()} 
           label="Certificates" 
           color="purple"
         />
       </div>
+
+      {teacher && (
+        <div className="bg-[#131726] border border-[#242b40] rounded-2xl p-4 flex items-center gap-4">
+          <div className="w-12 h-12 rounded-full bg-[#1a2035] flex items-center justify-center text-[#4f8ef7] font-bold text-lg overflow-hidden border border-[#242b40]">
+            {teacher.av ? <img src={teacher.av} alt={teacher.name} className="w-full h-full object-cover" /> : teacher.name[0]}
+          </div>
+          <div>
+            <div className="text-[10px] font-bold text-[#6b7599] uppercase tracking-wider">Assigned Teacher</div>
+            <div className="text-sm font-bold text-white">{teacher.name}</div>
+            <div className="text-[11px] text-[#4f8ef7]">{teacher.email}</div>
+          </div>
+        </div>
+      )}
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <Card title="My Course Progress">
@@ -98,11 +188,7 @@ const StudentDashboard: React.FC<StudentDashboardProps> = ({ user }) => {
 
         <Card title="Upcoming Events">
           <div className="space-y-4">
-            {[
-              { icon: <Video size={16} />, title: 'Live Class — Week 4', sub: 'Today 10:00 AM', color: '#f75f6a' },
-              { icon: <FileText size={16} />, title: 'Mid Term Exam', sub: '25 Mar 2026', color: '#f7924f' },
-              { icon: <Calendar size={16} />, title: 'Assignment #4 Due', sub: '28 Mar 2026', color: '#4f8ef7' },
-            ].map((event, i) => (
+            {upcomingEvents.length > 0 ? upcomingEvents.map((event, i) => (
               <div key={i} className="flex items-center gap-4 py-3 border-b border-[#242b40] last:border-0">
                 <div className="w-10 h-10 rounded-xl flex items-center justify-center text-lg" style={{ backgroundColor: `${event.color}15`, color: event.color }}>
                   {event.icon}
@@ -112,10 +198,40 @@ const StudentDashboard: React.FC<StudentDashboardProps> = ({ user }) => {
                   <div className="text-[11px] text-[#6b7599] mt-0.5">{event.sub}</div>
                 </div>
               </div>
-            ))}
+            )) : (
+              <div className="text-center py-8">
+                <Calendar size={32} className="mx-auto text-[#242b40] mb-2" />
+                <p className="text-sm text-[#6b7599]">No upcoming events</p>
+              </div>
+            )}
           </div>
         </Card>
       </div>
+
+      {certificates.length > 0 && (
+        <Card title="My Certificates">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            {certificates.map((cert) => (
+              <div key={cert.id} className="p-4 bg-[#1a2035] border border-[#242b40] rounded-xl flex items-center gap-4">
+                <div className="w-12 h-12 rounded-lg bg-purple-500/10 flex items-center justify-center text-purple-500">
+                  <Award size={24} />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <div className="text-[13.5px] font-bold text-[#e8ecf5] truncate">{cert.courseName}</div>
+                  <div className="text-[11px] text-[#6b7599] mt-0.5">Issued on {cert.issueDate}</div>
+                </div>
+                <button 
+                  onClick={() => window.open(cert.url, '_blank')}
+                  className="p-2 text-[#4f8ef7] hover:bg-[#4f8ef7]/10 rounded-lg transition-colors"
+                  title="Download Certificate"
+                >
+                  <Award size={18} />
+                </button>
+              </div>
+            ))}
+          </div>
+        </Card>
+      )}
     </div>
   );
 };

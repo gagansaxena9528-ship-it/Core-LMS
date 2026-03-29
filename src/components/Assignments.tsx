@@ -14,7 +14,7 @@ import {
   Filter
 } from 'lucide-react';
 import { subscribeToCollection, addDoc, updateDoc } from '../services/firestore';
-import { sendEmail, getNewRecordTemplate } from '../services/emailService';
+import { sendEmail, getNewRecordTemplate, getUpdateNotificationTemplate } from '../services/emailService';
 import { Assignment, AssignmentSubmission, User, Student } from '../types';
 import { motion, AnimatePresence } from 'framer-motion';
 
@@ -30,6 +30,8 @@ const Assignments: React.FC<AssignmentsProps> = ({ user }) => {
   const [selectedAssignment, setSelectedAssignment] = useState<Assignment | null>(null);
   const [loading, setLoading] = useState(false);
   const [students, setStudents] = useState<Student[]>([]);
+  const [courses, setCourses] = useState<any[]>([]);
+  const [batches, setBatches] = useState<any[]>([]);
 
   useEffect(() => {
     const unsubAssignments = subscribeToCollection('assignments', setAssignments);
@@ -37,10 +39,15 @@ const Assignments: React.FC<AssignmentsProps> = ({ user }) => {
     const unsubStudents = subscribeToCollection('users', (data) => {
       setStudents(data.filter(u => u.role === 'student') as Student[]);
     });
+    const unsubCourses = subscribeToCollection('courses', setCourses);
+    const unsubBatches = subscribeToCollection('batches', setBatches);
+    
     return () => {
       unsubAssignments();
       unsubSubmissions();
       unsubStudents();
+      unsubCourses();
+      unsubBatches();
     };
   }, []);
 
@@ -54,13 +61,16 @@ const Assignments: React.FC<AssignmentsProps> = ({ user }) => {
       dueDate: formData.get('dueDate') as string,
       totalMarks: parseInt(formData.get('totalMarks') as string),
       status: 'Active',
-      courseId: 'c1', // Mock
-      batchId: 'b1', // Mock
+      courseId: formData.get('courseId') as string,
+      batchId: formData.get('batchId') as string,
     };
     const docRef = await addDoc('assignments', newAssignment);
     
     // Notify students about new assignment
-    const batchStudents = students.filter(s => s.batchId === newAssignment.batchId || !newAssignment.batchId);
+    const batchStudents = students.filter(s => 
+      (!newAssignment.courseId || s.courseId === newAssignment.courseId) &&
+      (!newAssignment.batchId || s.batchId === newAssignment.batchId)
+    );
     for (const student of batchStudents) {
       const details = `A new assignment "${newAssignment.title}" has been posted. Due Date: ${new Date(newAssignment.dueDate!).toLocaleDateString()}. Description: ${newAssignment.description}`;
       const html = getNewRecordTemplate('New Assignment', student.name, details);
@@ -84,9 +94,36 @@ const Assignments: React.FC<AssignmentsProps> = ({ user }) => {
       status: 'Submitted',
     };
     await addDoc('submissions', newSubmission);
+
+    // Notify teacher/admin about submission
+    const details = `Student ${user.name} has submitted the assignment: "${selectedAssignment.title}". Submission Date: ${new Date(newSubmission.submissionDate!).toLocaleString()}`;
+    const html = getUpdateNotificationTemplate('Administrator', 'Assignment Submission', 'received', details);
+    // In a real app, we'd find the specific teacher's email. For now, notifying the configured admin email.
+    await sendEmail('gagansaxena9528@gmail.com', `New Submission: ${selectedAssignment.title}`, html);
+
     setLoading(false);
     setShowSubmitModal(false);
   };
+
+  const filteredAssignments = assignments.filter(a => {
+    if (user.role === 'student') {
+      const student = students.find(s => s.uid === user.uid);
+      if (!student) return false;
+      
+      const matchesCourse = !a.courseId || a.courseId === student.courseId;
+      const matchesBatch = !a.batchId || a.batchId === student.batchId;
+      
+      return matchesCourse && matchesBatch;
+    }
+    return true;
+  });
+
+  const mySubmissions = submissions.filter(s => s.studentId === user.uid);
+  const completedCount = mySubmissions.length;
+  const pendingCount = filteredAssignments.length - completedCount;
+  const completionRate = filteredAssignments.length > 0 
+    ? Math.round((completedCount / filteredAssignments.length) * 100) 
+    : 0;
 
   const isAdminOrTeacher = user.role === 'admin' || user.role === 'teacher';
 
@@ -122,13 +159,13 @@ const Assignments: React.FC<AssignmentsProps> = ({ user }) => {
           </div>
 
           <div className="grid grid-cols-1 gap-4">
-            {assignments.length === 0 ? (
+            {filteredAssignments.length === 0 ? (
               <div className="text-center py-12 bg-[#131726] border border-[#242b40] border-dashed rounded-2xl">
                 <FileText size={48} className="mx-auto text-[#242b40] mb-4" />
                 <p className="text-[#6b7599]">No assignments found</p>
               </div>
             ) : (
-              assignments.map((assignment) => {
+              filteredAssignments.map((assignment) => {
                 const mySubmission = submissions.find(s => s.assignmentId === assignment.id && s.studentId === user.uid);
                 return (
                   <div key={assignment.id} className="bg-[#131726] border border-[#242b40] rounded-2xl p-6 hover:border-[#4f8ef7]/50 transition-all group">
@@ -193,10 +230,10 @@ const Assignments: React.FC<AssignmentsProps> = ({ user }) => {
                   </div>
                   <div>
                     <div className="text-[13px] font-bold text-[#e8ecf5]">Completed</div>
-                    <div className="text-[11px] text-[#6b7599]">8 Assignments</div>
+                    <div className="text-[11px] text-[#6b7599]">{completedCount} Assignments</div>
                   </div>
                 </div>
-                <div className="text-lg font-bold text-[#2ecc8a]">85%</div>
+                <div className="text-lg font-bold text-[#2ecc8a]">{completionRate}%</div>
               </div>
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
@@ -205,10 +242,10 @@ const Assignments: React.FC<AssignmentsProps> = ({ user }) => {
                   </div>
                   <div>
                     <div className="text-[13px] font-bold text-[#e8ecf5]">Pending</div>
-                    <div className="text-[11px] text-[#6b7599]">2 Assignments</div>
+                    <div className="text-[11px] text-[#6b7599]">{pendingCount} Assignments</div>
                   </div>
                 </div>
-                <div className="text-lg font-bold text-[#f7924f]">15%</div>
+                <div className="text-lg font-bold text-[#f7924f]">{100 - completionRate}%</div>
               </div>
             </div>
           </Card>
@@ -273,6 +310,28 @@ const Assignments: React.FC<AssignmentsProps> = ({ user }) => {
                     className="w-full bg-[#1a2035] border border-[#242b40] rounded-xl px-4 py-2.5 text-sm outline-none focus:border-[#4f8ef7] transition-colors resize-none"
                     placeholder="Provide detailed instructions..."
                   />
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-1.5">
+                    <label className="text-[11px] font-bold text-[#6b7599] uppercase tracking-wider">Course</label>
+                    <select 
+                      name="courseId"
+                      className="w-full bg-[#1a2035] border border-[#242b40] rounded-xl px-4 py-2.5 text-sm outline-none focus:border-[#4f8ef7] transition-colors"
+                    >
+                      <option value="">All Courses</option>
+                      {courses.map(c => <option key={c.id} value={c.id}>{c.title}</option>)}
+                    </select>
+                  </div>
+                  <div className="space-y-1.5">
+                    <label className="text-[11px] font-bold text-[#6b7599] uppercase tracking-wider">Batch</label>
+                    <select 
+                      name="batchId"
+                      className="w-full bg-[#1a2035] border border-[#242b40] rounded-xl px-4 py-2.5 text-sm outline-none focus:border-[#4f8ef7] transition-colors"
+                    >
+                      <option value="">All Batches</option>
+                      {batches.map(b => <option key={b.id} value={b.id}>{b.name}</option>)}
+                    </select>
+                  </div>
                 </div>
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-1.5">

@@ -55,6 +55,7 @@ const Layout: React.FC<LayoutProps> = ({ user }) => {
       { label: 'Academics', items: [
         { id: '/content', icon: <Video size={18} />, label: 'Content & Videos' },
         { id: '/exams', icon: <FileText size={18} />, label: 'Exams' },
+        { id: '/assignments', icon: <FileText size={18} />, label: 'Assignments' },
         { id: '/live-classes', icon: <Video size={18} />, label: 'Live Classes' },
         { id: '/attendance', icon: <CheckCircle2 size={18} />, label: 'Attendance' },
       ]},
@@ -74,6 +75,7 @@ const Layout: React.FC<LayoutProps> = ({ user }) => {
       { label: 'Academics', items: [
         { id: '/content', icon: <Video size={18} />, label: 'Upload Videos' },
         { id: '/exams', icon: <FileText size={18} />, label: 'Exams' },
+        { id: '/assignments', icon: <FileText size={18} />, label: 'Assignments' },
         { id: '/students', icon: <Users size={18} />, label: 'My Students' },
         { id: '/attendance', icon: <CheckCircle2 size={18} />, label: 'Attendance' },
       ]},
@@ -86,6 +88,7 @@ const Layout: React.FC<LayoutProps> = ({ user }) => {
       ]},
       { label: 'Academics', items: [
         { id: '/exams', icon: <FileText size={18} />, label: 'Exams' },
+        { id: '/assignments', icon: <FileText size={18} />, label: 'Assignments' },
         { id: '/attendance', icon: <CheckCircle2 size={18} />, label: 'Attendance' },
       ]},
       { label: 'Account', items: [
