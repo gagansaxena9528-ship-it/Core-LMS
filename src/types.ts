@@ -36,11 +36,25 @@ export interface Student extends User {
 }
 
 export interface Teacher extends User {
+  firstName?: string;
+  lastName?: string;
+  profilePhoto?: string;
+  qualification?: string;
+  experience?: string;
+  skills?: string[];
   bio?: string;
   rating: number;
   coursesCount: number;
   batchesCount: number;
   studentsCount: number;
+  classesTaken?: number;
+  attendanceRate?: number;
+  salary?: number;
+  documents?: {
+    resume?: string;
+    certificates?: string[];
+    idProof?: string;
+  };
 }
 
 export interface Course {

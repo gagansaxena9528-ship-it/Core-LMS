@@ -104,6 +104,13 @@ async function startServer() {
       timeSpent INTEGER,
       completedLessons INTEGER,
       pendingAmount REAL,
+      qualification TEXT,
+      experience TEXT,
+      skills TEXT,
+      classesTaken INTEGER,
+      attendanceRate REAL,
+      salary REAL,
+      documents TEXT,
       createdAt DATETIME DEFAULT CURRENT_TIMESTAMP
     );
 
@@ -139,7 +146,14 @@ async function startServer() {
     { name: 'lastLogin', type: 'TEXT' },
     { name: 'timeSpent', type: 'INTEGER' },
     { name: 'completedLessons', type: 'INTEGER' },
-    { name: 'pendingAmount', type: 'REAL' }
+    { name: 'pendingAmount', type: 'REAL' },
+    { name: 'qualification', type: 'TEXT' },
+    { name: 'experience', type: 'TEXT' },
+    { name: 'skills', type: 'TEXT' },
+    { name: 'classesTaken', type: 'INTEGER' },
+    { name: 'attendanceRate', type: 'REAL' },
+    { name: 'salary', type: 'REAL' },
+    { name: 'documents', type: 'TEXT' }
   ];
 
   for (const col of columnsToAdd) {
