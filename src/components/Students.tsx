@@ -45,6 +45,28 @@ const Students: React.FC = () => {
     password: ''
   });
 
+  const [emailStatus, setEmailStatus] = useState<'checking' | 'ok' | 'error'>('checking');
+  const [emailError, setEmailError] = useState<string | null>(null);
+
+  useEffect(() => {
+    const checkEmail = async () => {
+      try {
+        const res = await fetch('/api/email/health');
+        const data = await res.json();
+        if (data.status === 'ok') {
+          setEmailStatus('ok');
+        } else {
+          setEmailStatus('error');
+          setEmailError(data.error);
+        }
+      } catch (err: any) {
+        setEmailStatus('error');
+        setEmailError(err.message);
+      }
+    };
+    checkEmail();
+  }, []);
+
   useEffect(() => {
     const unsubUsers = subscribeToCollection('users', (data) => {
       setStudents(data.filter(u => u.role === 'student'));
@@ -269,7 +291,23 @@ const Students: React.FC = () => {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <h2 className="text-2xl font-extrabold font-syne text-white">Student Management</h2>
-          <p className="text-sm text-[#6b7599] mt-1">{students.length} total students enrolled</p>
+          <div className="flex items-center gap-2 mt-1">
+            <p className="text-sm text-[#6b7599]">{students.length} total students enrolled</p>
+            <span className="text-[#6b7599]">•</span>
+            <div className="flex items-center gap-1.5">
+              <div className={`w-2 h-2 rounded-full ${
+                emailStatus === 'ok' ? 'bg-green-500' : 
+                emailStatus === 'error' ? 'bg-red-500' : 
+                'bg-yellow-500 animate-pulse'
+              }`} />
+              <span className="text-[11px] font-bold uppercase tracking-wider text-[#6b7599]">
+                Email System: {emailStatus === 'ok' ? 'Ready' : emailStatus === 'error' ? 'Error' : 'Checking...'}
+              </span>
+              {emailStatus === 'error' && (
+                <span className="text-[10px] text-red-500/80 ml-1">({emailError})</span>
+              )}
+            </div>
+          </div>
         </div>
         <button 
           onClick={() => setShowModal(true)}

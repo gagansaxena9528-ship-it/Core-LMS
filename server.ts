@@ -293,6 +293,27 @@ async function startServer() {
     }
   });
 
+  // Verify Transporter
+  transporter.verify((error, success) => {
+    if (error) {
+      console.error('--- EMAIL TRANSPORTER ERROR ---');
+      console.error(error);
+    } else {
+      console.log('--- EMAIL SYSTEM READY ---');
+    }
+  });
+
+  // Email Health Check
+  app.get('/api/email/health', authenticate, (req, res) => {
+    transporter.verify((error, success) => {
+      if (error) {
+        res.status(500).json({ status: 'error', error: error.message });
+      } else {
+        res.json({ status: 'ok', user: process.env.EMAIL_USER });
+      }
+    });
+  });
+
   // Email Route
   app.post('/api/email/send', authenticate, async (req, res) => {
     const { to, subject, text, html } = req.body;
