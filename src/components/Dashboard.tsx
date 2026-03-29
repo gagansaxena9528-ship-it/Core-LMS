@@ -231,13 +231,13 @@ const Dashboard: React.FC<DashboardProps> = ({ user }) => {
                       </div>
                     </div>
                   </td>
-                  <td className="px-6 py-4 text-[13px] text-[#6b7599]">Digital Marketing</td>
+                  <td className="px-6 py-4 text-[13px] text-[#6b7599]">{s.course || 'No Course'}</td>
                   <td className="px-6 py-4">
                     <div className="flex items-center gap-2">
                       <div className="w-24 h-1.5 bg-[#1a2035] rounded-full overflow-hidden">
-                        <div className="h-full bg-gradient-to-r from-[#4f8ef7] to-[#7c5fe6]" style={{ width: '72%' }} />
+                        <div className="h-full bg-gradient-to-r from-[#4f8ef7] to-[#7c5fe6]" style={{ width: `${(s as any).progress || 0}%` }} />
                       </div>
-                      <span className="text-[11px] text-[#6b7599]">72%</span>
+                      <span className="text-[11px] text-[#6b7599]">{(s as any).progress || 0}%</span>
                     </div>
                   </td>
                   <td className="px-6 py-4">

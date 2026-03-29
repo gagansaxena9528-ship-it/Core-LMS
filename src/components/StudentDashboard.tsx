@@ -41,7 +41,7 @@ const StudentDashboard: React.FC<StudentDashboardProps> = ({ user }) => {
           </div>
           <div>
             <h1 className="text-2xl font-extrabold font-syne text-white">Welcome back, {user?.name.split(' ')[0] || 'Student'}! 👋</h1>
-            <p className="text-sm text-[#6b7599] mt-1">Digital Marketing · DM-2026-MAR · Last login: Today 9:30 AM</p>
+            <p className="text-sm text-[#6b7599] mt-1">{user?.course || 'No Course'} · {user?.batch || 'No Batch'} · Last login: Today 9:30 AM</p>
           </div>
         </div>
       </div>
@@ -55,7 +55,7 @@ const StudentDashboard: React.FC<StudentDashboardProps> = ({ user }) => {
         />
         <StatCard 
           icon={<TrendingUp className="text-[#2ecc8a]" />} 
-          value="72%" 
+          value={`${(user as any).progress || 0}%`} 
           label="Overall Progress" 
           color="green"
         />
@@ -78,13 +78,13 @@ const StudentDashboard: React.FC<StudentDashboardProps> = ({ user }) => {
           <div className="p-4 bg-[#1a2035] border border-[#242b40] rounded-xl flex items-center gap-6">
             <div className="w-20 h-14 rounded-lg bg-gradient-to-br from-[#0f2027] to-[#203a43] flex items-center justify-center text-3xl">📱</div>
             <div className="flex-1 min-w-0">
-              <div className="text-[14.5px] font-bold text-[#e8ecf5] truncate">Digital Marketing Masterclass</div>
+              <div className="text-[14.5px] font-bold text-[#e8ecf5] truncate">{user?.course || 'No Course'}</div>
               <div className="mt-2 h-1.5 bg-[#131726] rounded-full overflow-hidden">
-                <div className="h-full bg-gradient-to-r from-[#4f8ef7] to-[#7c5fe6]" style={{ width: '72%' }} />
+                <div className="h-full bg-gradient-to-r from-[#4f8ef7] to-[#7c5fe6]" style={{ width: `${(user as any).progress || 0}%` }} />
               </div>
               <div className="flex justify-between mt-2 text-[11px] text-[#6b7599]">
-                <span>Module 3 of 4</span>
-                <span>72% complete</span>
+                <span>Module 0 of 0</span>
+                <span>{(user as any).progress || 0}% complete</span>
               </div>
             </div>
             <button 

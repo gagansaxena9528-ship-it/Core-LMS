@@ -35,8 +35,13 @@ const Students: React.FC = () => {
     name: '',
     email: '',
     phone: '',
+    fatherName: '',
+    motherName: '',
+    dob: '',
+    address: '',
     course: '',
     batch: '',
+    fee: '',
     password: ''
   });
 
@@ -68,14 +73,19 @@ const Students: React.FC = () => {
     XLSX.writeFile(wb, "Students_List.xlsx");
   };
 
-  const handleEdit = (student: User) => {
+  const handleEdit = (student: any) => {
     setEditingStudent(student);
     setFormData({
       name: student.name,
       email: student.email,
       phone: student.phone || '',
+      fatherName: student.fatherName || '',
+      motherName: student.motherName || '',
+      dob: student.dob || '',
+      address: student.address || '',
       course: student.course || '',
       batch: student.batch || '',
+      fee: student.fee?.toString() || '',
       password: '' // Don't show password for security
     });
     setShowModal(true);
@@ -99,18 +109,34 @@ const Students: React.FC = () => {
     try {
       if (editingStudent) {
         const { password, ...updateData } = formData;
-        await updateDocument('users', editingStudent.uid, updateData);
+        await updateDocument('users', editingStudent.uid, {
+          ...updateData,
+          fee: parseFloat(formData.fee) || 0
+        });
       } else {
         // Create Account via custom backend
-        await adminCreateUser(formData.email, formData.password, formData.name);
+        const userCredential = await adminCreateUser(formData.email, formData.password, formData.name);
         
-        // The backend creates the basic user, we can update it with course/batch if needed
-        // But it's better to just pass everything to the backend.
-        // For now, let's just make sure the student is created.
+        // Update the newly created user with additional details
+        if (userCredential?.uid) {
+          const { password, ...additionalData } = formData;
+          await updateDocument('users', userCredential.uid, {
+            ...additionalData,
+            role: 'student',
+            status: 'Active',
+            joined: new Date().toISOString(),
+            progress: 0,
+            fee: parseFloat(formData.fee) || 0,
+            paid: 0
+          });
+        }
       }
       setShowModal(false);
       setEditingStudent(null);
-      setFormData({ name: '', email: '', phone: '', course: '', batch: '', password: '' });
+      setFormData({ 
+        name: '', email: '', phone: '', fatherName: '', motherName: '', 
+        dob: '', address: '', course: '', batch: '', fee: '', password: '' 
+      });
     } catch (err: any) {
       console.error(err);
       let message = err.message || 'Failed to save student';
@@ -220,9 +246,9 @@ const Students: React.FC = () => {
                   <td className="px-6 py-4">
                     <div className="flex items-center gap-2">
                       <div className="w-24 h-1.5 bg-border rounded-full overflow-hidden">
-                        <div className="h-full bg-gradient-to-r from-secondary to-accent" style={{ width: '72%' }} />
+                        <div className="h-full bg-gradient-to-r from-secondary to-accent" style={{ width: `${(s as any).progress || 0}%` }} />
                       </div>
-                      <span className="text-[11px] text-muted">72%</span>
+                      <span className="text-[11px] text-muted">{(s as any).progress || 0}%</span>
                     </div>
                   </td>
                   <td className="px-6 py-4">
@@ -351,6 +377,62 @@ const Students: React.FC = () => {
                       </button>
                     </div>
                   </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <label className="text-[11px] font-bold text-[#6b7599] uppercase tracking-wider">Father's Name</label>
+                    <input 
+                      type="text" 
+                      className="w-full bg-[#1a2035] border border-[#242b40] rounded-xl px-4 py-2.5 text-sm outline-none focus:border-[#4f8ef7] transition-colors"
+                      placeholder="Father's Name"
+                      value={formData.fatherName}
+                      onChange={(e) => setFormData({...formData, fatherName: e.target.value})}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-[11px] font-bold text-[#6b7599] uppercase tracking-wider">Mother's Name</label>
+                    <input 
+                      type="text" 
+                      className="w-full bg-[#1a2035] border border-[#242b40] rounded-xl px-4 py-2.5 text-sm outline-none focus:border-[#4f8ef7] transition-colors"
+                      placeholder="Mother's Name"
+                      value={formData.motherName}
+                      onChange={(e) => setFormData({...formData, motherName: e.target.value})}
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <label className="text-[11px] font-bold text-[#6b7599] uppercase tracking-wider">Date of Birth</label>
+                    <input 
+                      type="date" 
+                      className="w-full bg-[#1a2035] border border-[#242b40] rounded-xl px-4 py-2.5 text-sm outline-none focus:border-[#4f8ef7] transition-colors"
+                      value={formData.dob}
+                      onChange={(e) => setFormData({...formData, dob: e.target.value})}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-[11px] font-bold text-[#6b7599] uppercase tracking-wider">Total Fee (₹)</label>
+                    <input 
+                      type="number" 
+                      className="w-full bg-[#1a2035] border border-[#242b40] rounded-xl px-4 py-2.5 text-sm outline-none focus:border-[#4f8ef7] transition-colors"
+                      placeholder="Total Course Fee"
+                      value={formData.fee}
+                      onChange={(e) => setFormData({...formData, fee: e.target.value})}
+                    />
+                  </div>
+                </div>
+
+                <div className="space-y-2">
+                  <label className="text-[11px] font-bold text-[#6b7599] uppercase tracking-wider">Address</label>
+                  <textarea 
+                    rows={2}
+                    className="w-full bg-[#1a2035] border border-[#242b40] rounded-xl px-4 py-2.5 text-sm outline-none focus:border-[#4f8ef7] transition-colors resize-none"
+                    placeholder="Full Address"
+                    value={formData.address}
+                    onChange={(e) => setFormData({...formData, address: e.target.value})}
+                  />
                 </div>
 
                 <div className="grid grid-cols-2 gap-4">

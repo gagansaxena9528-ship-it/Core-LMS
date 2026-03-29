@@ -6,6 +6,10 @@ export interface User {
   email: string;
   role: UserRole;
   phone?: string;
+  fatherName?: string;
+  motherName?: string;
+  dob?: string;
+  address?: string;
   course?: string;
   batch?: string;
   status: 'Active' | 'Inactive';
