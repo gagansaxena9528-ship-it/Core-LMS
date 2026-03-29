@@ -17,39 +17,45 @@ import {
 } from 'lucide-react';
 import { subscribeToCollection, addDoc, updateDoc, deleteDoc } from '../services/firestore';
 import { sendEmail, getNewRecordTemplate } from '../services/emailService';
-import { Module, Course, Student } from '../types';
+import { Lesson, Course, Student } from '../types';
 import { motion, AnimatePresence } from 'framer-motion';
 import { cn } from '../lib/utils';
 
 const Content: React.FC = () => {
-  const [modules, setModules] = useState<Module[]>([]);
+  const [lessons, setLessons] = useState<Lesson[]>([]);
   const [courses, setCourses] = useState<Course[]>([]);
   const [students, setStudents] = useState<Student[]>([]);
   const [selectedCourseId, setSelectedCourseId] = useState<string>('');
   const [showModal, setShowModal] = useState(false);
-  const [editingModule, setEditingModule] = useState<Module | null>(null);
+  const [editingLesson, setEditingLesson] = useState<Lesson | null>(null);
   const [loading, setLoading] = useState(false);
   const [search, setSearch] = useState('');
 
   const [formData, setFormData] = useState({
     title: '',
     courseId: '',
+    moduleId: 'default', // Fallback for now
+    type: 'video' as const,
     description: '',
     thumbnail: '',
     videoUrl: '',
     videoType: 'youtube' as const,
+    content: '',
+    duration: '',
+    isFree: false,
+    dripDays: 0,
     keyPoints: [] as string[]
   });
 
   useEffect(() => {
-    const unsubModules = subscribeToCollection('modules', setModules);
+    const unsubLessons = subscribeToCollection('lessons', setLessons);
     const unsubCourses = subscribeToCollection('courses', setCourses);
     const unsubStudents = subscribeToCollection('users', (data) => {
       setStudents(data.filter(u => u.role === 'student') as Student[]);
     });
 
     return () => {
-      unsubModules();
+      unsubLessons();
       unsubCourses();
       unsubStudents();
     };
@@ -61,29 +67,35 @@ const Content: React.FC = () => {
     }
   }, [courses]);
 
-  const filteredModules = modules.filter(m => 
-    m.courseId === selectedCourseId && 
-    m.title.toLowerCase().includes(search.toLowerCase())
+  const filteredLessons = lessons.filter(l => 
+    l.courseId === selectedCourseId && 
+    l.title.toLowerCase().includes(search.toLowerCase())
   );
 
-  const handleEdit = (module: Module) => {
-    setEditingModule(module);
+  const handleEdit = (lesson: Lesson) => {
+    setEditingLesson(lesson);
     setFormData({
-      title: module.title,
-      courseId: module.courseId,
-      description: module.description,
-      thumbnail: module.thumbnail,
-      videoUrl: module.videoUrl,
-      videoType: module.videoType,
-      keyPoints: module.keyPoints || []
+      title: lesson.title,
+      courseId: lesson.courseId,
+      moduleId: lesson.moduleId || 'default',
+      type: lesson.type,
+      description: lesson.description || '',
+      thumbnail: lesson.thumbnail || '',
+      videoUrl: lesson.videoUrl || '',
+      videoType: lesson.videoType || 'youtube',
+      content: lesson.content || '',
+      duration: lesson.duration || '',
+      isFree: lesson.isFree || false,
+      dripDays: lesson.dripDays || 0,
+      keyPoints: (lesson as any).keyPoints || []
     });
     setShowModal(true);
   };
 
   const handleDelete = async (id: string) => {
-    if (window.confirm('Are you sure you want to delete this module?')) {
+    if (window.confirm('Are you sure you want to delete this lesson?')) {
       try {
-        await deleteDoc('modules', id);
+        await deleteDoc('lessons', id);
       } catch (err) {
         console.error(err);
       }
@@ -94,32 +106,36 @@ const Content: React.FC = () => {
     e.preventDefault();
     setLoading(true);
     try {
-      if (editingModule) {
-        await updateDoc('modules', editingModule.id, formData);
+      if (editingLesson) {
+        await updateDoc('lessons', editingLesson.id, formData);
       } else {
-        const docRef = await addDoc('modules', { ...formData, courseId: selectedCourseId });
+        const docRef = await addDoc('lessons', { ...formData, courseId: selectedCourseId });
         
-        // Notify students about new module
+        // Notify students about new lesson
         const course = courses.find(c => c.id === selectedCourseId);
         if (course) {
-          // Find students enrolled in this course (based on batch or direct enrollment if available)
-          // For now, we'll notify all students as a fallback or if we had more specific enrollment data
           for (const student of students) {
-            const details = `A new module "${formData.title}" has been added to your course "${course.title}". You can now access the new content in your dashboard.`;
+            const details = `A new lesson "${formData.title}" has been added to your course "${course.title}". You can now access the new content in your dashboard.`;
             const html = getNewRecordTemplate('Course Content', student.name, details);
             await sendEmail(student.email, `New Content Added: ${course.title}`, html);
           }
         }
       }
       setShowModal(false);
-      setEditingModule(null);
+      setEditingLesson(null);
       setFormData({
         title: '',
         courseId: '',
+        moduleId: 'default',
+        type: 'video',
         description: '',
         thumbnail: '',
         videoUrl: '',
         videoType: 'youtube',
+        content: '',
+        duration: '',
+        isFree: false,
+        dripDays: 0,
         keyPoints: []
       });
     } catch (err) {
@@ -154,21 +170,27 @@ const Content: React.FC = () => {
         </div>
         <button 
           onClick={() => {
-            setEditingModule(null);
+            setEditingLesson(null);
             setFormData({
               title: '',
               courseId: selectedCourseId,
+              moduleId: 'default',
+              type: 'video',
               description: '',
               thumbnail: '',
               videoUrl: '',
               videoType: 'youtube',
+              content: '',
+              duration: '',
+              isFree: false,
+              dripDays: 0,
               keyPoints: []
             });
             setShowModal(true);
           }}
           className="bg-[#4f8ef7] hover:bg-[#3a7ae8] text-white px-5 py-2.5 rounded-xl font-bold text-sm flex items-center gap-2 transition-colors w-fit"
         >
-          <Plus size={18} /> Add Module
+          <Plus size={18} /> Add Lesson
         </button>
       </div>
 
@@ -194,13 +216,13 @@ const Content: React.FC = () => {
           ))}
         </div>
 
-        {/* Modules List */}
+        {/* Lessons List */}
         <div className="flex-1 space-y-4">
           <div className="flex items-center gap-3 bg-[#131726] border border-[#242b40] rounded-xl px-4 py-2 mb-6">
             <Search size={18} className="text-[#6b7599]" />
             <input 
               type="text" 
-              placeholder="Search modules in this course..." 
+              placeholder="Search lessons in this course..." 
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               className="bg-transparent border-none outline-none text-sm w-full placeholder-[#6b7599]"
@@ -208,11 +230,11 @@ const Content: React.FC = () => {
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {filteredModules.map((module, index) => (
-              <Card key={module.id} className="p-0 overflow-hidden group">
+            {filteredLessons.map((lesson, index) => (
+              <Card key={lesson.id} className="p-0 overflow-hidden group">
                 <div className="aspect-video bg-[#1a2035] relative">
-                  {module.thumbnail ? (
-                    <img src={module.thumbnail} alt={module.title} className="w-full h-full object-cover" />
+                  {lesson.thumbnail ? (
+                    <img src={lesson.thumbnail} alt={lesson.title} className="w-full h-full object-cover" />
                   ) : (
                     <div className="w-full h-full flex items-center justify-center text-[#242b40]">
                       <Video size={48} />
@@ -220,13 +242,13 @@ const Content: React.FC = () => {
                   )}
                   <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-3">
                     <button 
-                      onClick={() => handleEdit(module)}
+                      onClick={() => handleEdit(lesson)}
                       className="w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 text-white flex items-center justify-center backdrop-blur-sm transition-all"
                     >
                       <Edit2 size={18} />
                     </button>
                     <button 
-                      onClick={() => handleDelete(module.id)}
+                      onClick={() => handleDelete(lesson.id)}
                       className="w-10 h-10 rounded-full bg-red-500/20 hover:bg-red-500/40 text-red-500 flex items-center justify-center backdrop-blur-sm transition-all"
                     >
                       <Trash2 size={18} />
@@ -237,14 +259,14 @@ const Content: React.FC = () => {
                   </div>
                 </div>
                 <div className="p-4">
-                  <h4 className="font-bold text-[#e8ecf5] truncate">{module.title}</h4>
+                  <h4 className="font-bold text-[#e8ecf5] truncate">{lesson.title}</h4>
                   <p className="text-[12px] text-[#6b7599] mt-1 line-clamp-2 h-8">
-                    {module.description}
+                    {lesson.description}
                   </p>
                   <div className="flex items-center justify-between mt-4 pt-4 border-t border-[#242b40]">
                     <div className="flex items-center gap-3 text-[11px] text-[#6b7599]">
-                      <span className="flex items-center gap-1"><Video size={12} /> Video</span>
-                      <span className="flex items-center gap-1"><FileText size={12} /> {module.keyPoints?.length || 0} Points</span>
+                      <span className="flex items-center gap-1"><Video size={12} /> {lesson.type}</span>
+                      <span className="flex items-center gap-1"><FileText size={12} /> {(lesson as any).keyPoints?.length || 0} Points</span>
                     </div>
                     <button className="text-[#4f8ef7] hover:text-[#3a7ae8] text-[11px] font-bold flex items-center gap-1">
                       <Eye size={12} /> Preview
@@ -254,15 +276,15 @@ const Content: React.FC = () => {
               </Card>
             ))}
 
-            {filteredModules.length === 0 && (
+            {filteredLessons.length === 0 && (
               <div className="col-span-full text-center py-20 bg-[#131726] border border-[#242b40] border-dashed rounded-2xl">
                 <Layers size={48} className="mx-auto text-[#242b40] mb-4" />
-                <p className="text-[#6b7599]">No modules found for this course</p>
+                <p className="text-[#6b7599]">No lessons found for this course</p>
                 <button 
                   onClick={() => setShowModal(true)}
                   className="mt-4 text-[#4f8ef7] font-bold text-sm hover:underline"
                 >
-                  Add your first module
+                  Add your first lesson
                 </button>
               </div>
             )}
@@ -289,7 +311,7 @@ const Content: React.FC = () => {
             >
               <div className="flex items-center justify-between mb-6">
                 <h3 className="text-xl font-extrabold font-syne">
-                  {editingModule ? 'Edit Module' : 'Add New Module'}
+                  {editingLesson ? 'Edit Lesson' : 'Add New Lesson'}
                 </h3>
                 <button onClick={() => setShowModal(false)} className="p-2 hover:bg-red-500/10 text-[#6b7599] hover:text-red-500 rounded-full transition-colors">
                   <X size={20} />
@@ -300,7 +322,7 @@ const Content: React.FC = () => {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                   <div className="space-y-5">
                     <div className="space-y-1.5">
-                      <label className="text-[11px] font-bold text-[#6b7599] uppercase tracking-wider">Module Title</label>
+                      <label className="text-[11px] font-bold text-[#6b7599] uppercase tracking-wider">Lesson Title</label>
                       <input 
                         required
                         type="text" 
@@ -342,28 +364,63 @@ const Content: React.FC = () => {
 
                   <div className="space-y-5">
                     <div className="space-y-1.5">
-                      <label className="text-[11px] font-bold text-[#6b7599] uppercase tracking-wider">Video Source</label>
+                      <label className="text-[11px] font-bold text-[#6b7599] uppercase tracking-wider">Content Type</label>
                       <div className="flex gap-2">
                         <select 
                           className="bg-[#1a2035] border border-[#242b40] rounded-xl px-3 py-2.5 text-xs outline-none focus:border-[#4f8ef7]"
-                          value={formData.videoType}
-                          onChange={(e) => setFormData({...formData, videoType: e.target.value as any})}
+                          value={formData.type}
+                          onChange={(e) => setFormData({...formData, type: e.target.value as any})}
                         >
-                          <option value="youtube">YouTube</option>
-                          <option value="vimeo">Vimeo</option>
-                          <option value="upload">Upload</option>
+                          <option value="video">Video</option>
+                          <option value="pdf">PDF</option>
+                          <option value="text">Text</option>
+                          <option value="file">File</option>
                         </select>
-                        <div className="flex-1 relative">
-                          <LinkIcon size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-[#6b7599]" />
-                          <input 
-                            required
-                            type="text" 
-                            className="w-full bg-[#1a2035] border border-[#242b40] rounded-xl pl-11 pr-4 py-2.5 text-sm outline-none focus:border-[#4f8ef7] transition-colors"
-                            placeholder="Video URL or ID"
-                            value={formData.videoUrl}
-                            onChange={(e) => setFormData({...formData, videoUrl: e.target.value})}
+                        {formData.type === 'video' && (
+                          <select 
+                            className="bg-[#1a2035] border border-[#242b40] rounded-xl px-3 py-2.5 text-xs outline-none focus:border-[#4f8ef7]"
+                            value={formData.videoType}
+                            onChange={(e) => setFormData({...formData, videoType: e.target.value as any})}
+                          >
+                            <option value="youtube">YouTube</option>
+                            <option value="direct">Direct</option>
+                          </select>
+                        )}
+                      </div>
+                    </div>
+
+                    <div className="space-y-1.5">
+                      <label className="text-[11px] font-bold text-[#6b7599] uppercase tracking-wider">
+                        {formData.type === 'video' ? 'Video URL' : formData.type === 'pdf' ? 'PDF URL' : formData.type === 'file' ? 'File URL' : 'Content'}
+                      </label>
+                      <div className="relative">
+                        {formData.type === 'text' ? (
+                          <textarea 
+                            rows={4}
+                            className="w-full bg-[#1a2035] border border-[#242b40] rounded-xl px-4 py-2.5 text-sm outline-none focus:border-[#4f8ef7] transition-colors resize-none"
+                            placeholder="Enter lesson content..."
+                            value={formData.content}
+                            onChange={(e) => setFormData({...formData, content: e.target.value})}
                           />
-                        </div>
+                        ) : (
+                          <>
+                            <LinkIcon size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-[#6b7599]" />
+                            <input 
+                              required
+                              type="text" 
+                              className="w-full bg-[#1a2035] border border-[#242b40] rounded-xl pl-11 pr-4 py-2.5 text-sm outline-none focus:border-[#4f8ef7] transition-colors"
+                              placeholder="URL"
+                              value={formData.type === 'video' ? formData.videoUrl : formData.content}
+                              onChange={(e) => {
+                                if (formData.type === 'video') {
+                                  setFormData({...formData, videoUrl: e.target.value});
+                                } else {
+                                  setFormData({...formData, content: e.target.value});
+                                }
+                              }}
+                            />
+                          </>
+                        )}
                       </div>
                     </div>
 
@@ -378,7 +435,7 @@ const Content: React.FC = () => {
                           <PlusCircle size={14} /> Add Point
                         </button>
                       </div>
-                      <div className="space-y-2 max-h-[180px] overflow-y-auto pr-2 custom-scrollbar">
+                      <div className="space-y-2 max-h-[120px] overflow-y-auto pr-2 custom-scrollbar">
                         {formData.keyPoints.map((point, idx) => (
                           <div key={idx} className="flex gap-2">
                             <input 
@@ -411,7 +468,7 @@ const Content: React.FC = () => {
                     disabled={loading}
                     className="flex-1 bg-[#4f8ef7] hover:bg-[#3a7ae8] text-white py-3 rounded-xl font-bold text-sm transition-colors disabled:opacity-50"
                   >
-                    {loading ? 'Saving...' : editingModule ? 'Update Module' : 'Add Module'}
+                    {loading ? 'Saving...' : editingLesson ? 'Update Lesson' : 'Add Lesson'}
                   </button>
                   <button 
                     type="button"

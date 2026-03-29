@@ -43,6 +43,12 @@ export const deleteDocument = async (colPath: string, id: string) => {
   return response.json();
 };
 
+export const getDocs = async (colPath: string) => {
+  const response = await fetch(`/api/data/${colPath}`);
+  if (!response.ok) return [];
+  return response.json();
+};
+
 // Aliases for easier use
 export const addDoc = createDoc;
 export const updateDoc = updateDocument;

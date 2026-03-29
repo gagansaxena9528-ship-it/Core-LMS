@@ -63,24 +63,48 @@ export interface Course {
   category: string;
   teacherId: string;
   price: number;
+  discountPrice?: number;
+  isFree: boolean;
   duration: string;
   level: 'Beginner' | 'Intermediate' | 'Advanced';
-  status: 'Active' | 'Draft';
+  status: 'Active' | 'Draft' | 'Archived';
   emoji: string;
+  thumbnail?: string;
   description: string;
-  keyPoints: string[];
+  language?: string;
+  tags?: string[];
+  offerBanner?: string;
   studentsCount: number;
+  rating?: number;
+  reviewsCount?: number;
+  dripContent?: boolean;
+  certificateEnabled?: boolean;
+  createdAt?: string;
 }
 
 export interface Module {
   id: string;
   courseId: string;
   title: string;
-  description: string;
-  thumbnail: string;
-  videoUrl: string;
-  videoType: 'youtube' | 'vimeo' | 'upload';
-  keyPoints: string[];
+  order: number;
+}
+
+export interface Lesson {
+  id: string;
+  moduleId: string;
+  courseId: string;
+  title: string;
+  type: 'video' | 'pdf' | 'text' | 'file';
+  content?: string;
+  videoUrl?: string;
+  videoType?: 'youtube' | 'direct';
+  fileUrl?: string;
+  duration?: string;
+  order: number;
+  isFree?: boolean;
+  dripDays?: number;
+  description?: string;
+  thumbnail?: string;
 }
 
 export interface Exam {
