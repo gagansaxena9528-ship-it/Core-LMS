@@ -62,55 +62,55 @@ const Login: React.FC = () => {
         className="w-full max-w-[1000px] min-h-[600px] bg-[#131726] border border-[#242b40] rounded-none sm:rounded-[32px] shadow-2xl overflow-hidden flex flex-col lg:flex-row relative z-10"
       >
         {/* Left Side - Welcome Panel */}
-        <div className="lg:w-[45%] bg-gradient-to-br from-[#4f8ef7] to-[#7c5fe6] p-8 sm:p-12 flex flex-col justify-between relative overflow-hidden">
+        <div className="lg:w-[42%] bg-gradient-to-br from-[#4f8ef7] to-[#7c5fe6] p-8 sm:p-12 flex flex-col justify-between relative overflow-hidden">
           {/* Decorative Elements */}
           <div className="absolute top-0 right-0 w-64 h-64 bg-white/10 blur-3xl rounded-full -mr-32 -mt-32" />
           <div className="absolute bottom-0 left-0 w-48 h-48 bg-black/10 blur-2xl rounded-full -ml-24 -mb-24" />
           
           <div className="relative z-10">
-            <div className="flex items-center gap-3 mb-12">
-              <div className="w-10 h-10 rounded-xl bg-white/20 backdrop-blur-md flex items-center justify-center">
-                <Rocket className="text-white" size={24} />
+            <div className="flex items-center gap-3 mb-16">
+              <div className="w-10 h-10 rounded-xl bg-white/20 backdrop-blur-md flex items-center justify-center border border-white/20">
+                <Rocket className="text-white" size={20} />
               </div>
-              <span className="text-xl font-bold text-white tracking-tight font-syne">CoreLMS</span>
+              <span className="text-lg font-bold text-white tracking-tight font-syne">CoreLMS</span>
             </div>
 
-            <div className="space-y-4">
-              <h2 className="text-4xl sm:text-5xl font-extrabold text-white font-syne leading-tight">
-                Welcome to <br /> <span className="text-white/80">CoreLMS</span>
+            <div className="space-y-6">
+              <h2 className="text-4xl xl:text-5xl font-extrabold text-white font-syne leading-[1.1] tracking-tight">
+                Welcome <br /> to <span className="text-white/80">CoreLMS</span>
               </h2>
-              <p className="text-white/70 text-sm sm:text-base leading-relaxed max-w-xs">
+              <p className="text-white/70 text-sm xl:text-base leading-relaxed max-w-[280px]">
                 Empowering education through technology. Access your courses, track progress, and achieve your goals.
               </p>
             </div>
           </div>
 
           <div className="relative z-10 mt-12 lg:mt-0">
-            <div className="flex items-center gap-4 text-white/50 text-[10px] uppercase tracking-[0.2em] font-bold">
+            <div className="flex items-center gap-4 text-white/40 text-[9px] uppercase tracking-[0.25em] font-bold">
               <span>CREATOR HERE</span>
-              <div className="w-px h-3 bg-white/20" />
+              <div className="w-px h-3 bg-white/10" />
               <span>DESIGNER HERE</span>
             </div>
           </div>
 
-          {/* Wavy Separator (Desktop Only) */}
+          {/* Wavy Separator (Desktop Only) - Improved Curve */}
           <svg 
-            className="absolute right-[-2px] top-0 h-full w-24 fill-[#131726] hidden lg:block" 
+            className="absolute right-[-1px] top-0 h-full w-24 fill-[#131726] hidden lg:block" 
             viewBox="0 0 100 100" 
             preserveAspectRatio="none"
           >
-            <path d="M0 0 C 40 0, 60 20, 60 50 C 60 80, 40 100, 0 100 L 100 100 L 100 0 Z" />
+            <path d="M0 0 Q 80 0, 80 50 T 0 100 L 100 100 L 100 0 Z" />
           </svg>
         </div>
 
         {/* Right Side - Form Panel */}
-        <div className="flex-1 p-8 sm:p-12 lg:p-16 flex flex-col justify-center bg-[#131726]">
-          <div className="max-w-md mx-auto w-full">
-            <div className="mb-10">
-              <h3 className="text-2xl sm:text-3xl font-extrabold text-white mb-2 font-syne">
-                {isRegistering ? 'Create your account' : 'Sign in to account'}
+        <div className="flex-1 p-8 sm:p-12 xl:p-20 flex flex-col justify-center bg-[#131726]">
+          <div className="max-w-[380px] mx-auto w-full">
+            <div className="mb-12">
+              <h3 className="text-3xl xl:text-4xl font-extrabold text-white mb-3 font-syne tracking-tight">
+                {isRegistering ? 'Create account' : 'Sign in'}
               </h3>
-              <p className="text-[#6b7599] text-sm">
+              <p className="text-[#6b7599] text-sm xl:text-base">
                 {isRegistering ? 'Enter your details to get started' : 'Enter your credentials to access your dashboard'}
               </p>
             </div>
