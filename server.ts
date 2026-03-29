@@ -9,6 +9,7 @@ import cookieParser from 'cookie-parser';
 import cors from 'cors';
 import dotenv from 'dotenv';
 import Stripe from 'stripe';
+import nodemailer from 'nodemailer';
 
 process.on('unhandledRejection', (reason, promise) => {
   console.error('Unhandled Rejection at:', promise, 'reason:', reason);
@@ -251,6 +252,39 @@ async function startServer() {
       res.json({ clientSecret: paymentIntent.client_secret });
     } catch (err: any) {
       res.status(400).json({ error: err.message });
+    }
+  });
+
+  // Email Transporter
+  const transporter = nodemailer.createTransport({
+    service: 'gmail',
+    auth: {
+      user: process.env.EMAIL_USER || 'gagansaxena9528@gmail.com',
+      pass: process.env.EMAIL_PASS
+    }
+  });
+
+  // Email Route
+  app.post('/api/email/send', authenticate, async (req, res) => {
+    const { to, subject, text, html } = req.body;
+    
+    if (!process.env.EMAIL_PASS) {
+      console.warn('EMAIL_PASS not set. Skipping email send.');
+      return res.status(200).json({ success: true, message: 'Email skipped (no credentials)' });
+    }
+
+    try {
+      await transporter.sendMail({
+        from: `"Core LMS" <${process.env.EMAIL_USER || 'gagansaxena9528@gmail.com'}>`,
+        to,
+        subject,
+        text,
+        html
+      });
+      res.json({ success: true });
+    } catch (err: any) {
+      console.error('Email Error:', err);
+      res.status(500).json({ error: 'Failed to send email: ' + err.message });
     }
   });
 

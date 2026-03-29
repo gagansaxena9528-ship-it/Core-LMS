@@ -73,6 +73,108 @@ const Students: React.FC = () => {
     XLSX.writeFile(wb, "Students_List.xlsx");
   };
 
+  const sendWelcomeEmail = async (studentData: any, password: string) => {
+    try {
+      await fetch('/api/email/send', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          to: studentData.email,
+          subject: 'Welcome to Core LMS - Your Account Details',
+          html: `
+            <div style="font-family: sans-serif; color: #333; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #eee; border-radius: 10px;">
+              <h2 style="color: #4f8ef7;">Welcome to Core LMS!</h2>
+              <p>Hello <strong>${studentData.name}</strong>,</p>
+              <p>Your student account has been successfully created. You can now log in to access your courses and learning materials.</p>
+              
+              <div style="background: #f9f9f9; padding: 15px; border-radius: 8px; margin: 20px 0;">
+                <h3 style="margin-top: 0; font-size: 16px;">Your Login Credentials:</h3>
+                <p style="margin: 5px 0;"><strong>Email:</strong> ${studentData.email}</p>
+                <p style="margin: 5px 0;"><strong>Password:</strong> ${password}</p>
+              </div>
+
+              <p><strong>Additional Details:</strong></p>
+              <ul>
+                <li><strong>Course:</strong> ${studentData.course || 'N/A'}</li>
+                <li><strong>Batch:</strong> ${studentData.batch || 'N/A'}</li>
+                <li><strong>Phone:</strong> ${studentData.phone || 'N/A'}</li>
+              </ul>
+
+              <p>Please keep your password secure. We recommend changing it after your first login.</p>
+              
+              <div style="margin-top: 30px; padding-top: 20px; border-top: 1px solid #eee; font-size: 12px; color: #888;">
+                <p>Sent from Core LMS Admin Panel</p>
+              </div>
+            </div>
+          `
+        })
+      });
+    } catch (err) {
+      console.error('Failed to send welcome email:', err);
+    }
+  };
+
+  const handleImport = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setLoading(true);
+    setError(null);
+    try {
+      const reader = new FileReader();
+      reader.onload = async (evt) => {
+        const bstr = evt.target?.result;
+        const wb = XLSX.read(bstr, { type: 'binary' });
+        const wsname = wb.SheetNames[0];
+        const ws = wb.Sheets[wsname];
+        const data = XLSX.utils.sheet_to_json(ws) as any[];
+
+        let successCount = 0;
+        let failCount = 0;
+
+        for (const row of data) {
+          try {
+            const password = row.password || Math.random().toString(36).substring(7).toUpperCase();
+            const userCredential = await adminCreateUser(row.email, password, row.name);
+            
+            if (userCredential?.uid) {
+              await updateDocument('users', userCredential.uid, {
+                name: row.name,
+                email: row.email,
+                phone: row.phone || '',
+                fatherName: row.fatherName || '',
+                motherName: row.motherName || '',
+                dob: row.dob || '',
+                address: row.address || '',
+                course: row.course || '',
+                batch: row.batch || '',
+                role: 'student',
+                status: 'Active',
+                joined: new Date().toISOString(),
+                progress: 0,
+                fee: parseFloat(row.fee) || 0,
+                paid: 0
+              });
+              
+              // Send welcome email
+              await sendWelcomeEmail(row, password);
+              successCount++;
+            }
+          } catch (err) {
+            console.error(`Failed to import student ${row.email}:`, err);
+            failCount++;
+          }
+        }
+        alert(`Import completed! ${successCount} students added, ${failCount} failed.`);
+        setLoading(false);
+      };
+      reader.readAsBinaryString(file);
+    } catch (err: any) {
+      setError('Import failed: ' + err.message);
+      setLoading(false);
+    }
+  };
+
   const handleEdit = (student: any) => {
     setEditingStudent(student);
     setFormData({
@@ -129,6 +231,9 @@ const Students: React.FC = () => {
             fee: parseFloat(formData.fee) || 0,
             paid: 0
           });
+
+          // Send welcome email
+          await sendWelcomeEmail(formData, formData.password);
         }
       }
       setShowModal(false);
@@ -201,11 +306,19 @@ const Students: React.FC = () => {
             <Download size={18} />
           </button>
           <button 
+            onClick={() => document.getElementById('csv-import')?.click()}
             className="p-2.5 bg-[#131726] border border-[#242b40] rounded-xl text-[#6b7599] hover:text-[#e8ecf5] hover:bg-[#242b40] transition-all"
             title="Import from CSV"
           >
             <Upload size={18} />
           </button>
+          <input 
+            id="csv-import"
+            type="file"
+            accept=".csv, .xlsx, .xls"
+            onChange={handleImport}
+            className="hidden"
+          />
         </div>
       </div>
 

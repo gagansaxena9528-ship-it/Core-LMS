@@ -30,8 +30,9 @@ import {
   Area
 } from 'recharts';
 import { subscribeToCollection } from '../services/firestore';
-import { User, Course, Batch } from '../types';
+import { User, Course, Batch, Payment, AssignmentSubmission, Notification as AppNotification } from '../types';
 import Modal from './ui/Modal';
+import { format, subMonths, startOfMonth, endOfMonth, isWithinInterval, parseISO, formatDistanceToNow } from 'date-fns';
 
 interface DashboardProps {
   user: User;
@@ -43,6 +44,9 @@ const Dashboard: React.FC<DashboardProps> = ({ user }) => {
   const [teachers, setTeachers] = useState<User[]>([]);
   const [courses, setCourses] = useState<Course[]>([]);
   const [batches, setBatches] = useState<Batch[]>([]);
+  const [payments, setPayments] = useState<Payment[]>([]);
+  const [submissions, setSubmissions] = useState<AssignmentSubmission[]>([]);
+  const [activities, setActivities] = useState<any[]>([]);
 
   // Modal States
   const [isRevenueModalOpen, setIsRevenueModalOpen] = useState(false);
@@ -57,28 +61,52 @@ const Dashboard: React.FC<DashboardProps> = ({ user }) => {
     });
     const unsubCourses = subscribeToCollection('courses', setCourses);
     const unsubBatches = subscribeToCollection('batches', setBatches);
+    const unsubPayments = subscribeToCollection('payments', setPayments);
+    const unsubSubmissions = subscribeToCollection('assignmentSubmissions', setSubmissions);
+    const unsubNotifications = subscribeToCollection('notifications', (data: AppNotification[]) => {
+      const sorted = data.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+      setActivities(sorted.slice(0, 10).map(n => ({
+        color: n.type === 'success' ? '#2ecc8a' : n.type === 'warning' ? '#f7924f' : n.type === 'error' ? '#f75f6a' : '#4f8ef7',
+        msg: n.message,
+        time: formatDistanceToNow(new Date(n.date)) + ' ago',
+        type: n.title,
+        fullDate: n.date
+      })));
+    });
 
     return () => {
       unsubUsers();
       unsubCourses();
       unsubBatches();
+      unsubPayments();
+      unsubSubmissions();
+      unsubNotifications();
     };
   }, []);
 
-  const revenueData = [
-    { month: 'Apr', revenue: 240000 },
-    { month: 'May', revenue: 320000 },
-    { month: 'Jun', revenue: 280000 },
-    { month: 'Jul', revenue: 450000 },
-    { month: 'Aug', revenue: 380000 },
-    { month: 'Sep', revenue: 520000 },
-    { month: 'Oct', revenue: 480000 },
-    { month: 'Nov', revenue: 610000 },
-    { month: 'Dec', revenue: 550000 },
-    { month: 'Jan', revenue: 680000 },
-    { month: 'Feb', revenue: 720000 },
-    { month: 'Mar', revenue: 850000 },
-  ];
+  // Calculate Real Revenue Data
+  const revenueData = Array.from({ length: 12 }).map((_, i) => {
+    const date = subMonths(new Date(), 11 - i);
+    const monthName = format(date, 'MMM');
+    const start = startOfMonth(date);
+    const end = endOfMonth(date);
+
+    const monthlyTotal = payments
+      .filter(p => {
+        const pDate = parseISO(p.date);
+        return isWithinInterval(pDate, { start, end });
+      })
+      .reduce((sum, p) => sum + (Number(p.paid) || 0), 0);
+
+    return { month: monthName, revenue: monthlyTotal, date };
+  });
+
+  const currentMonthRevenue = revenueData[11].revenue;
+  const lastMonthRevenue = revenueData[10].revenue;
+  const revenueGrowth = lastMonthRevenue === 0 ? 100 : Math.round(((currentMonthRevenue - lastMonthRevenue) / lastMonthRevenue) * 100);
+
+  const pendingTasksCount = submissions.filter(s => s.status === 'Pending').length;
+  const totalRevenueAllTime = payments.reduce((sum, p) => sum + (Number(p.paid) || 0), 0);
 
   return (
     <div className="space-y-8">
@@ -133,16 +161,16 @@ const Dashboard: React.FC<DashboardProps> = ({ user }) => {
         />
         <StatCard 
           icon={<IndianRupee className="text-[#2ecc8a]" />} 
-          value="₹3.2L" 
+          value={`₹${(currentMonthRevenue / 1000).toFixed(1)}k`} 
           label="Monthly Revenue" 
-          change="18%" 
-          trend="up" 
+          change={`${revenueGrowth}%`} 
+          trend={revenueGrowth >= 0 ? 'up' : 'down'} 
           color="green"
           onClick={() => navigate('/payments')}
         />
         <StatCard 
           icon={<ClipboardList className="text-[#f75f6a]" />} 
-          value="47" 
+          value={pendingTasksCount} 
           label="Pending Tasks" 
           color="red"
           onClick={() => setIsTasksModalOpen(true)}
@@ -150,7 +178,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user }) => {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-6">
-        <Card title="Revenue (12 Months)" headerAction={<span className="text-[11px] font-bold text-[#4f8ef7] bg-blue-500/10 px-2 py-1 rounded-full">₹38.4L Total</span>}>
+        <Card title="Revenue (12 Months)" headerAction={<span className="text-[11px] font-bold text-[#4f8ef7] bg-blue-500/10 px-2 py-1 rounded-full">₹{(totalRevenueAllTime / 100000).toFixed(1)}L Total</span>}>
           <div className="h-[250px] md:h-[300px] w-full mt-4">
             <ResponsiveContainer width="100%" height="100%">
               <BarChart 
@@ -199,13 +227,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user }) => {
 
         <Card title="Recent Activity">
           <div className="space-y-6 mt-2">
-            {[
-              { color: '#4f8ef7', msg: 'Priya enrolled in Digital Marketing', time: '2 min ago' },
-              { color: '#2ecc8a', msg: 'New video uploaded — SEO Strategies', time: '20 min ago' },
-              { color: '#f7924f', msg: 'Payment received from Arjun ₹4,999', time: '1 hr ago' },
-              { color: '#7c5fe6', msg: 'Batch DM-2026-March class scheduled', time: '2 hrs ago' },
-              { color: '#f75f6a', msg: 'Assignment #4 deadline tomorrow', time: '3 hrs ago' },
-            ].map((activity, i) => (
+            {activities.length > 0 ? activities.slice(0, 5).map((activity, i) => (
               <div key={i} className="flex gap-4 items-start">
                 <div className="w-2 h-2 rounded-full mt-1.5 flex-shrink-0" style={{ backgroundColor: activity.color }} />
                 <div className="flex-1 min-w-0">
@@ -213,7 +235,9 @@ const Dashboard: React.FC<DashboardProps> = ({ user }) => {
                   <div className="text-[11px] text-[#6b7599] mt-1">{activity.time}</div>
                 </div>
               </div>
-            ))}
+            )) : (
+              <div className="text-center py-8 text-[#6b7599] text-sm italic">No recent activity</div>
+            )}
           </div>
           <button 
             onClick={() => setIsActivityModalOpen(true)}
@@ -237,26 +261,48 @@ const Dashboard: React.FC<DashboardProps> = ({ user }) => {
               <div className="text-2xl font-bold text-white">₹{selectedMonthData?.revenue.toLocaleString()}</div>
             </div>
             <div className="p-4 bg-[#1a2035] border border-[#242b40] rounded-2xl">
-              <div className="text-[11px] text-[#6b7599] font-bold uppercase mb-1">Growth</div>
-              <div className="text-2xl font-bold text-[#2ecc8a]">+12.5%</div>
+              <div className="text-[11px] text-[#6b7599] font-bold uppercase mb-1">Payments</div>
+              <div className="text-2xl font-bold text-[#2ecc8a]">
+                {payments.filter(p => {
+                  const pDate = parseISO(p.date);
+                  return isWithinInterval(pDate, { 
+                    start: startOfMonth(selectedMonthData?.date || new Date()), 
+                    end: endOfMonth(selectedMonthData?.date || new Date()) 
+                  });
+                }).length}
+              </div>
             </div>
           </div>
           
           <div className="space-y-4">
-            <h4 className="text-sm font-bold text-white">Top Revenue Sources</h4>
-            {[
-              { source: 'Course Sales', amount: '₹1,85,000', color: '#4f8ef7' },
-              { source: 'Renewals', amount: '₹85,000', color: '#7c5fe6' },
-              { source: 'Certifications', amount: '₹50,000', color: '#2ecc8a' },
-            ].map((s, i) => (
-              <div key={i} className="flex items-center justify-between p-3 bg-white/5 rounded-xl">
-                <div className="flex items-center gap-3">
-                  <div className="w-2 h-2 rounded-full" style={{ backgroundColor: s.color }} />
-                  <span className="text-sm text-[#e8ecf5]">{s.source}</span>
+            <h4 className="text-sm font-bold text-white">Recent Payments this Month</h4>
+            {payments
+              .filter(p => {
+                const pDate = parseISO(p.date);
+                return isWithinInterval(pDate, { 
+                  start: startOfMonth(selectedMonthData?.date || new Date()), 
+                  end: endOfMonth(selectedMonthData?.date || new Date()) 
+                });
+              })
+              .slice(0, 5)
+              .map((p, i) => (
+                <div key={i} className="flex items-center justify-between p-3 bg-white/5 rounded-xl">
+                  <div className="flex items-center gap-3">
+                    <div className="w-2 h-2 rounded-full bg-blue-500" />
+                    <span className="text-sm text-[#e8ecf5]">Payment ID: {p.id.slice(0, 8)}</span>
+                  </div>
+                  <span className="text-sm font-bold text-white">₹{p.paid.toLocaleString()}</span>
                 </div>
-                <span className="text-sm font-bold text-white">{s.amount}</span>
-              </div>
-            ))}
+              ))}
+            {payments.filter(p => {
+              const pDate = parseISO(p.date);
+              return isWithinInterval(pDate, { 
+                start: startOfMonth(selectedMonthData?.date || new Date()), 
+                end: endOfMonth(selectedMonthData?.date || new Date()) 
+              });
+            }).length === 0 && (
+              <div className="text-center py-4 text-[#6b7599] text-xs">No payments recorded for this period</div>
+            )}
           </div>
         </div>
       </Modal>
@@ -267,32 +313,37 @@ const Dashboard: React.FC<DashboardProps> = ({ user }) => {
         title="Pending Tasks"
       >
         <div className="space-y-4">
-          {[
-            { title: 'Approve 12 new student registrations', priority: 'High', icon: <Users size={16} />, color: '#f75f6a' },
-            { title: 'Update Digital Marketing course content', priority: 'Medium', icon: <BookOpen size={16} />, color: '#f7924f' },
-            { title: 'Review pending payment from Arjun', priority: 'High', icon: <IndianRupee size={16} />, color: '#f75f6a' },
-            { title: 'Schedule batch DM-2026-March orientation', priority: 'Low', icon: <Calendar size={16} />, color: '#4f8ef7' },
-            { title: 'Verify teacher certifications for new joiners', priority: 'Medium', icon: <CheckCircle2 size={16} />, color: '#f7924f' },
-          ].map((task, i) => (
-            <div key={i} className="group p-4 bg-[#1a2035] border border-[#242b40] rounded-2xl hover:border-blue-500/30 transition-all cursor-pointer">
-              <div className="flex items-start gap-4">
-                <div className="p-2 rounded-xl bg-white/5 text-[#6b7599] group-hover:text-blue-500 transition-colors">
-                  {task.icon}
-                </div>
-                <div className="flex-1">
-                  <div className="flex items-center justify-between mb-1">
-                    <span className="text-sm font-medium text-[#e8ecf5]">{task.title}</span>
-                    <span className="text-[10px] font-bold px-2 py-0.5 rounded-full uppercase" style={{ backgroundColor: `${task.color}15`, color: task.color }}>
-                      {task.priority}
-                    </span>
+          {submissions.filter(s => s.status === 'Pending').length > 0 ? (
+            submissions.filter(s => s.status === 'Pending').map((task, i) => (
+              <div key={i} className="group p-4 bg-[#1a2035] border border-[#242b40] rounded-2xl hover:border-blue-500/30 transition-all cursor-pointer">
+                <div className="flex items-start gap-4">
+                  <div className="p-2 rounded-xl bg-white/5 text-[#6b7599] group-hover:text-blue-500 transition-colors">
+                    <ClipboardList size={16} />
                   </div>
-                  <div className="flex items-center gap-2 text-[11px] text-[#6b7599]">
-                    <Clock size={12} /> Due in 2 days
+                  <div className="flex-1">
+                    <div className="flex items-center justify-between mb-1">
+                      <span className="text-sm font-medium text-[#e8ecf5]">Assignment: {task.assignmentId.slice(0, 8)}</span>
+                      <span className="text-[10px] font-bold px-2 py-0.5 rounded-full uppercase bg-red-500/10 text-red-500">
+                        Pending
+                      </span>
+                    </div>
+                    <div className="text-[12px] text-[#e8ecf5] mb-1">Student: {task.studentName}</div>
+                    <div className="flex items-center gap-2 text-[11px] text-[#6b7599]">
+                      <Clock size={12} /> Submitted: {format(parseISO(task.submissionDate), 'PPP')}
+                    </div>
                   </div>
                 </div>
               </div>
+            ))
+          ) : (
+            <div className="text-center py-12">
+              <div className="w-16 h-16 bg-green-500/10 text-green-500 rounded-full flex items-center justify-center mx-auto mb-4">
+                <CheckCircle2 size={32} />
+              </div>
+              <h4 className="text-white font-bold">All caught up!</h4>
+              <p className="text-[#6b7599] text-sm mt-1">No pending assignment submissions to check.</p>
             </div>
-          ))}
+          )}
         </div>
       </Modal>
 
@@ -302,42 +353,26 @@ const Dashboard: React.FC<DashboardProps> = ({ user }) => {
         title="All System Activity"
       >
         <div className="space-y-6">
-          {[
-            { date: 'Today', items: [
-              { color: '#4f8ef7', msg: 'Priya enrolled in Digital Marketing', time: '2 min ago', type: 'Enrollment' },
-              { color: '#2ecc8a', msg: 'New video uploaded — SEO Strategies', time: '20 min ago', type: 'Content' },
-              { color: '#f7924f', msg: 'Payment received from Arjun ₹4,999', time: '1 hr ago', type: 'Payment' },
-            ]},
-            { date: 'Yesterday', items: [
-              { color: '#7c5fe6', msg: 'Batch DM-2026-March class scheduled', time: 'Yesterday, 4:30 PM', type: 'Batch' },
-              { color: '#f75f6a', msg: 'Assignment #4 deadline tomorrow', time: 'Yesterday, 2:15 PM', type: 'Assignment' },
-              { color: '#4f8ef7', msg: 'New teacher account created: Sarah Johnson', time: 'Yesterday, 11:00 AM', type: 'User' },
-            ]},
-          ].map((group, i) => (
-            <div key={i} className="space-y-4">
-              <div className="text-[11px] font-bold text-[#6b7599] uppercase tracking-widest flex items-center gap-2">
-                <div className="h-px flex-1 bg-[#242b40]" />
-                {group.date}
-                <div className="h-px flex-1 bg-[#242b40]" />
-              </div>
-              <div className="space-y-4">
-                {group.items.map((item, j) => (
-                  <div key={j} className="flex gap-4 items-start p-3 hover:bg-white/[0.02] rounded-xl transition-colors">
-                    <div className="w-10 h-10 rounded-xl bg-white/5 flex items-center justify-center flex-shrink-0" style={{ color: item.color }}>
-                      <TrendingUp size={18} />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center justify-between mb-1">
-                        <span className="text-[11px] font-bold uppercase tracking-wider" style={{ color: item.color }}>{item.type}</span>
-                        <span className="text-[11px] text-[#6b7599]">{item.time}</span>
-                      </div>
-                      <div className="text-[13.5px] font-medium text-[#e8ecf5]">{item.msg}</div>
-                    </div>
+          {activities.length > 0 ? (
+            <div className="space-y-4">
+              {activities.map((item, j) => (
+                <div key={j} className="flex gap-4 items-start p-3 hover:bg-white/[0.02] rounded-xl transition-colors">
+                  <div className="w-10 h-10 rounded-xl bg-white/5 flex items-center justify-center flex-shrink-0" style={{ color: item.color }}>
+                    <TrendingUp size={18} />
                   </div>
-                ))}
-              </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center justify-between mb-1">
+                      <span className="text-[11px] font-bold uppercase tracking-wider" style={{ color: item.color }}>{item.type}</span>
+                      <span className="text-[11px] text-[#6b7599]">{item.time}</span>
+                    </div>
+                    <div className="text-[13.5px] font-medium text-[#e8ecf5]">{item.msg}</div>
+                  </div>
+                </div>
+              ))}
             </div>
-          ))}
+          ) : (
+            <div className="text-center py-12 text-[#6b7599]">No activity logs found</div>
+          )}
         </div>
       </Modal>
 
