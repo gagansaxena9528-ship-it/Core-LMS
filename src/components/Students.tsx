@@ -33,7 +33,8 @@ const Students: React.FC = () => {
 
   // Form State
   const [formData, setFormData] = useState({
-    name: '',
+    firstName: '',
+    lastName: '',
     email: '',
     phone: '',
     fatherName: '',
@@ -43,8 +44,13 @@ const Students: React.FC = () => {
     course: '',
     batch: '',
     fee: '',
-    password: ''
+    password: '',
+    profilePhoto: ''
   });
+
+  const [selectedStudents, setSelectedStudents] = useState<string[]>([]);
+  const [showProfileModal, setShowProfileModal] = useState(false);
+  const [viewingStudent, setViewingStudent] = useState<User | null>(null);
 
   const [emailStatus, setEmailStatus] = useState<'checking' | 'ok' | 'error'>('checking');
   const [emailError, setEmailError] = useState<string | null>(null);
@@ -171,8 +177,10 @@ const Students: React.FC = () => {
 
   const handleEdit = (student: any) => {
     setEditingStudent(student);
+    const [firstName = '', lastName = ''] = (student.name || '').split(' ');
     setFormData({
-      name: student.name,
+      firstName: student.firstName || firstName,
+      lastName: student.lastName || lastName,
       email: student.email,
       phone: student.phone || '',
       fatherName: student.fatherName || '',
@@ -182,9 +190,29 @@ const Students: React.FC = () => {
       course: student.course || '',
       batch: student.batch || '',
       fee: student.fee?.toString() || '',
-      password: '' // Don't show password for security
+      password: '', // Don't show password for security
+      profilePhoto: student.profilePhoto || ''
     });
     setShowModal(true);
+  };
+
+  const handleViewProfile = (student: any) => {
+    setViewingStudent(student);
+    setShowProfileModal(true);
+  };
+
+  const handleResetPassword = async (student: any) => {
+    const newPassword = Math.random().toString(36).substring(7).toUpperCase();
+    if (window.confirm(`Are you sure you want to reset password for ${student.name}? New password will be: ${newPassword}`)) {
+      try {
+        await updateDocument('users', student.uid, { password: newPassword });
+        const html = getUpdateNotificationTemplate(student.name, 'Account Password', 'reset', `Your new password is: ${newPassword}`);
+        await sendEmail(student.email, 'Password Reset Notification - Core LMS', html);
+        alert('Password reset successfully and email sent to student.');
+      } catch (err: any) {
+        alert('Failed to reset password: ' + err.message);
+      }
+    }
   };
 
   const handleDelete = async (uid: string) => {
@@ -198,19 +226,83 @@ const Students: React.FC = () => {
     }
   };
 
+  const handleBulkDelete = async () => {
+    if (selectedStudents.length === 0) return;
+    if (window.confirm(`Are you sure you want to delete ${selectedStudents.length} selected students?`)) {
+      setLoading(true);
+      try {
+        await Promise.all(selectedStudents.map(uid => deleteDocument('users', uid)));
+        setSelectedStudents([]);
+        alert('Selected students deleted successfully.');
+      } catch (err: any) {
+        alert('Failed to delete some students: ' + err.message);
+      } finally {
+        setLoading(false);
+      }
+    }
+  };
+
+  const handleBulkAssignCourse = async () => {
+    if (selectedStudents.length === 0) return;
+    const courseTitle = window.prompt('Enter the Course Title to assign to selected students:');
+    if (!courseTitle) return;
+    
+    const selectedCourse = courses.find(c => c.title === courseTitle);
+    if (!selectedCourse) {
+      alert('Course not found. Please enter a valid course title.');
+      return;
+    }
+
+    setLoading(true);
+    try {
+      await Promise.all(selectedStudents.map(uid => updateDocument('users', uid, {
+        course: selectedCourse.title,
+        courseId: selectedCourse.id
+      })));
+      setSelectedStudents([]);
+      alert('Course assigned to selected students successfully.');
+    } catch (err: any) {
+      alert('Failed to assign course: ' + err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const toggleSelectAll = () => {
+    if (selectedStudents.length === filteredStudents.length) {
+      setSelectedStudents([]);
+    } else {
+      setSelectedStudents(filteredStudents.map(s => s.uid));
+    }
+  };
+
+  const toggleSelectStudent = (uid: string) => {
+    if (selectedStudents.includes(uid)) {
+      setSelectedStudents(selectedStudents.filter(id => id !== uid));
+    } else {
+      setSelectedStudents([...selectedStudents, uid]);
+    }
+  };
+
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
     setError(null);
     try {
+      const feeNum = parseFloat(formData.fee) || 0;
+      const selectedBatch = batches.find(b => b.name === formData.batch);
+      const selectedCourse = courses.find(c => c.title === formData.course);
+      const fullName = `${formData.firstName} ${formData.lastName}`.trim();
+
       if (editingStudent) {
         const { password, ...updateData } = formData;
-        const selectedBatch = batches.find(b => b.name === formData.batch);
-        const selectedCourse = courses.find(c => c.title === formData.course);
+        const paid = (editingStudent as any).paid || 0;
         
         await updateDocument('users', editingStudent.uid, {
           ...updateData,
-          fee: parseFloat(formData.fee) || 0,
+          name: fullName,
+          fee: feeNum,
+          pendingAmount: feeNum - paid,
           courseId: selectedCourse?.id || '',
           batchId: selectedBatch?.id || '',
           teacherId: selectedBatch?.teacherId || ''
@@ -218,40 +310,40 @@ const Students: React.FC = () => {
         
         // Send update notification
         const details = `Your profile has been updated by the administrator. Course: ${formData.course}, Batch: ${formData.batch}.`;
-        const html = getUpdateNotificationTemplate(formData.name, 'Student Profile', 'updated', details);
+        const html = getUpdateNotificationTemplate(fullName, 'Student Profile', 'updated', details);
         await sendEmail(formData.email, 'Account Update Notification - Core LMS', html);
       } else {
         // Create Account via custom backend
-        const userCredential = await adminCreateUser(formData.email, formData.password, formData.name);
+        const userCredential = await adminCreateUser(formData.email, formData.password, fullName);
         
         // Update the newly created user with additional details
         if (userCredential?.uid) {
           const { password, ...additionalData } = formData;
-          const selectedBatch = batches.find(b => b.name === formData.batch);
-          const selectedCourse = courses.find(c => c.title === formData.course);
 
           await updateDocument('users', userCredential.uid, {
             ...additionalData,
+            name: fullName,
             role: 'student',
             status: 'Active',
             joined: new Date().toISOString(),
             progress: 0,
-            fee: parseFloat(formData.fee) || 0,
+            fee: feeNum,
             paid: 0,
+            pendingAmount: feeNum,
             courseId: selectedCourse?.id || '',
             batchId: selectedBatch?.id || '',
             teacherId: selectedBatch?.teacherId || ''
           });
 
           // Send welcome email
-          await sendWelcomeEmail(formData, formData.password);
+          await sendWelcomeEmail({ ...formData, name: fullName }, formData.password);
         }
       }
       setShowModal(false);
       setEditingStudent(null);
       setFormData({ 
-        name: '', email: '', phone: '', fatherName: '', motherName: '', 
-        dob: '', address: '', course: '', batch: '', fee: '', password: '' 
+        firstName: '', lastName: '', email: '', phone: '', fatherName: '', motherName: '', 
+        dob: '', address: '', course: '', batch: '', fee: '', password: '', profilePhoto: ''
       });
     } catch (err: any) {
       console.error(err);
@@ -329,6 +421,24 @@ const Students: React.FC = () => {
         </div>
 
         <div className="flex gap-2">
+          {selectedStudents.length > 0 && (
+            <>
+              <button 
+                onClick={handleBulkAssignCourse}
+                className="flex items-center gap-2 px-4 py-2.5 bg-blue-500/10 border border-blue-500/20 text-[#4f8ef7] rounded-xl hover:bg-blue-500/20 transition-all"
+              >
+                <Plus size={18} />
+                <span className="text-sm font-bold">Assign Course</span>
+              </button>
+              <button 
+                onClick={handleBulkDelete}
+                className="flex items-center gap-2 px-4 py-2.5 bg-red-500/10 border border-red-500/20 text-[#f75f6a] rounded-xl hover:bg-red-500/20 transition-all"
+              >
+                <Trash2 size={18} />
+                <span className="text-sm font-bold">Delete ({selectedStudents.length})</span>
+              </button>
+            </>
+          )}
           <button 
             onClick={handleExport}
             className="flex items-center gap-2 px-4 py-2.5 bg-[#131726] border border-[#242b40] rounded-xl text-[#6b7599] hover:text-[#e8ecf5] hover:bg-[#242b40] transition-all"
@@ -360,24 +470,41 @@ const Students: React.FC = () => {
           <table className="w-full text-left border-collapse">
             <thead>
               <tr className="bg-[#1a2035]">
-                <th className="px-6 py-4 text-[10px] font-bold text-[#6b7599] uppercase tracking-wider">#</th>
+                <th className="px-6 py-4">
+                  <input 
+                    type="checkbox" 
+                    checked={selectedStudents.length === filteredStudents.length && filteredStudents.length > 0}
+                    onChange={toggleSelectAll}
+                    className="rounded border-[#242b40] bg-[#131726]"
+                  />
+                </th>
                 <th className="px-6 py-4 text-[10px] font-bold text-[#6b7599] uppercase tracking-wider">Student</th>
                 <th className="px-6 py-4 text-[10px] font-bold text-[#6b7599] uppercase tracking-wider">Contact</th>
                 <th className="px-6 py-4 text-[10px] font-bold text-[#6b7599] uppercase tracking-wider">Course & Batch</th>
-                <th className="px-6 py-4 text-[10px] font-bold text-[#6b7599] uppercase tracking-wider">Progress</th>
-                <th className="px-6 py-4 text-[10px] font-bold text-[#6b7599] uppercase tracking-wider">Status</th>
+                <th className="px-6 py-4 text-[10px] font-bold text-[#6b7599] uppercase tracking-wider">Join Date</th>
                 <th className="px-6 py-4 text-[10px] font-bold text-[#6b7599] uppercase tracking-wider text-right">Actions</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-[#242b40]">
               {filteredStudents.map((s, i) => (
                 <tr key={s.uid} className="hover:bg-white/[0.01] transition-colors group">
-                  <td className="px-6 py-4 text-sm text-[#6b7599]">{i + 1}</td>
+                  <td className="px-6 py-4">
+                    <input 
+                      type="checkbox" 
+                      checked={selectedStudents.includes(s.uid)}
+                      onChange={() => toggleSelectStudent(s.uid)}
+                      className="rounded border-[#242b40] bg-[#131726]"
+                    />
+                  </td>
                   <td className="px-6 py-4">
                     <div className="flex items-center gap-3">
-                      <div className="w-9 h-9 rounded-full bg-blue-500/10 text-[#4f8ef7] flex items-center justify-center font-bold text-sm">
-                        {s.av}
-                      </div>
+                      {s.profilePhoto ? (
+                        <img src={s.profilePhoto} alt={s.name} className="w-9 h-9 rounded-full object-cover border border-[#242b40]" referrerPolicy="no-referrer" />
+                      ) : (
+                        <div className="w-9 h-9 rounded-full bg-blue-500/10 text-[#4f8ef7] flex items-center justify-center font-bold text-sm">
+                          {s.av}
+                        </div>
+                      )}
                       <div>
                         <div className="text-[13.5px] font-semibold">{s.name}</div>
                         <div className="text-[11px] text-[#6b7599]">{s.email}</div>
@@ -389,23 +516,13 @@ const Students: React.FC = () => {
                     <div className="text-[13px] font-medium text-white">{s.course || 'No Course'}</div>
                     <div className="text-[11px] text-muted">{s.batch || 'No Batch'}</div>
                   </td>
-                  <td className="px-6 py-4">
-                    <div className="flex items-center gap-2">
-                      <div className="w-24 h-1.5 bg-border rounded-full overflow-hidden">
-                        <div className="h-full bg-gradient-to-r from-secondary to-accent" style={{ width: `${(s as any).progress || 0}%` }} />
-                      </div>
-                      <span className="text-[11px] text-muted">{(s as any).progress || 0}%</span>
-                    </div>
-                  </td>
-                  <td className="px-6 py-4">
-                    <span className="px-2.5 py-1 rounded-full bg-green-500/10 text-[#2ecc8a] text-[10px] font-bold uppercase">
-                      {s.status}
-                    </span>
+                  <td className="px-6 py-4 text-[13px] text-[#6b7599]">
+                    {new Date(s.joined).toLocaleDateString()}
                   </td>
                   <td className="px-6 py-4 text-right">
                     <div className="flex items-center justify-end gap-2 transition-opacity">
                       <button 
-                        onClick={() => handleEdit(s)}
+                        onClick={() => handleViewProfile(s)}
                         className="p-2 hover:bg-blue-500/10 text-[#4f8ef7] rounded-lg transition-colors" 
                         title="View Profile"
                       >
@@ -417,6 +534,13 @@ const Students: React.FC = () => {
                         title="Edit"
                       >
                         <Edit2 size={16} />
+                      </button>
+                      <button 
+                        onClick={() => handleResetPassword(s)}
+                        className="p-2 hover:bg-yellow-500/10 text-yellow-500 rounded-lg transition-colors" 
+                        title="Reset Password"
+                      >
+                        <Key size={16} />
                       </button>
                       <button 
                         onClick={() => handleDelete(s.uid)}
@@ -469,16 +593,30 @@ const Students: React.FC = () => {
               <form onSubmit={handleSave} className="space-y-5">
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
-                    <label className="text-[11px] font-bold text-[#6b7599] uppercase tracking-wider">Full Name</label>
+                    <label className="text-[11px] font-bold text-[#6b7599] uppercase tracking-wider">First Name</label>
                     <input 
                       required
                       type="text" 
                       className="w-full bg-[#1a2035] border border-[#242b40] rounded-xl px-4 py-2.5 text-sm outline-none focus:border-[#4f8ef7] transition-colors"
-                      placeholder="e.g. Rahul Kumar"
-                      value={formData.name}
-                      onChange={(e) => setFormData({...formData, name: e.target.value})}
+                      placeholder="e.g. Rahul"
+                      value={formData.firstName}
+                      onChange={(e) => setFormData({...formData, firstName: e.target.value})}
                     />
                   </div>
+                  <div className="space-y-2">
+                    <label className="text-[11px] font-bold text-[#6b7599] uppercase tracking-wider">Last Name</label>
+                    <input 
+                      required
+                      type="text" 
+                      className="w-full bg-[#1a2035] border border-[#242b40] rounded-xl px-4 py-2.5 text-sm outline-none focus:border-[#4f8ef7] transition-colors"
+                      placeholder="e.g. Kumar"
+                      value={formData.lastName}
+                      onChange={(e) => setFormData({...formData, lastName: e.target.value})}
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <label className="text-[11px] font-bold text-[#6b7599] uppercase tracking-wider">Email Address</label>
                     <input 
@@ -490,9 +628,6 @@ const Students: React.FC = () => {
                       onChange={(e) => setFormData({...formData, email: e.target.value})}
                     />
                   </div>
-                </div>
-
-                <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <label className="text-[11px] font-bold text-[#6b7599] uppercase tracking-wider">Mobile Number</label>
                     <input 
@@ -501,6 +636,19 @@ const Students: React.FC = () => {
                       placeholder="10-digit mobile"
                       value={formData.phone}
                       onChange={(e) => setFormData({...formData, phone: e.target.value})}
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <label className="text-[11px] font-bold text-[#6b7599] uppercase tracking-wider">Profile Photo URL</label>
+                    <input 
+                      type="url" 
+                      className="w-full bg-[#1a2035] border border-[#242b40] rounded-xl px-4 py-2.5 text-sm outline-none focus:border-[#4f8ef7] transition-colors"
+                      placeholder="https://example.com/photo.jpg"
+                      value={formData.profilePhoto}
+                      onChange={(e) => setFormData({...formData, profilePhoto: e.target.value})}
                     />
                   </div>
                   <div className="space-y-2">
@@ -627,6 +775,174 @@ const Students: React.FC = () => {
                   </button>
                 </div>
               </form>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
+      {/* Profile Modal */}
+      <AnimatePresence>
+        {showProfileModal && viewingStudent && (
+          <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+            <motion.div 
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setShowProfileModal(false)}
+              className="absolute inset-0 bg-black/70 backdrop-blur-sm"
+            />
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 20 }}
+              className="relative w-full max-w-[720px] bg-[#131726] border border-[#242b40] rounded-2xl shadow-2xl p-8 overflow-y-auto max-h-[90vh]"
+            >
+              <div className="flex items-center justify-between mb-8">
+                <div className="flex items-center gap-4">
+                  {viewingStudent.profilePhoto ? (
+                    <img src={viewingStudent.profilePhoto} alt={viewingStudent.name} className="w-16 h-16 rounded-2xl object-cover border-2 border-[#242b40]" referrerPolicy="no-referrer" />
+                  ) : (
+                    <div className="w-16 h-16 rounded-2xl bg-blue-500/10 text-[#4f8ef7] flex items-center justify-center font-bold text-2xl">
+                      {viewingStudent.av}
+                    </div>
+                  )}
+                  <div>
+                    <h3 className="text-2xl font-extrabold font-syne">{viewingStudent.name}</h3>
+                    <p className="text-[#6b7599] text-sm">{viewingStudent.email}</p>
+                  </div>
+                </div>
+                <button onClick={() => setShowProfileModal(false)} className="p-2 hover:bg-red-500/10 text-[#6b7599] hover:text-red-500 rounded-full transition-colors">
+                  <X size={24} />
+                </button>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                <div className="space-y-6">
+                  <div>
+                    <h4 className="text-[10px] font-bold text-[#6b7599] uppercase tracking-widest mb-3">Personal Information</h4>
+                    <div className="space-y-3">
+                      <div className="flex justify-between text-sm">
+                        <span className="text-[#6b7599]">Phone:</span>
+                        <span className="text-white font-medium">{viewingStudent.phone || '—'}</span>
+                      </div>
+                      <div className="flex justify-between text-sm">
+                        <span className="text-[#6b7599]">Father's Name:</span>
+                        <span className="text-white font-medium">{(viewingStudent as any).fatherName || '—'}</span>
+                      </div>
+                      <div className="flex justify-between text-sm">
+                        <span className="text-[#6b7599]">Mother's Name:</span>
+                        <span className="text-white font-medium">{(viewingStudent as any).motherName || '—'}</span>
+                      </div>
+                      <div className="flex justify-between text-sm">
+                        <span className="text-[#6b7599]">DOB:</span>
+                        <span className="text-white font-medium">{(viewingStudent as any).dob || '—'}</span>
+                      </div>
+                      <div className="flex justify-between text-sm">
+                        <span className="text-[#6b7599]">Address:</span>
+                        <span className="text-white font-medium text-right max-w-[200px]">{(viewingStudent as any).address || '—'}</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div>
+                    <h4 className="text-[10px] font-bold text-[#6b7599] uppercase tracking-widest mb-3">Course & Batch Info</h4>
+                    <div className="space-y-3">
+                      <div className="flex justify-between text-sm">
+                        <span className="text-[#6b7599]">Course:</span>
+                        <span className="text-[#4f8ef7] font-bold">{viewingStudent.course || '—'}</span>
+                      </div>
+                      <div className="flex justify-between text-sm">
+                        <span className="text-[#6b7599]">Batch:</span>
+                        <span className="text-white font-medium">{viewingStudent.batch || '—'}</span>
+                      </div>
+                      <div className="flex justify-between text-sm">
+                        <span className="text-[#6b7599]">Join Date:</span>
+                        <span className="text-white font-medium">{new Date(viewingStudent.joined).toLocaleDateString()}</span>
+                      </div>
+                      <div className="flex justify-between text-sm">
+                        <span className="text-[#6b7599]">Status:</span>
+                        <span className="px-2 py-0.5 rounded-full bg-green-500/10 text-[#2ecc8a] text-[10px] font-bold uppercase">
+                          {viewingStudent.status}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="space-y-6">
+                  <div>
+                    <h4 className="text-[10px] font-bold text-[#6b7599] uppercase tracking-widest mb-3">Academic Progress</h4>
+                    <div className="space-y-4">
+                      <div className="space-y-2">
+                        <div className="flex justify-between text-xs">
+                          <span className="text-[#6b7599]">Course Progress</span>
+                          <span className="text-white">{(viewingStudent as any).progress || 0}%</span>
+                        </div>
+                        <div className="w-full h-2 bg-[#1a2035] rounded-full overflow-hidden">
+                          <div className="h-full bg-gradient-to-r from-[#4f8ef7] to-[#7c5fe6]" style={{ width: `${(viewingStudent as any).progress || 0}%` }} />
+                        </div>
+                      </div>
+                      <div className="grid grid-cols-2 gap-4">
+                        <div className="p-3 bg-[#1a2035] rounded-xl border border-[#242b40]">
+                          <div className="text-[10px] font-bold text-[#6b7599] uppercase mb-1">Attendance</div>
+                          <div className="text-lg font-bold text-white">{(viewingStudent as any).attendanceRate || 0}%</div>
+                        </div>
+                        <div className="p-3 bg-[#1a2035] rounded-xl border border-[#242b40]">
+                          <div className="text-[10px] font-bold text-[#6b7599] uppercase mb-1">Lessons</div>
+                          <div className="text-lg font-bold text-white">{(viewingStudent as any).completedLessons || 0}</div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div>
+                    <h4 className="text-[10px] font-bold text-[#6b7599] uppercase tracking-widest mb-3">Fee Summary</h4>
+                    <div className="p-4 bg-[#1a2035] rounded-xl border border-[#242b40] space-y-3">
+                      <div className="flex justify-between text-sm">
+                        <span className="text-[#6b7599]">Total Fee:</span>
+                        <span className="text-white font-bold">₹{(viewingStudent as any).fee || 0}</span>
+                      </div>
+                      <div className="flex justify-between text-sm">
+                        <span className="text-[#6b7599]">Paid Amount:</span>
+                        <span className="text-green-500 font-bold">₹{(viewingStudent as any).paid || 0}</span>
+                      </div>
+                      <div className="flex justify-between text-sm pt-2 border-t border-[#242b40]">
+                        <span className="text-[#6b7599]">Pending:</span>
+                        <span className="text-red-500 font-bold">₹{(viewingStudent as any).pendingAmount || 0}</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div>
+                    <h4 className="text-[10px] font-bold text-[#6b7599] uppercase tracking-widest mb-3">Activity Tracking</h4>
+                    <div className="space-y-2">
+                      <div className="flex justify-between text-xs">
+                        <span className="text-[#6b7599]">Last Login:</span>
+                        <span className="text-white">{(viewingStudent as any).lastLogin ? new Date((viewingStudent as any).lastLogin).toLocaleString() : 'Never'}</span>
+                      </div>
+                      <div className="flex justify-between text-xs">
+                        <span className="text-[#6b7599]">Time Spent:</span>
+                        <span className="text-white">{(viewingStudent as any).timeSpent || 0} minutes</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div className="mt-8 pt-6 border-t border-[#242b40] flex justify-end gap-3">
+                <button 
+                  onClick={() => { setShowProfileModal(false); handleEdit(viewingStudent); }}
+                  className="px-6 py-2.5 bg-[#4f8ef7] hover:bg-[#3a7ae8] text-white rounded-xl font-bold text-sm transition-colors"
+                >
+                  Edit Profile
+                </button>
+                <button 
+                  onClick={() => setShowProfileModal(false)}
+                  className="px-6 py-2.5 bg-[#1a2035] border border-[#242b40] text-[#e8ecf5] rounded-xl font-bold text-sm hover:bg-[#242b40] transition-colors"
+                >
+                  Close
+                </button>
+              </div>
             </motion.div>
           </div>
         )}

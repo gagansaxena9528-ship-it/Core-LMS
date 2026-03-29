@@ -97,6 +97,13 @@ async function startServer() {
       courseId TEXT,
       batchId TEXT,
       teacherId TEXT,
+      firstName TEXT,
+      lastName TEXT,
+      profilePhoto TEXT,
+      lastLogin TEXT,
+      timeSpent INTEGER,
+      completedLessons INTEGER,
+      pendingAmount REAL,
       createdAt DATETIME DEFAULT CURRENT_TIMESTAMP
     );
 
@@ -125,7 +132,14 @@ async function startServer() {
     { name: 'progress', type: 'INTEGER' },
     { name: 'courseId', type: 'TEXT' },
     { name: 'batchId', type: 'TEXT' },
-    { name: 'teacherId', type: 'TEXT' }
+    { name: 'teacherId', type: 'TEXT' },
+    { name: 'firstName', type: 'TEXT' },
+    { name: 'lastName', type: 'TEXT' },
+    { name: 'profilePhoto', type: 'TEXT' },
+    { name: 'lastLogin', type: 'TEXT' },
+    { name: 'timeSpent', type: 'INTEGER' },
+    { name: 'completedLessons', type: 'INTEGER' },
+    { name: 'pendingAmount', type: 'REAL' }
   ];
 
   for (const col of columnsToAdd) {

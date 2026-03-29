@@ -19,13 +19,20 @@ export interface User {
 }
 
 export interface Student extends User {
+  firstName?: string;
+  lastName?: string;
+  profilePhoto?: string;
   courseId?: string;
   batchId?: string;
   teacherId?: string;
   progress: number;
   fee: number;
   paid: number;
+  pendingAmount?: number;
   attendanceRate?: number;
+  lastLogin?: string;
+  timeSpent?: number; // in minutes
+  completedLessons?: number;
 }
 
 export interface Teacher extends User {
