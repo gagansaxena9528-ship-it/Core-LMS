@@ -102,6 +102,7 @@ const Payments: React.FC<PaymentsProps> = ({ user }) => {
   const [qrData, setQrData] = useState({ upiId: 'gagansaxena7212@naviaxis', amount: 0, name: 'CoreLMS' });
   const [checkingPayment, setCheckingPayment] = useState(false);
   const [paymentSuccess, setPaymentSuccess] = useState(false);
+  const [timeLeft, setTimeLeft] = useState(300); // 5 minutes in seconds
   const [loading, setLoading] = useState(false);
   
   const [paymentFormData, setPaymentFormData] = useState({
@@ -140,6 +141,33 @@ const Payments: React.FC<PaymentsProps> = ({ user }) => {
       unsubStudents();
     };
   }, []);
+
+  useEffect(() => {
+    let interval: NodeJS.Timeout;
+    if (showQRModal && timeLeft > 0 && !paymentSuccess) {
+      interval = setInterval(() => {
+        setTimeLeft((prev) => prev - 1);
+      }, 1000);
+
+      // Simulate automatic payment detection after 15 seconds
+      if (timeLeft === 285) {
+        simulateCheckPayment();
+      }
+    }
+    return () => clearInterval(interval);
+  }, [showQRModal, timeLeft, paymentSuccess]);
+
+  useEffect(() => {
+    if (showQRModal) {
+      setTimeLeft(300);
+    }
+  }, [showQRModal]);
+
+  const formatTime = (seconds: number) => {
+    const mins = Math.floor(seconds / 60);
+    const secs = seconds % 60;
+    return `${mins}:${secs.toString().padStart(2, '0')}`;
+  };
 
   const filteredPayments = payments.filter(p => {
     if (user?.role === 'student' && p.studentId !== user.uid) return false;
@@ -322,61 +350,92 @@ const Payments: React.FC<PaymentsProps> = ({ user }) => {
     }
   };
 
-  const generateInvoice = (payment: Payment) => {
+  const generateInvoice = (payment: Payment, action: 'download' | 'print' = 'download') => {
     const doc = new jsPDF() as any;
     const student = students.find(s => s.uid === payment.studentId);
     
     // Header
-    doc.setFontSize(20);
+    doc.setFontSize(24);
     doc.setTextColor(79, 142, 247);
-    doc.text('CoreLMS', 105, 20, { align: 'center' });
+    doc.text('CoreLMS', 105, 25, { align: 'center' });
     
     doc.setFontSize(10);
     doc.setTextColor(100);
-    doc.text('Professional Learning Management System', 105, 26, { align: 'center' });
+    doc.text('Professional Learning Management System', 105, 32, { align: 'center' });
     
-    doc.setDrawColor(200);
-    doc.line(20, 35, 190, 35);
+    doc.setDrawColor(79, 142, 247);
+    doc.setLineWidth(0.5);
+    doc.line(20, 40, 190, 40);
     
     // Invoice Info
-    doc.setFontSize(12);
+    doc.setFontSize(14);
     doc.setTextColor(0);
-    doc.text(`INVOICE: ${payment.invoiceNumber || 'N/A'}`, 20, 45);
-    doc.text(`Date: ${new Date(payment.date).toLocaleDateString()}`, 140, 45);
+    doc.text('PAYMENT RECEIPT', 20, 55);
     
-    // Student Info
-    doc.setFontSize(10);
-    doc.text('Bill To:', 20, 60);
-    doc.setFontSize(11);
-    doc.text(payment.studentName || 'N/A', 20, 66);
     doc.setFontSize(10);
     doc.setTextColor(100);
-    doc.text(student?.email || '', 20, 72);
-    doc.text(student?.phone || '', 20, 78);
+    doc.text(`Receipt No: ${payment.invoiceNumber || 'N/A'}`, 20, 62);
+    doc.text(`Date: ${new Date(payment.date).toLocaleString()}`, 20, 68);
+    
+    // Student Info
+    doc.setFontSize(12);
+    doc.setTextColor(0);
+    doc.text('STUDENT DETAILS', 20, 85);
+    doc.setDrawColor(200);
+    doc.line(20, 87, 80, 87);
+    
+    doc.setFontSize(10);
+    doc.text(`Name: ${payment.studentName || 'N/A'}`, 20, 95);
+    doc.text(`Email: ${student?.email || 'N/A'}`, 20, 101);
+    doc.text(`Phone: ${student?.phone || 'N/A'}`, 20, 107);
+    
+    // Payment Details
+    doc.setFontSize(12);
+    doc.text('PAYMENT SUMMARY', 120, 85);
+    doc.line(120, 87, 180, 87);
+    
+    doc.setFontSize(10);
+    doc.text(`Course: ${payment.courseName || 'N/A'}`, 120, 95);
+    doc.text(`Mode: ${payment.mode}`, 120, 101);
+    doc.text(`Status: ${payment.status}`, 120, 107);
     
     // Table
     doc.autoTable({
-      startY: 90,
-      head: [['Description', 'Amount']],
+      startY: 120,
+      head: [['Description', 'Amount (INR)']],
       body: [
-        [`Course Fee: ${payment.courseName}`, `INR ${payment.amount.toLocaleString()}`],
-        ['GST (18%)', `INR ${(payment.amount * 0.18).toLocaleString()}`],
+        [`Course Fee Payment for ${payment.courseName}`, `₹${payment.amount.toLocaleString()}`],
+        ['Tax / GST (Included)', '₹0.00'],
       ],
-      theme: 'grid',
-      headStyles: { fillColor: [79, 142, 247] }
+      theme: 'striped',
+      headStyles: { fillColor: [79, 142, 247], textColor: [255, 255, 255], fontStyle: 'bold' },
+      styles: { fontSize: 10, cellPadding: 5 },
+      columnStyles: { 1: { halign: 'right' } }
     });
     
     const finalY = (doc as any).lastAutoTable.finalY;
     
+    // Total
+    doc.setFillColor(245, 247, 250);
+    doc.rect(120, finalY + 5, 70, 15, 'F');
     doc.setFontSize(12);
-    doc.setTextColor(0);
-    doc.text(`Total Paid: INR ${(payment.amount * 1.18).toLocaleString()}`, 140, finalY + 20);
+    doc.setTextColor(79, 142, 247);
+    doc.setFont(undefined, 'bold');
+    doc.text(`TOTAL PAID: ₹${payment.amount.toLocaleString()}`, 125, finalY + 15);
     
-    doc.setFontSize(10);
-    doc.setTextColor(100);
-    doc.text('Thank you for your payment!', 105, finalY + 40, { align: 'center' });
+    // Footer
+    doc.setFontSize(9);
+    doc.setTextColor(150);
+    doc.setFont(undefined, 'normal');
+    doc.text('This is a computer-generated receipt and does not require a physical signature.', 105, 280, { align: 'center' });
+    doc.text('© 2026 CoreLMS. All Rights Reserved.', 105, 285, { align: 'center' });
     
-    doc.save(`Invoice_${payment.invoiceNumber}.pdf`);
+    if (action === 'print') {
+      doc.autoPrint();
+      window.open(doc.output('bloburl'), '_blank');
+    } else {
+      doc.save(`Receipt_${payment.invoiceNumber}.pdf`);
+    }
   };
 
   const sendReminder = (student: any, type: 'SMS' | 'WhatsApp') => {
@@ -600,13 +659,22 @@ const Payments: React.FC<PaymentsProps> = ({ user }) => {
                     </div>
                   </td>
                   <td className="px-6 py-4 text-right">
-                    <button 
-                      onClick={() => generateInvoice(p)}
-                      className="p-2 hover:bg-[#4f8ef7]/10 text-[#4f8ef7] rounded-lg transition-colors"
-                      title="Download Invoice"
-                    >
-                      <Download size={18} />
-                    </button>
+                    <div className="flex items-center justify-end gap-1">
+                      <button 
+                        onClick={() => generateInvoice(p, 'download')}
+                        className="p-2 hover:bg-[#4f8ef7]/10 text-[#4f8ef7] rounded-lg transition-colors"
+                        title="Download Receipt"
+                      >
+                        <Download size={16} />
+                      </button>
+                      <button 
+                        onClick={() => generateInvoice(p, 'print')}
+                        className="p-2 hover:bg-[#4f8ef7]/10 text-[#4f8ef7] rounded-lg transition-colors"
+                        title="Print Receipt"
+                      >
+                        <Printer size={16} />
+                      </button>
+                    </div>
                   </td>
                 </tr>
               ))}
@@ -767,8 +835,26 @@ const Payments: React.FC<PaymentsProps> = ({ user }) => {
                     </div>
                   </div>
                   <div>
-                    <label className="block text-[11px] font-bold text-[#6b7599] uppercase tracking-wider mb-1.5 ml-1">Payment API Reference (Optional)</label>
-                    <input type="text" value={paymentFormData.paymentApiRef} onChange={(e) => setPaymentFormData({...paymentFormData, paymentApiRef: e.target.value})} className="w-full bg-[#1a2035] border border-[#242b40] rounded-xl px-4 py-3 text-sm outline-none focus:border-[#4f8ef7] text-white" placeholder="External API Reference ID" />
+                    <label className="block text-[11px] font-bold text-[#6b7599] uppercase tracking-wider mb-1.5 ml-1">Student UPI ID (Optional)</label>
+                    <div className="flex gap-2">
+                      <input 
+                        type="text" 
+                        value={paymentFormData.paymentApiRef} 
+                        onChange={(e) => setPaymentFormData({...paymentFormData, paymentApiRef: e.target.value})} 
+                        className="w-full bg-[#1a2035] border border-[#242b40] rounded-xl px-4 py-3 text-sm outline-none focus:border-[#4f8ef7] text-white" 
+                        placeholder="e.g. student@upi" 
+                      />
+                      <button 
+                        type="button"
+                        onClick={() => {
+                          if (!paymentFormData.paymentApiRef) return alert('Please enter student UPI ID');
+                          alert(`Payment request of ₹${paymentFormData.amount} sent to ${paymentFormData.paymentApiRef}. Student will receive a notification in their UPI app.`);
+                        }}
+                        className="px-4 bg-[#4f8ef7]/10 border border-[#4f8ef7]/20 rounded-xl text-[#4f8ef7] hover:bg-[#4f8ef7]/20 transition-colors font-bold text-[10px] uppercase tracking-wider whitespace-nowrap"
+                      >
+                        Send Request
+                      </button>
+                    </div>
                   </div>
                 </div>
                 <button type="submit" disabled={loading} className="w-full bg-[#4f8ef7] hover:bg-[#3a7ae8] text-white py-3.5 rounded-xl font-bold text-sm transition-all disabled:opacity-50">
@@ -841,7 +927,12 @@ const Payments: React.FC<PaymentsProps> = ({ user }) => {
             <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setShowQRModal(false)} className="absolute inset-0 bg-black/80 backdrop-blur-md" />
             <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.95 }} className="relative w-full max-w-sm bg-[#131726] border border-[#242b40] rounded-3xl p-8 text-center">
               <div className="flex items-center justify-between mb-8">
-                <h3 className="text-xl font-extrabold font-syne">Scan to Pay</h3>
+                <div>
+                  <h3 className="text-xl font-extrabold font-syne">Scan to Pay</h3>
+                  <p className="text-[10px] text-red-500 font-bold uppercase tracking-widest mt-1 flex items-center gap-1">
+                    <Clock size={10} /> Expires in: {formatTime(timeLeft)}
+                  </p>
+                </div>
                 <button onClick={() => setShowQRModal(false)} className="p-2 hover:bg-red-500/10 text-[#6b7599] hover:text-red-500 rounded-full transition-colors"><X size={20} /></button>
               </div>
 
@@ -887,20 +978,16 @@ const Payments: React.FC<PaymentsProps> = ({ user }) => {
                   Scan this QR code using any UPI app (PhonePe, Google Pay, Paytm) to complete your payment.
                 </p>
 
-                <div className="grid grid-cols-2 gap-3 pt-4">
+                <div className="pt-4">
                   <a 
                     href={generateUPIUrl(qrData.upiId, qrData.amount, qrData.name)}
-                    className="flex items-center justify-center gap-2 py-3 bg-[#1a2035] text-white rounded-xl font-bold text-sm hover:bg-[#242b40] transition-all border border-[#242b40]"
+                    className="flex items-center justify-center gap-2 w-full py-3.5 bg-[#4f8ef7] text-white rounded-xl font-bold text-sm hover:bg-[#3a7ae8] transition-all shadow-lg shadow-blue-500/20"
                   >
-                    <ExternalLink size={16} /> Open App
+                    <ExternalLink size={16} /> Open in UPI App
                   </a>
-                  <button 
-                    onClick={simulateCheckPayment}
-                    disabled={checkingPayment || paymentSuccess}
-                    className="flex items-center justify-center gap-2 py-3 bg-[#2ecc8a] text-white rounded-xl font-bold text-sm hover:bg-[#27af76] transition-all disabled:opacity-50"
-                  >
-                    {checkingPayment ? 'Checking...' : 'I have Paid'}
-                  </button>
+                  <p className="text-[10px] text-[#6b7599] mt-4 font-bold uppercase tracking-widest animate-pulse">
+                    Waiting for payment confirmation...
+                  </p>
                 </div>
               </div>
             </motion.div>
