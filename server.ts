@@ -394,6 +394,73 @@ async function startServer() {
     }
   });
 
+  // Background Task: Live Class Reminders
+  const checkLiveClassReminders = async () => {
+    try {
+      const now = new Date();
+      const tenMinutesFromNow = new Date(now.getTime() + 10 * 60 * 1000);
+      
+      const dateStr = tenMinutesFromNow.toISOString().split('T')[0];
+      const timeStr = tenMinutesFromNow.toTimeString().split(' ')[0].substring(0, 5); // HH:mm
+
+      // Fetch all live classes
+      const liveClassesRaw = db.prepare('SELECT * FROM collections WHERE colPath = ?').all('liveClasses') as any[];
+      const liveClasses = liveClassesRaw.map(item => ({ id: item.id, ...JSON.parse(item.data) }));
+
+      for (const c of liveClasses) {
+        // Check if class starts in 10 minutes and reminder hasn't been sent
+        if (c.date === dateStr && c.startTime === timeStr && !c.reminderSent) {
+          console.log(`--- SENDING 10-MINUTE REMINDERS FOR: ${c.title} ---`);
+          
+          // Get students in the batch
+          const students = db.prepare('SELECT * FROM users WHERE role = "student" AND (batchId = ? OR batchId IS NULL)').all(c.batchId) as any[];
+          
+          for (const student of students) {
+            const emailHtml = `
+              <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e5e7eb; border-radius: 12px;">
+                <h2 style="color: #4f8ef7;">Class Starting Soon!</h2>
+                <p>Hi ${student.name},</p>
+                <p>Your live class <strong>"${c.title}"</strong> is starting in 10 minutes.</p>
+                <div style="background: #f9fafb; padding: 15px; border-radius: 8px; margin: 20px 0;">
+                  <p style="margin: 5px 0;"><strong>Time:</strong> ${c.startTime} - ${c.endTime}</p>
+                  <p style="margin: 5px 0;"><strong>Platform:</strong> ${c.meetingType}</p>
+                </div>
+                <a href="${c.meetingLink}" style="display: inline-block; background: #4f8ef7; color: white; padding: 12px 24px; border-radius: 8px; text-decoration: none; font-weight: bold;">Join Class Now</a>
+                <p style="margin-top: 20px; font-size: 12px; color: #6b7280;">If the button doesn't work, copy and paste this link: ${c.meetingLink}</p>
+              </div>
+            `;
+            
+            try {
+              await transporter.sendMail({
+                from: `"Core LMS" <${EMAIL_USER}>`,
+                to: student.email,
+                subject: `Reminder: ${c.title} starts in 10 minutes`,
+                html: emailHtml
+              });
+              console.log(`Email reminder sent to ${student.email}`);
+            } catch (err) {
+              console.error(`Failed to send email reminder to ${student.email}:`, err);
+            }
+
+            // Mock SMS/WhatsApp
+            console.log(`[MOCK SMS] To: ${student.phone || 'N/A'} - Your class "${c.title}" starts in 10 minutes! Join here: ${c.meetingLink}`);
+            console.log(`[MOCK WhatsApp] To: ${student.phone || 'N/A'} - Your class "${c.title}" starts in 10 minutes! Join here: ${c.meetingLink}`);
+          }
+
+          // Mark as sent
+          c.reminderSent = true;
+          db.prepare('UPDATE collections SET data = ?, updatedAt = CURRENT_TIMESTAMP WHERE id = ? AND colPath = ?')
+            .run(JSON.stringify(c), c.id, 'liveClasses');
+        }
+      }
+    } catch (err) {
+      console.error('Error in checkLiveClassReminders:', err);
+    }
+  };
+
+  // Run reminders check every minute
+  setInterval(checkLiveClassReminders, 60000);
+
   // Generic CRUD Routes
   app.get('/api/data/:colPath', authenticate, async (req, res) => {
     try {

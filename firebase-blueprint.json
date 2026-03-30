@@ -271,11 +271,13 @@
         "teacherId": { "type": "string" },
         "title": { "type": "string" },
         "date": { "type": "string", "format": "date" },
-        "time": { "type": "string" },
+        "startTime": { "type": "string" },
+        "endTime": { "type": "string" },
         "status": { "type": "string", "enum": ["Live", "Upcoming", "Completed"] },
-        "zoomLink": { "type": "string" },
-        "zoomPassword": { "type": "string" },
-        "meetLink": { "type": "string" }
+        "meetingLink": { "type": "string" },
+        "meetingType": { "type": "string", "enum": ["Zoom", "Meet", "Custom"] },
+        "reminderSent": { "type": "boolean", "description": "Whether the 10-minute reminder has been sent" },
+        "createdAt": { "type": "string", "format": "date-time" }
       }
     }
   },

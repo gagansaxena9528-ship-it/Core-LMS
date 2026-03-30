@@ -181,11 +181,13 @@ export interface LiveClass {
   teacherId: string;
   title: string;
   date: string;
-  time: string;
-  status: 'Live' | 'Upcoming' | 'Completed';
-  zoomLink?: string;
-  zoomPassword?: string;
-  meetLink?: string;
+  startTime: string;
+  endTime: string;
+  meetingLink: string;
+  meetingType: 'Zoom' | 'Meet' | 'Custom';
+  status: 'Upcoming' | 'Live' | 'Completed';
+  reminderSent?: boolean;
+  createdAt?: string;
 }
 
 export interface Batch {

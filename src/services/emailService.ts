@@ -172,3 +172,28 @@ export const getExamResultEmailTemplate = (name: string, examTitle: string, scor
     </div>
   </div>
 `;
+
+export const getLiveClassEmailTemplate = (name: string, title: string, date: string, startTime: string, endTime: string, link: string, type: string) => `
+  <div style="font-family: sans-serif; color: #333; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #eee; border-radius: 10px;">
+    <h2 style="color: #4f8ef7;">Live Class Scheduled - Core LMS</h2>
+    <p>Hello <strong>${name}</strong>,</p>
+    <p>A new live class has been scheduled for your course.</p>
+    
+    <div style="background: #f9f9f9; padding: 15px; border-radius: 8px; margin: 20px 0;">
+      <h3 style="margin-top: 0; font-size: 16px;">Class Details:</h3>
+      <p style="margin: 5px 0;"><strong>Title:</strong> ${title}</p>
+      <p style="margin: 5px 0;"><strong>Date:</strong> ${date}</p>
+      <p style="margin: 5px 0;"><strong>Time:</strong> ${startTime} - ${endTime}</p>
+      <p style="margin: 5px 0;"><strong>Platform:</strong> ${type}</p>
+      <p style="margin: 15px 0;">
+        <a href="${link}" style="background: #4f8ef7; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px; font-weight: bold;">Join Class</a>
+      </p>
+    </div>
+
+    <p>You can join the class 10 minutes before the scheduled start time.</p>
+    
+    <div style="margin-top: 30px; padding-top: 20px; border-top: 1px solid #eee; font-size: 12px; color: #888;">
+      <p>Sent from Core LMS Admin Panel</p>
+    </div>
+  </div>
+`;
