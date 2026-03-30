@@ -19,6 +19,8 @@ import Payments from './components/Payments';
 import Settings from './components/Settings';
 import Profile from './components/Profile';
 import Attendance from './components/Attendance';
+import Certificates from './components/Certificates';
+import CertificateVerification from './components/CertificateVerification';
 import CoursePlayer from './components/CoursePlayer';
 
 const App: React.FC = () => {
@@ -49,6 +51,8 @@ const App: React.FC = () => {
     <Router>
       <Routes>
         <Route path="/login" element={user ? <Navigate to="/" /> : <Login />} />
+        <Route path="/verify-certificate/:id" element={<CertificateVerification />} />
+        <Route path="/verify-certificate" element={<CertificateVerification />} />
         
         <Route element={user ? <Layout user={user} /> : <Navigate to="/login" />}>
           <Route path="/" element={
@@ -68,6 +72,7 @@ const App: React.FC = () => {
           <Route path="/live-classes" element={<LiveClasses user={user!} />} />
           <Route path="/payments" element={<Payments user={user!} />} />
           <Route path="/attendance" element={<Attendance user={user!} />} />
+          <Route path="/certificates" element={<Certificates user={user!} />} />
           <Route path="/settings" element={<Settings />} />
           <Route path="/profile" element={<Profile user={user!} />} />
           

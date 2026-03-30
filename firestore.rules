@@ -151,6 +151,16 @@ service cloud.firestore {
       allow read: if isAuthenticated();
       allow write: if isAdmin() || isTeacher();
     }
+
+    match /certificates/{certificateId} {
+      allow read: if true; // Public verification
+      allow write: if isAdmin();
+    }
+
+    match /certificateTemplates/{templateId} {
+      allow read: if isAuthenticated();
+      allow write: if isAdmin();
+    }
     
     match /test/connection {
       allow read: if true;

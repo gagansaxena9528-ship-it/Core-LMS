@@ -277,7 +277,23 @@ export interface Certificate {
   issueDate: string;
   certificateId: string; // Auto-generated
   grade?: string;
+  score?: number;
+  totalMarks?: number;
   url?: string;
+  templateId?: string;
+}
+
+export interface CertificateTemplate {
+  id: string;
+  name: string;
+  instituteName: string;
+  logoUrl?: string;
+  backgroundUrl?: string;
+  signatureUrl?: string;
+  signatureName?: string;
+  title: string;
+  isDefault: boolean;
+  createdAt: string;
 }
 
 export interface Notification {

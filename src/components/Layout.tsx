@@ -58,6 +58,7 @@ const Layout: React.FC<LayoutProps> = ({ user }) => {
         { id: '/assignments', icon: <FileText size={18} />, label: 'Assignments' },
         { id: '/live-classes', icon: <Video size={18} />, label: 'Live Classes' },
         { id: '/attendance', icon: <CheckCircle2 size={18} />, label: 'Attendance' },
+        { id: '/certificates', icon: <Award size={18} />, label: 'Certificates' },
       ]},
       { label: 'Finance', items: [
         { id: '/payments', icon: <CreditCard size={18} />, label: 'Payments' },
@@ -78,6 +79,7 @@ const Layout: React.FC<LayoutProps> = ({ user }) => {
         { id: '/assignments', icon: <FileText size={18} />, label: 'Assignments' },
         { id: '/students', icon: <Users size={18} />, label: 'My Students' },
         { id: '/attendance', icon: <CheckCircle2 size={18} />, label: 'Attendance' },
+        { id: '/certificates', icon: <Award size={18} />, label: 'Certificates' },
       ]},
     ],
     student: [
@@ -90,6 +92,7 @@ const Layout: React.FC<LayoutProps> = ({ user }) => {
         { id: '/exams', icon: <FileText size={18} />, label: 'Exams' },
         { id: '/assignments', icon: <FileText size={18} />, label: 'Assignments' },
         { id: '/attendance', icon: <CheckCircle2 size={18} />, label: 'Attendance' },
+        { id: '/certificates', icon: <Award size={18} />, label: 'Certificates' },
       ]},
       { label: 'Account', items: [
         { id: '/payments', icon: <CreditCard size={18} />, label: 'Fees' },
