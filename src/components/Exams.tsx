@@ -47,9 +47,9 @@ const Exams: React.FC<ExamsProps> = ({ user }) => {
 
   // Mock questions for the demo
   const mockQuestions: Question[] = [
-    { id: 'q1', examId: 'e1', question: 'What does SEO stand for?', options: ['Search Engine Optimization', 'Social Engine Operation', 'System Entry Order', 'Search Entry Option'], answerIndex: 0 },
-    { id: 'q2', examId: 'e1', question: 'Which platform is best for B2B marketing?', options: ['Instagram', 'TikTok', 'LinkedIn', 'Snapchat'], answerIndex: 2 },
-    { id: 'q3', examId: 'e1', question: 'What is the main goal of Content Marketing?', options: ['Selling products directly', 'Building trust and authority', 'Increasing server speed', 'Reducing employee turnover'], answerIndex: 1 },
+    { id: 'q1', examId: 'e1', question: 'What does SEO stand for?', options: ['Search Engine Optimization', 'Social Engine Operation', 'System Entry Order', 'Search Entry Option'], answerIndex: 0, type: 'MCQ', marks: 1 },
+    { id: 'q2', examId: 'e1', question: 'Which platform is best for B2B marketing?', options: ['Instagram', 'TikTok', 'LinkedIn', 'Snapchat'], answerIndex: 2, type: 'MCQ', marks: 1 },
+    { id: 'q3', examId: 'e1', question: 'What is the main goal of Content Marketing?', options: ['Selling products directly', 'Building trust and authority', 'Increasing server speed', 'Reducing employee turnover'], answerIndex: 1, type: 'MCQ', marks: 1 },
   ];
 
   const [formData, setFormData] = useState({
@@ -228,7 +228,9 @@ const Exams: React.FC<ExamsProps> = ({ user }) => {
       examId: editingExam?.id || '',
       question: '',
       options: ['', '', '', ''],
-      answerIndex: 0
+      answerIndex: 0,
+      type: 'MCQ',
+      marks: 1
     };
     setFormData({
       ...formData,

@@ -261,7 +261,8 @@ const Courses: React.FC<CoursesProps> = ({ user }) => {
       duration: lessonData.duration,
       order: moduleLessons.filter(l => l.moduleId === editingModule.id).length + 1,
       isFree: lessonData.isFree || false,
-      dripDays: lessonData.dripDays || 0
+      dripDays: lessonData.dripDays || 0,
+      status: 'Published'
     };
     await createDoc('lessons', newLesson, newLesson.id);
     setModuleLessons([...moduleLessons, newLesson]);

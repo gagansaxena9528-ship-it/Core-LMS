@@ -11,7 +11,7 @@ import Students from './components/Students';
 import Teachers from './components/Teachers';
 import Courses from './components/Courses';
 import Batches from './components/Batches';
-import Content from './components/Content';
+import ContentManagement from './components/ContentManagement';
 import Exams from './components/Exams';
 import Assignments from './components/Assignments';
 import LiveClasses from './components/LiveClasses';
@@ -62,7 +62,7 @@ const App: React.FC = () => {
           <Route path="/teachers" element={<Teachers />} />
           <Route path="/courses" element={<Courses user={user!} />} />
           <Route path="/batches" element={<Batches />} />
-          <Route path="/content" element={<Content />} />
+          <Route path="/content" element={<ContentManagement user={user!} />} />
           <Route path="/exams" element={<Exams user={user!} />} />
           <Route path="/assignments" element={<Assignments user={user!} />} />
           <Route path="/live-classes" element={<LiveClasses user={user!} />} />

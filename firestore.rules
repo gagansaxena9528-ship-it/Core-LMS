@@ -101,6 +101,29 @@ service cloud.firestore {
       allow write: if isAdmin() || isTeacher();
     }
 
+    match /lessons/{lessonId} {
+      allow read: if isAuthenticated() && (isAdmin() || isTeacher() || resource.data.status == 'Published');
+      allow write: if isAdmin() || isTeacher();
+    }
+
+    match /assignments/{assignmentId} {
+      allow read: if isAuthenticated() && (isAdmin() || isTeacher() || resource.data.status == 'Active');
+      allow write: if isAdmin() || isTeacher();
+    }
+
+    match /submissions/{submissionId} {
+      allow read: if isAuthenticated() && (isAdmin() || isTeacher() || isOwner(resource.data.studentId));
+      allow create: if isStudent() && request.resource.data.studentId == request.auth.uid;
+      allow update: if (isStudent() && isOwner(resource.data.studentId) && request.resource.data.status == 'Submitted') || isAdmin() || isTeacher();
+      allow delete: if isAdmin();
+    }
+
+    match /results/{resultId} {
+      allow read: if isAuthenticated() && (isAdmin() || isTeacher() || isOwner(resource.data.studentId));
+      allow create: if isAuthenticated();
+      allow update, delete: if isAdmin() || isTeacher();
+    }
+
     match /exams/{examId} {
       allow read: if isAuthenticated();
       allow write: if isAdmin() || isTeacher();

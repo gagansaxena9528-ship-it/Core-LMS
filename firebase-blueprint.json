@@ -68,11 +68,91 @@
       "properties": {
         "courseId": { "type": "string" },
         "title": { "type": "string" },
+        "order": { "type": "number" }
+      }
+    },
+    "Lesson": {
+      "title": "Lesson",
+      "description": "A single lesson (video, pdf, etc.) within a module.",
+      "type": "object",
+      "properties": {
+        "moduleId": { "type": "string" },
+        "courseId": { "type": "string" },
+        "title": { "type": "string" },
+        "type": { "type": "string", "enum": ["video", "pdf", "text", "file"] },
+        "content": { "type": "string" },
+        "videoUrl": { "type": "string" },
+        "videoType": { "type": "string", "enum": ["youtube", "direct"] },
+        "fileUrl": { "type": "string" },
+        "duration": { "type": "string" },
+        "order": { "type": "number" },
+        "isFree": { "type": "boolean" },
+        "dripDays": { "type": "number" },
         "description": { "type": "string" },
         "thumbnail": { "type": "string" },
-        "videoUrl": { "type": "string" },
-        "videoType": { "type": "string", "enum": ["youtube", "vimeo", "upload"] },
-        "keyPoints": { "type": "array", "items": { "type": "string" } }
+        "status": { "type": "string", "enum": ["Published", "Draft", "Scheduled"] },
+        "scheduledDate": { "type": "string", "format": "date-time" },
+        "accessControl": {
+          "type": "object",
+          "properties": {
+            "batchIds": { "type": "array", "items": { "type": "string" } },
+            "isPaidOnly": { "type": "boolean" }
+          }
+        },
+        "analytics": {
+          "type": "object",
+          "properties": {
+            "views": { "type": "number" },
+            "avgWatchTime": { "type": "number" },
+            "downloads": { "type": "number" }
+          }
+        }
+      }
+    },
+    "Assignment": {
+      "title": "Assignment",
+      "description": "Assignment details.",
+      "type": "object",
+      "properties": {
+        "courseId": { "type": "string" },
+        "batchId": { "type": "string" },
+        "moduleId": { "type": "string" },
+        "title": { "type": "string" },
+        "description": { "type": "string" },
+        "dueDate": { "type": "string", "format": "date" },
+        "totalMarks": { "type": "number" },
+        "fileUrl": { "type": "string" },
+        "status": { "type": "string", "enum": ["Active", "Draft", "Completed"] }
+      }
+    },
+    "AssignmentSubmission": {
+      "title": "AssignmentSubmission",
+      "description": "Student submission for an assignment.",
+      "type": "object",
+      "properties": {
+        "assignmentId": { "type": "string" },
+        "studentId": { "type": "string" },
+        "studentName": { "type": "string" },
+        "submissionDate": { "type": "string", "format": "date-time" },
+        "fileUrl": { "type": "string" },
+        "marks": { "type": "number" },
+        "feedback": { "type": "string" },
+        "status": { "type": "string", "enum": ["Submitted", "Checked", "Pending"] }
+      }
+    },
+    "Result": {
+      "title": "Result",
+      "description": "Result of an exam attempt.",
+      "type": "object",
+      "properties": {
+        "examId": { "type": "string" },
+        "studentId": { "type": "string" },
+        "studentName": { "type": "string" },
+        "score": { "type": "number" },
+        "totalMarks": { "type": "number" },
+        "percentage": { "type": "number" },
+        "status": { "type": "string", "enum": ["Pass", "Fail"] },
+        "date": { "type": "string", "format": "date-time" }
       }
     },
     "Exam": {
@@ -87,7 +167,9 @@
         "totalMarks": { "type": "number" },
         "passingMarks": { "type": "number" },
         "status": { "type": "string", "enum": ["Active", "Draft", "Completed"] },
-        "type": { "type": "string", "enum": ["Practice", "Final"] }
+        "type": { "type": "string", "enum": ["Practice", "Final"] },
+        "autoResult": { "type": "boolean" },
+        "attemptsAllowed": { "type": "number" }
       }
     },
     "Question": {
@@ -152,6 +234,10 @@
     "/teachers/{userId}": { "schema": "Teacher", "description": "Teacher specific data" },
     "/courses/{courseId}": { "schema": "Course", "description": "Course information" },
     "/courses/{courseId}/modules/{moduleId}": { "schema": "Module", "description": "Modules within a course" },
+    "/lessons/{lessonId}": { "schema": "Lesson", "description": "Lessons (videos, pdfs, etc.)" },
+    "/assignments/{assignmentId}": { "schema": "Assignment", "description": "Assignments" },
+    "/submissions/{submissionId}": { "schema": "AssignmentSubmission", "description": "Assignment submissions" },
+    "/results/{resultId}": { "schema": "Result", "description": "Exam results" },
     "/exams/{examId}": { "schema": "Exam", "description": "Exams" },
     "/exams/{examId}/questions/{questionId}": { "schema": "Question", "description": "Questions for an exam" },
     "/attendance/{attendanceId}": { "schema": "Attendance", "description": "Attendance records" },

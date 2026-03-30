@@ -101,10 +101,21 @@ export interface Lesson {
   fileUrl?: string;
   duration?: string;
   order: number;
-  isFree?: boolean;
+  isFree: boolean;
   dripDays?: number;
   description?: string;
   thumbnail?: string;
+  status: 'Published' | 'Draft' | 'Scheduled';
+  scheduledDate?: string;
+  accessControl?: {
+    batchIds?: string[];
+    isPaidOnly: boolean;
+  };
+  analytics?: {
+    views: number;
+    avgWatchTime?: number;
+    downloads?: number;
+  };
 }
 
 export interface Exam {
@@ -117,14 +128,19 @@ export interface Exam {
   passingMarks: number;
   status: 'Active' | 'Draft' | 'Completed';
   type: 'Practice' | 'Final';
+  autoResult: boolean;
+  attemptsAllowed?: number;
 }
 
 export interface Question {
   id: string;
   examId: string;
   question: string;
+  type: 'MCQ' | 'Multiple' | 'TrueFalse';
   options: string[];
-  answerIndex: number;
+  answerIndex?: number; // for MCQ/TrueFalse
+  correctOptions?: number[]; // for Multiple
+  marks: number;
 }
 
 export interface Attendance {
