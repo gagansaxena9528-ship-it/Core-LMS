@@ -167,14 +167,39 @@ export interface Batch {
   name: string;
   courseId: string;
   teacherId: string;
+  assistantTeacherId?: string;
   studentsCount: number;
-  startDate?: string;
-  endDate?: string;
-  startTime?: string;
-  endTime?: string;
+  maxStudents: number;
+  startDate: string;
+  endDate: string;
+  classDays: 'Mon-Fri' | 'Weekend' | 'Custom';
   days: string[];
-  capacity?: number;
+  timeSlot: string;
   status: 'Active' | 'Upcoming' | 'Completed';
+  createdAt?: string;
+}
+
+export interface BatchAnnouncement {
+  id: string;
+  batchId: string;
+  title: string;
+  message: string;
+  type: 'Notice' | 'Update' | 'Alert';
+  date: string;
+  authorId: string;
+}
+
+export interface ScheduledClass {
+  id: string;
+  batchId: string;
+  teacherId: string;
+  topic: string;
+  date: string;
+  time: string;
+  duration: string;
+  link?: string;
+  linkType?: 'Zoom' | 'Meet' | 'Other';
+  status: 'Upcoming' | 'Live' | 'Completed';
 }
 
 export interface Assignment {
