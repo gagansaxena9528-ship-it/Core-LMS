@@ -21,7 +21,8 @@ import {
   ChevronRight,
   CheckCircle2,
   Menu,
-  X
+  X,
+  BarChart3
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { clsx, type ClassValue } from 'clsx';
@@ -51,6 +52,7 @@ const Layout: React.FC<LayoutProps> = ({ user }) => {
         { id: '/teachers', icon: <UserSquare2 size={18} />, label: 'Teachers' },
         { id: '/courses', icon: <BookOpen size={18} />, label: 'Courses' },
         { id: '/batches', icon: <Layers size={18} />, label: 'Batches' },
+        { id: '/reports', icon: <BarChart3 size={18} />, label: 'Reports & Analytics' },
       ]},
       { label: 'Academics', items: [
         { id: '/content', icon: <Video size={18} />, label: 'Content & Videos' },

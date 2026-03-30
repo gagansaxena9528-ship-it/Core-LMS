@@ -22,6 +22,7 @@ import Attendance from './components/Attendance';
 import Certificates from './components/Certificates';
 import CertificateVerification from './components/CertificateVerification';
 import CoursePlayer from './components/CoursePlayer';
+import Reports from './components/Reports';
 
 const App: React.FC = () => {
   const [user, setUser] = useState<User | null>(null);
@@ -73,6 +74,7 @@ const App: React.FC = () => {
           <Route path="/payments" element={<Payments user={user!} />} />
           <Route path="/attendance" element={<Attendance user={user!} />} />
           <Route path="/certificates" element={<Certificates user={user!} />} />
+          <Route path="/reports" element={<Reports user={user!} />} />
           <Route path="/settings" element={<Settings />} />
           <Route path="/profile" element={<Profile user={user!} />} />
           
