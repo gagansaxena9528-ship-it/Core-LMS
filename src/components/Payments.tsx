@@ -104,6 +104,7 @@ const Payments: React.FC<PaymentsProps> = ({ user }) => {
   const [paymentSuccess, setPaymentSuccess] = useState(false);
   const [timeLeft, setTimeLeft] = useState(300); // 5 minutes in seconds
   const [loading, setLoading] = useState(false);
+  const [requestingUPI, setRequestingUPI] = useState(false);
   
   const [paymentFormData, setPaymentFormData] = useState({
     studentId: '',
@@ -148,11 +149,6 @@ const Payments: React.FC<PaymentsProps> = ({ user }) => {
       interval = setInterval(() => {
         setTimeLeft((prev) => prev - 1);
       }, 1000);
-
-      // Simulate automatic payment detection after 15 seconds
-      if (timeLeft === 285) {
-        simulateCheckPayment();
-      }
     }
     return () => clearInterval(interval);
   }, [showQRModal, timeLeft, paymentSuccess]);
@@ -351,90 +347,103 @@ const Payments: React.FC<PaymentsProps> = ({ user }) => {
   };
 
   const generateInvoice = (payment: Payment, action: 'download' | 'print' = 'download') => {
-    const doc = new jsPDF() as any;
-    const student = students.find(s => s.uid === payment.studentId);
-    
-    // Header
-    doc.setFontSize(24);
-    doc.setTextColor(79, 142, 247);
-    doc.text('CoreLMS', 105, 25, { align: 'center' });
-    
-    doc.setFontSize(10);
-    doc.setTextColor(100);
-    doc.text('Professional Learning Management System', 105, 32, { align: 'center' });
-    
-    doc.setDrawColor(79, 142, 247);
-    doc.setLineWidth(0.5);
-    doc.line(20, 40, 190, 40);
-    
-    // Invoice Info
-    doc.setFontSize(14);
-    doc.setTextColor(0);
-    doc.text('PAYMENT RECEIPT', 20, 55);
-    
-    doc.setFontSize(10);
-    doc.setTextColor(100);
-    doc.text(`Receipt No: ${payment.invoiceNumber || 'N/A'}`, 20, 62);
-    doc.text(`Date: ${new Date(payment.date).toLocaleString()}`, 20, 68);
-    
-    // Student Info
-    doc.setFontSize(12);
-    doc.setTextColor(0);
-    doc.text('STUDENT DETAILS', 20, 85);
-    doc.setDrawColor(200);
-    doc.line(20, 87, 80, 87);
-    
-    doc.setFontSize(10);
-    doc.text(`Name: ${payment.studentName || 'N/A'}`, 20, 95);
-    doc.text(`Email: ${student?.email || 'N/A'}`, 20, 101);
-    doc.text(`Phone: ${student?.phone || 'N/A'}`, 20, 107);
-    
-    // Payment Details
-    doc.setFontSize(12);
-    doc.text('PAYMENT SUMMARY', 120, 85);
-    doc.line(120, 87, 180, 87);
-    
-    doc.setFontSize(10);
-    doc.text(`Course: ${payment.courseName || 'N/A'}`, 120, 95);
-    doc.text(`Mode: ${payment.mode}`, 120, 101);
-    doc.text(`Status: ${payment.status}`, 120, 107);
-    
-    // Table
-    doc.autoTable({
-      startY: 120,
-      head: [['Description', 'Amount (INR)']],
-      body: [
-        [`Course Fee Payment for ${payment.courseName}`, `₹${payment.amount.toLocaleString()}`],
-        ['Tax / GST (Included)', '₹0.00'],
-      ],
-      theme: 'striped',
-      headStyles: { fillColor: [79, 142, 247], textColor: [255, 255, 255], fontStyle: 'bold' },
-      styles: { fontSize: 10, cellPadding: 5 },
-      columnStyles: { 1: { halign: 'right' } }
-    });
-    
-    const finalY = (doc as any).lastAutoTable.finalY;
-    
-    // Total
-    doc.setFillColor(245, 247, 250);
-    doc.rect(120, finalY + 5, 70, 15, 'F');
-    doc.setFontSize(12);
-    doc.setTextColor(79, 142, 247);
-    doc.setFont(undefined, 'bold');
-    doc.text(`TOTAL PAID: ₹${payment.amount.toLocaleString()}`, 125, finalY + 15);
-    
-    // Footer
-    doc.setFontSize(9);
-    doc.setTextColor(150);
-    doc.setFont(undefined, 'normal');
-    doc.text('This is a computer-generated receipt and does not require a physical signature.', 105, 280, { align: 'center' });
-    doc.text('© 2026 CoreLMS. All Rights Reserved.', 105, 285, { align: 'center' });
-    
-    if (action === 'print') {
-      doc.autoPrint();
-      window.open(doc.output('bloburl'), '_blank');
-    } else {
-      doc.save(`Receipt_${payment.invoiceNumber}.pdf`);
+    try {
+      const doc = new jsPDF() as any;
+      const student = students.find(s => s.uid === payment.studentId);
+      
+      // Header
+      doc.setFontSize(24);
+      doc.setTextColor(79, 142, 247);
+      doc.text('CoreLMS', 105, 25, { align: 'center' });
+      
+      doc.setFontSize(10);
+      doc.setTextColor(100);
+      doc.text('Professional Learning Management System', 105, 32, { align: 'center' });
+      
+      doc.setDrawColor(79, 142, 247);
+      doc.setLineWidth(0.5);
+      doc.line(20, 40, 190, 40);
+      
+      // Invoice Info
+      doc.setFontSize(14);
+      doc.setTextColor(0);
+      doc.text('PAYMENT RECEIPT', 20, 55);
+      
+      doc.setFontSize(10);
+      doc.setTextColor(100);
+      doc.text(`Receipt No: ${payment.invoiceNumber || 'N/A'}`, 20, 62);
+      doc.text(`Date: ${new Date(payment.date).toLocaleString()}`, 20, 68);
+      
+      // Student Info
+      doc.setFontSize(12);
+      doc.setTextColor(0);
+      doc.text('STUDENT DETAILS', 20, 85);
+      doc.setDrawColor(200);
+      doc.line(20, 87, 80, 87);
+      
+      doc.setFontSize(10);
+      doc.text(`Name: ${payment.studentName || 'N/A'}`, 20, 95);
+      doc.text(`Email: ${student?.email || 'N/A'}`, 20, 101);
+      doc.text(`Phone: ${student?.phone || 'N/A'}`, 20, 107);
+      
+      // Payment Details
+      doc.setFontSize(12);
+      doc.text('PAYMENT SUMMARY', 120, 85);
+      doc.line(120, 87, 180, 87);
+      
+      doc.setFontSize(10);
+      doc.text(`Course: ${payment.courseName || 'N/A'}`, 120, 95);
+      doc.text(`Mode: ${payment.mode}`, 120, 101);
+      doc.text(`Status: ${payment.status}`, 120, 107);
+      
+      // Table
+      doc.autoTable({
+        startY: 120,
+        head: [['Description', 'Amount (INR)']],
+        body: [
+          [`Course Fee Payment for ${payment.courseName}`, `₹${payment.amount.toLocaleString()}`],
+          ['Tax / GST (Included)', '₹0.00'],
+        ],
+        theme: 'striped',
+        headStyles: { fillColor: [79, 142, 247], textColor: [255, 255, 255], fontStyle: 'bold' },
+        styles: { fontSize: 10, cellPadding: 5 },
+        columnStyles: { 1: { halign: 'right' } }
+      });
+      
+      const finalY = (doc as any).lastAutoTable.finalY;
+      
+      // Total
+      doc.setFillColor(245, 247, 250);
+      doc.rect(120, finalY + 5, 70, 15, 'F');
+      doc.setFontSize(12);
+      doc.setTextColor(79, 142, 247);
+      doc.setFont(undefined, 'bold');
+      doc.text(`TOTAL PAID: ₹${payment.amount.toLocaleString()}`, 125, finalY + 15);
+      
+      // Footer
+      doc.setFontSize(9);
+      doc.setTextColor(150);
+      doc.setFont(undefined, 'normal');
+      doc.text('This is a computer-generated receipt and does not require a physical signature.', 105, 280, { align: 'center' });
+      doc.text('© 2026 CoreLMS. All Rights Reserved.', 105, 285, { align: 'center' });
+      
+      if (action === 'print') {
+        const blob = doc.output('blob');
+        const url = URL.createObjectURL(blob);
+        const printWindow = window.open(url, '_blank');
+        if (printWindow) {
+          printWindow.onload = () => {
+            printWindow.print();
+          };
+        } else {
+          alert('Pop-up blocked! Please allow pop-ups to print the receipt.');
+        }
+      } else {
+        doc.save(`Receipt_${payment.invoiceNumber || 'Payment'}.pdf`);
+      }
+    } catch (error) {
+      console.error('Error generating invoice:', error);
+      alert('Failed to generate receipt. Please try again.');
     }
   };
 
@@ -846,13 +855,18 @@ const Payments: React.FC<PaymentsProps> = ({ user }) => {
                       />
                       <button 
                         type="button"
-                        onClick={() => {
+                        disabled={requestingUPI}
+                        onClick={async () => {
                           if (!paymentFormData.paymentApiRef) return alert('Please enter student UPI ID');
+                          setRequestingUPI(true);
+                          // Simulate sending request
+                          await new Promise(resolve => setTimeout(resolve, 2000));
                           alert(`Payment request of ₹${paymentFormData.amount} sent to ${paymentFormData.paymentApiRef}. Student will receive a notification in their UPI app.`);
+                          setRequestingUPI(false);
                         }}
-                        className="px-4 bg-[#4f8ef7]/10 border border-[#4f8ef7]/20 rounded-xl text-[#4f8ef7] hover:bg-[#4f8ef7]/20 transition-colors font-bold text-[10px] uppercase tracking-wider whitespace-nowrap"
+                        className="px-4 bg-[#4f8ef7]/10 border border-[#4f8ef7]/20 rounded-xl text-[#4f8ef7] hover:bg-[#4f8ef7]/20 transition-colors font-bold text-[10px] uppercase tracking-wider whitespace-nowrap disabled:opacity-50"
                       >
-                        Send Request
+                        {requestingUPI ? 'Sending...' : 'Send Request'}
                       </button>
                     </div>
                   </div>
@@ -978,7 +992,15 @@ const Payments: React.FC<PaymentsProps> = ({ user }) => {
                   Scan this QR code using any UPI app (PhonePe, Google Pay, Paytm) to complete your payment.
                 </p>
 
-                <div className="pt-4">
+                <div className="pt-4 space-y-3">
+                  <button 
+                    onClick={simulateCheckPayment}
+                    disabled={checkingPayment || paymentSuccess}
+                    className="w-full py-3.5 bg-[#2ecc8a] text-white rounded-xl font-bold text-sm hover:bg-[#27af76] transition-all shadow-lg shadow-green-500/20 disabled:opacity-50"
+                  >
+                    {checkingPayment ? 'Verifying...' : 'I have paid'}
+                  </button>
+                  
                   <a 
                     href={generateUPIUrl(qrData.upiId, qrData.amount, qrData.name)}
                     className="flex items-center justify-center gap-2 w-full py-3.5 bg-[#4f8ef7] text-white rounded-xl font-bold text-sm hover:bg-[#3a7ae8] transition-all shadow-lg shadow-blue-500/20"
