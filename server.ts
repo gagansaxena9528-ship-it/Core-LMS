@@ -546,8 +546,9 @@ async function startServer() {
         return res.json({ success: true });
       }
 
-      db.prepare('UPDATE collections SET data = ?, updatedAt = CURRENT_TIMESTAMP WHERE id = ? AND colPath = ?')
-        .run(JSON.stringify(data), id, colPath);
+      // Use INSERT OR REPLACE for collections to support upserts
+      db.prepare('INSERT OR REPLACE INTO collections (id, colPath, data, updatedAt) VALUES (?, ?, ?, CURRENT_TIMESTAMP)')
+        .run(id, colPath, JSON.stringify(data));
       res.json({ success: true });
     } catch (err: any) {
       console.error('PUT Data Error:', err);

@@ -81,14 +81,16 @@ export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    console.log('--- SettingsContext Initializing ---');
     // We'll store settings in a single document 'global' in 'settings' collection
     const unsub = subscribeToCollection('settings', (docs: any[]) => {
+      console.log('--- Settings Received from Firestore ---', docs.length);
       const globalDoc = docs.find(d => d.id === 'global');
       if (globalDoc) {
         // Merge with defaults to ensure all fields exist
         const merged = { ...defaultSettings };
         Object.keys(globalDoc).forEach(key => {
-          if (typeof globalDoc[key] === 'object' && globalDoc[key] !== null) {
+          if (key !== 'id' && typeof globalDoc[key] === 'object' && globalDoc[key] !== null) {
             merged[key as keyof GlobalSettings] = { 
               ...(merged[key as keyof GlobalSettings] as any), 
               ...globalDoc[key] 
@@ -98,6 +100,7 @@ export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         setSettings(merged);
         applySettings(merged);
       } else {
+        console.log('--- No global settings document found, using defaults ---');
         // If no settings doc, use defaults
         setSettings(defaultSettings);
         applySettings(defaultSettings);
@@ -105,7 +108,23 @@ export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       setLoading(false);
     });
 
-    return () => unsub();
+    // Timeout to prevent infinite loading if firestore is slow/broken
+    const timeout = setTimeout(() => {
+      setLoading(prev => {
+        if (prev) {
+          console.warn('--- Settings loading timed out, using defaults ---');
+          setSettings(defaultSettings);
+          applySettings(defaultSettings);
+          return false;
+        }
+        return prev;
+      });
+    }, 5000);
+
+    return () => {
+      unsub();
+      clearTimeout(timeout);
+    };
   }, []);
 
   const applySettings = (s: GlobalSettings) => {
@@ -201,10 +220,17 @@ export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   };
 
   const updateSettings = async (category: keyof GlobalSettings, data: any) => {
+    console.log(`--- Updating Settings: ${category} ---`, data);
     try {
-      const currentCategoryData = settings ? settings[category] : defaultSettings[category];
-      const updatedData = { ...currentCategoryData, ...data };
-      await updateDoc('settings', 'global', { [category]: updatedData });
+      const currentSettings = settings || defaultSettings;
+      const currentCategoryData = currentSettings[category];
+      const updatedCategoryData = { ...currentCategoryData, ...data };
+      
+      const updatedFullSettings = { ...currentSettings, [category]: updatedCategoryData };
+      
+      // We update the whole 'global' doc with the new data
+      await updateDoc('settings', 'global', updatedFullSettings);
+      console.log('--- Settings updated successfully ---');
     } catch (err) {
       console.error('Error updating settings:', err);
       throw err;

@@ -30,22 +30,28 @@ const Settings: React.FC = () => {
   const [saving, setSaving] = useState(false);
   const [success, setSuccess] = useState(false);
 
+  console.log('--- Settings Component Render ---', { activeTab, settingsLoading, hasSettings: !!settings });
+
   if (settingsLoading || !settings) {
     return (
       <div className="flex items-center justify-center h-[60vh]">
-        <Loader2 className="w-8 h-8 text-[#4f8ef7] animate-spin" />
+        <div className="flex flex-col items-center gap-4">
+          <Loader2 className="w-8 h-8 text-[#4f8ef7] animate-spin" />
+          <p className="text-[#6b7599] text-sm animate-pulse">Loading settings...</p>
+        </div>
       </div>
     );
   }
 
   const handleSave = async (category: keyof GlobalSettings, data: any) => {
+    console.log(`--- handleSave triggered for ${category} ---`, data);
     setSaving(true);
     try {
       await updateSettings(category, data);
       setSuccess(true);
       setTimeout(() => setSuccess(false), 3000);
     } catch (err) {
-      console.error(err);
+      console.error('--- handleSave Error ---', err);
     } finally {
       setSaving(false);
     }
