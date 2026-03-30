@@ -121,26 +121,36 @@ export interface Lesson {
 export interface Exam {
   id: string;
   courseId: string;
+  batchId?: string;
   moduleId?: string;
   title: string;
+  description?: string;
+  instructions?: string;
   duration: number; // in minutes
   totalMarks: number;
   passingMarks: number;
   status: 'Active' | 'Draft' | 'Completed';
   type: 'Practice' | 'Final';
   autoResult: boolean;
-  attemptsAllowed?: number;
+  attemptsAllowed?: number; // 0 for unlimited
+  startDate?: string;
+  endDate?: string;
+  negativeMarking?: number;
+  createdAt?: string;
 }
 
 export interface Question {
   id: string;
   examId: string;
   question: string;
-  type: 'MCQ' | 'Multiple' | 'TrueFalse';
-  options: string[];
+  type: 'MCQ' | 'Multiple' | 'TrueFalse' | 'Descriptive';
+  options?: string[]; // Not needed for Descriptive
   answerIndex?: number; // for MCQ/TrueFalse
   correctOptions?: number[]; // for Multiple
+  correctAnswer?: string; // for Descriptive or short answer
   marks: number;
+  difficulty?: 'Easy' | 'Medium' | 'Hard';
+  subject?: string;
 }
 
 export interface Attendance {
@@ -253,6 +263,9 @@ export interface Result {
   percentage: number;
   status: 'Pass' | 'Fail';
   date: string;
+  answers?: Record<string, any>;
+  feedback?: Record<string, string>;
+  manualMarks?: Record<string, number>;
 }
 
 export interface Certificate {

@@ -152,7 +152,10 @@
         "totalMarks": { "type": "number" },
         "percentage": { "type": "number" },
         "status": { "type": "string", "enum": ["Pass", "Fail"] },
-        "date": { "type": "string", "format": "date-time" }
+        "date": { "type": "string", "format": "date-time" },
+        "answers": { "type": "object" },
+        "feedback": { "type": "object" },
+        "manualMarks": { "type": "object" }
       }
     },
     "Exam": {
@@ -161,26 +164,38 @@
       "type": "object",
       "properties": {
         "courseId": { "type": "string" },
+        "batchId": { "type": "string" },
         "moduleId": { "type": "string" },
         "title": { "type": "string" },
+        "description": { "type": "string" },
+        "instructions": { "type": "string" },
         "duration": { "type": "number" },
         "totalMarks": { "type": "number" },
         "passingMarks": { "type": "number" },
         "status": { "type": "string", "enum": ["Active", "Draft", "Completed"] },
         "type": { "type": "string", "enum": ["Practice", "Final"] },
         "autoResult": { "type": "boolean" },
-        "attemptsAllowed": { "type": "number" }
+        "attemptsAllowed": { "type": "number" },
+        "startDate": { "type": "string", "format": "date-time" },
+        "endDate": { "type": "string", "format": "date-time" },
+        "negativeMarking": { "type": "number" }
       }
     },
     "Question": {
       "title": "Question",
-      "description": "Objective question for an exam.",
+      "description": "Objective or descriptive question for an exam.",
       "type": "object",
       "properties": {
         "examId": { "type": "string" },
         "question": { "type": "string" },
+        "type": { "type": "string", "enum": ["MCQ", "Multiple", "TrueFalse", "Descriptive"] },
         "options": { "type": "array", "items": { "type": "string" } },
-        "answerIndex": { "type": "number" }
+        "answerIndex": { "type": "number" },
+        "correctOptions": { "type": "array", "items": { "type": "number" } },
+        "correctAnswer": { "type": "string" },
+        "marks": { "type": "number" },
+        "difficulty": { "type": "string", "enum": ["Easy", "Medium", "Hard"] },
+        "subject": { "type": "string" }
       }
     },
     "Attendance": {

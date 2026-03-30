@@ -21,10 +21,13 @@ service cloud.firestore {
     // Fields: courseId, title, description, thumbnail, videoUrl, videoType, keyPoints
     //
     // Collection: exams
-    // Fields: courseId, moduleId, title, duration, totalMarks, passingMarks, status, type
+    // Fields: courseId, batchId, moduleId, title, description, instructions, duration, totalMarks, passingMarks, status, type, autoResult, attemptsAllowed, startDate, endDate, negativeMarking, createdAt
     //
     // Collection: questions
-    // Fields: examId, question, options, answerIndex
+    // Fields: examId, question, type, options, answerIndex, correctOptions, correctAnswer, marks, difficulty, subject
+    //
+    // Collection: results
+    // Fields: examId, studentId, studentName, score, totalMarks, percentage, status, date, answers, feedback, manualMarks
     //
     // Collection: attendance
     // Fields: studentId, courseId, batchId, date, status
@@ -120,7 +123,7 @@ service cloud.firestore {
 
     match /results/{resultId} {
       allow read: if isAuthenticated() && (isAdmin() || isTeacher() || isOwner(resource.data.studentId));
-      allow create: if isAuthenticated();
+      allow create: if isStudent() && request.resource.data.studentId == request.auth.uid;
       allow update, delete: if isAdmin() || isTeacher();
     }
 
