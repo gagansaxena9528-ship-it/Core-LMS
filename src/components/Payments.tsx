@@ -34,6 +34,52 @@ import { X } from 'lucide-react';
 import { jsPDF } from 'jspdf';
 import 'jspdf-autotable';
 
+import { loadStripe } from '@stripe/stripe-js';
+import { Elements, PaymentElement, useStripe, useElements } from '@stripe/react-stripe-js';
+
+const stripePromise = loadStripe((import.meta as any).env.VITE_STRIPE_PUBLISHABLE_KEY || 'pk_test_51P...');
+
+const CheckoutForm = ({ amount, onSuccess, onCancel }: { amount: number, onSuccess: (ref: string) => void, onCancel: () => void }) => {
+  const stripe = useStripe();
+  const elements = useElements();
+  const [error, setError] = useState<string | null>(null);
+  const [processing, setProcessing] = useState(false);
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!stripe || !elements) return;
+
+    setProcessing(true);
+    const { error: submitError } = await stripe.confirmPayment({
+      elements,
+      confirmParams: {
+        return_url: window.location.origin + '/payments/success',
+      },
+      redirect: 'if_required',
+    });
+
+    if (submitError) {
+      setError(submitError.message || 'An error occurred');
+      setProcessing(false);
+    } else {
+      onSuccess('Stripe-Automated');
+    }
+  };
+
+  return (
+    <form onSubmit={handleSubmit} className="space-y-6">
+      <PaymentElement />
+      {error && <div className="text-red-500 text-xs font-bold">{error}</div>}
+      <div className="flex gap-3 pt-4">
+        <button type="button" onClick={onCancel} className="flex-1 px-4 py-3 bg-[#1a2035] text-[#6b7599] rounded-xl font-bold text-sm hover:bg-[#242b40] transition-all">Cancel</button>
+        <button type="submit" disabled={!stripe || processing} className="flex-1 px-4 py-3 bg-[#4f8ef7] text-white rounded-xl font-bold text-sm hover:bg-[#3a7ae8] transition-all disabled:opacity-50">
+          {processing ? 'Processing...' : `Pay ₹${amount.toLocaleString()}`}
+        </button>
+      </div>
+    </form>
+  );
+};
+
 interface PaymentsProps {
   user?: UserType;
 }
@@ -49,7 +95,13 @@ const Payments: React.FC<PaymentsProps> = ({ user }) => {
   const [showPaymentModal, setShowPaymentModal] = useState(false);
   const [showFeeModal, setShowFeeModal] = useState(false);
   const [showQRModal, setShowQRModal] = useState(false);
+  const [showCheckoutModal, setShowCheckoutModal] = useState(false);
+  const [clientSecret, setClientSecret] = useState<string | null>(null);
+  const [showDirectPaymentModal, setShowDirectPaymentModal] = useState(false);
+  const [directPaymentData, setDirectPaymentData] = useState({ amount: 0, upiId: 'gagansaxena7212@naviaxis' });
   const [qrData, setQrData] = useState({ upiId: 'gagansaxena7212@naviaxis', amount: 0, name: 'CoreLMS' });
+  const [checkingPayment, setCheckingPayment] = useState(false);
+  const [paymentSuccess, setPaymentSuccess] = useState(false);
   const [loading, setLoading] = useState(false);
   
   const [paymentFormData, setPaymentFormData] = useState({
@@ -118,6 +170,80 @@ const Payments: React.FC<PaymentsProps> = ({ user }) => {
     pendingRevenue: pendingPayments.reduce((acc, p) => acc + p.pendingAmount, 0),
     totalTransactions: payments.length,
     successRate: Math.round((payments.filter(p => p.status === 'Paid').length / (payments.length || 1)) * 100)
+  };
+
+  const handleStartCheckout = async (amount: number) => {
+    setLoading(true);
+    try {
+      const response = await fetch('/api/payments/create-intent', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ amount })
+      });
+      const data = await response.json();
+      if (data.clientSecret) {
+        setClientSecret(data.clientSecret);
+        setShowCheckoutModal(true);
+      }
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handlePaymentSuccess = async (ref: string, amountOverride?: number) => {
+    setPaymentSuccess(true);
+    const amount = amountOverride || qrData.amount;
+    
+    // Record the payment
+    const student = students.find(s => s.uid === user?.uid);
+    const course = courses.find(c => c.id === student?.courseId);
+    
+    const invoiceNumber = `INV-${Date.now().toString().slice(-6)}`;
+    const newPayment: Payment = {
+      id: Math.random().toString(36).substring(2, 15),
+      studentId: user?.uid || '',
+      studentName: user?.name,
+      courseId: student?.courseId || '',
+      courseName: course?.title,
+      amount: amount,
+      mode: 'Online',
+      transactionId: `AUTO-${Date.now()}`,
+      notes: 'Automated Payment Success',
+      status: 'Paid',
+      paymentApiRef: ref,
+      date: new Date().toISOString(),
+      invoiceNumber,
+      totalFee: student?.fee,
+      paidAmount: (student?.paid || 0) + amount,
+      pendingAmount: (student?.fee || 0) - ((student?.paid || 0) + amount),
+    };
+
+    await addDoc('payments', newPayment, newPayment.id);
+    
+    if (student) {
+      await updateDoc('users', student.uid, {
+        paid: (student.paid || 0) + amount,
+        pendingAmount: (student.fee || 0) - ((student.paid || 0) + amount)
+      });
+    }
+
+    setTimeout(() => {
+      setPaymentSuccess(false);
+      setShowQRModal(false);
+      setShowCheckoutModal(false);
+      setShowDirectPaymentModal(false);
+    }, 3000);
+  };
+
+  const simulateCheckPayment = () => {
+    setCheckingPayment(true);
+    // Simulate a check with a delay
+    setTimeout(() => {
+      setCheckingPayment(false);
+      handlePaymentSuccess('UPI-QR-Simulated');
+    }, 2500);
   };
 
   const handleSavePayment = async (e: React.FormEvent) => {
@@ -292,17 +418,35 @@ const Payments: React.FC<PaymentsProps> = ({ user }) => {
             </>
           )}
           {user?.role === 'student' && (
-            <button 
-              onClick={() => {
-                const student = students.find(s => s.uid === user.uid);
-                const pending = (student?.fee || 0) - (student?.paid || 0);
-                setQrData({ upiId: 'gagansaxena7212@naviaxis', amount: pending, name: 'CoreLMS' });
-                setShowQRModal(true);
-              }}
-              className="bg-[#2ecc8a] hover:bg-[#27af76] text-white px-5 py-2.5 rounded-xl font-bold text-sm flex items-center gap-2 transition-colors shadow-lg shadow-green-500/20"
-            >
-              <CreditCard size={18} /> Pay Now
-            </button>
+            <div className="flex items-center gap-2">
+              <button 
+                onClick={() => setShowDirectPaymentModal(true)}
+                className="bg-[#131726] border border-[#242b40] text-[#e8ecf5] px-5 py-2.5 rounded-xl font-bold text-sm flex items-center gap-2 hover:bg-[#1a2035] transition-all"
+              >
+                <Smartphone size={18} /> Direct UPI
+              </button>
+              <button 
+                onClick={() => {
+                  const student = students.find(s => s.uid === user.uid);
+                  const pending = (student?.fee || 0) - (student?.paid || 0);
+                  handleStartCheckout(pending);
+                }}
+                className="bg-[#4f8ef7] hover:bg-[#3a7ae8] text-white px-5 py-2.5 rounded-xl font-bold text-sm flex items-center gap-2 transition-colors shadow-lg shadow-blue-500/20"
+              >
+                <DollarSign size={18} /> Pay Now (Online)
+              </button>
+              <button 
+                onClick={() => {
+                  const student = students.find(s => s.uid === user.uid);
+                  const pending = (student?.fee || 0) - (student?.paid || 0);
+                  setQrData({ upiId: 'gagansaxena7212@naviaxis', amount: pending, name: 'CoreLMS' });
+                  setShowQRModal(true);
+                }}
+                className="bg-[#2ecc8a] hover:bg-[#27af76] text-white px-5 py-2.5 rounded-xl font-bold text-sm flex items-center gap-2 transition-colors shadow-lg shadow-green-500/20"
+              >
+                <QrCode size={18} /> QR Code
+              </button>
+            </div>
           )}
         </div>
       </div>
@@ -701,13 +845,31 @@ const Payments: React.FC<PaymentsProps> = ({ user }) => {
                 <button onClick={() => setShowQRModal(false)} className="p-2 hover:bg-red-500/10 text-[#6b7599] hover:text-red-500 rounded-full transition-colors"><X size={20} /></button>
               </div>
 
-              <div className="bg-white p-6 rounded-2xl inline-block mb-6 shadow-2xl shadow-blue-500/20">
+              <div className="bg-white p-6 rounded-2xl inline-block mb-6 shadow-2xl shadow-blue-500/20 relative overflow-hidden">
                 <QRCodeCanvas 
                   value={generateUPIUrl(qrData.upiId, qrData.amount, qrData.name)}
                   size={200}
                   level="H"
                   includeMargin={false}
                 />
+                {(checkingPayment || paymentSuccess) && (
+                  <div className="absolute inset-0 bg-white/90 flex flex-col items-center justify-center p-4">
+                    {checkingPayment ? (
+                      <>
+                        <div className="w-12 h-12 border-4 border-[#4f8ef7] border-t-transparent rounded-full animate-spin mb-4"></div>
+                        <p className="text-xs font-bold text-[#4f8ef7] uppercase tracking-widest">Verifying Payment...</p>
+                      </>
+                    ) : (
+                      <>
+                        <div className="w-16 h-16 bg-[#2ecc8a] rounded-full flex items-center justify-center text-white mb-4 animate-bounce">
+                          <CheckCircle2 size={32} />
+                        </div>
+                        <p className="text-sm font-bold text-[#2ecc8a] uppercase tracking-widest">Success!</p>
+                        <p className="text-[10px] text-[#6b7599] mt-1">Recording transaction...</p>
+                      </>
+                    )}
+                  </div>
+                )}
               </div>
 
               <div className="space-y-4">
@@ -725,14 +887,111 @@ const Payments: React.FC<PaymentsProps> = ({ user }) => {
                   Scan this QR code using any UPI app (PhonePe, Google Pay, Paytm) to complete your payment.
                 </p>
 
-                <div className="pt-4">
+                <div className="grid grid-cols-2 gap-3 pt-4">
                   <a 
                     href={generateUPIUrl(qrData.upiId, qrData.amount, qrData.name)}
-                    className="flex items-center justify-center gap-2 w-full py-3 bg-[#4f8ef7] text-white rounded-xl font-bold text-sm hover:bg-[#3a7ae8] transition-all"
+                    className="flex items-center justify-center gap-2 py-3 bg-[#1a2035] text-white rounded-xl font-bold text-sm hover:bg-[#242b40] transition-all border border-[#242b40]"
                   >
-                    <ExternalLink size={16} /> Open in App
+                    <ExternalLink size={16} /> Open App
                   </a>
+                  <button 
+                    onClick={simulateCheckPayment}
+                    disabled={checkingPayment || paymentSuccess}
+                    className="flex items-center justify-center gap-2 py-3 bg-[#2ecc8a] text-white rounded-xl font-bold text-sm hover:bg-[#27af76] transition-all disabled:opacity-50"
+                  >
+                    {checkingPayment ? 'Checking...' : 'I have Paid'}
+                  </button>
                 </div>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
+      {/* Stripe Checkout Modal */}
+      <AnimatePresence>
+        {showCheckoutModal && clientSecret && (
+          <div className="fixed inset-0 z-[120] flex items-center justify-center p-4">
+            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setShowCheckoutModal(false)} className="absolute inset-0 bg-black/80 backdrop-blur-md" />
+            <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.95 }} className="relative w-full max-w-md bg-[#131726] border border-[#242b40] rounded-3xl p-8">
+              <div className="flex items-center justify-between mb-8">
+                <h3 className="text-xl font-extrabold font-syne">Secure Checkout</h3>
+                <button onClick={() => setShowCheckoutModal(false)} className="p-2 hover:bg-red-500/10 text-[#6b7599] hover:text-red-500 rounded-full transition-colors"><X size={20} /></button>
+              </div>
+
+              {paymentSuccess ? (
+                <div className="py-12 text-center">
+                  <div className="w-20 h-20 bg-[#2ecc8a] rounded-full flex items-center justify-center text-white mx-auto mb-6 animate-bounce">
+                    <CheckCircle2 size={40} />
+                  </div>
+                  <h4 className="text-2xl font-extrabold text-white mb-2">Payment Successful!</h4>
+                  <p className="text-[#6b7599]">Your transaction has been recorded automatically.</p>
+                </div>
+              ) : (
+                <Elements stripe={stripePromise} options={{ clientSecret, appearance: { theme: 'night' } }}>
+                  <CheckoutForm 
+                    amount={qrData.amount} 
+                    onSuccess={(ref) => handlePaymentSuccess(ref)} 
+                    onCancel={() => setShowCheckoutModal(false)} 
+                  />
+                </Elements>
+              )}
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
+      {/* Direct Payment Modal */}
+      <AnimatePresence>
+        {showDirectPaymentModal && (
+          <div className="fixed inset-0 z-[110] flex items-center justify-center p-4">
+            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setShowDirectPaymentModal(false)} className="absolute inset-0 bg-black/80 backdrop-blur-md" />
+            <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.95 }} className="relative w-full max-w-md bg-[#131726] border border-[#242b40] rounded-3xl p-8">
+              <div className="flex items-center justify-between mb-8">
+                <h3 className="text-xl font-extrabold font-syne">Direct UPI Payment</h3>
+                <button onClick={() => setShowDirectPaymentModal(false)} className="p-2 hover:bg-red-500/10 text-[#6b7599] hover:text-red-500 rounded-full transition-colors"><X size={20} /></button>
+              </div>
+
+              <div className="space-y-6">
+                <div>
+                  <label className="block text-[11px] font-bold text-[#6b7599] uppercase tracking-wider mb-2 ml-1">Enter Amount (INR)</label>
+                  <input 
+                    type="number" 
+                    value={directPaymentData.amount} 
+                    onChange={(e) => setDirectPaymentData({...directPaymentData, amount: parseFloat(e.target.value)})}
+                    className="w-full bg-[#1a2035] border border-[#242b40] rounded-xl px-4 py-4 text-xl font-bold outline-none focus:border-[#4f8ef7] text-white"
+                    placeholder="0.00"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-[11px] font-bold text-[#6b7599] uppercase tracking-wider mb-2 ml-1">Recipient UPI ID</label>
+                  <input 
+                    type="text" 
+                    value={directPaymentData.upiId} 
+                    onChange={(e) => setDirectPaymentData({...directPaymentData, upiId: e.target.value})}
+                    className="w-full bg-[#1a2035] border border-[#242b40] rounded-xl px-4 py-4 text-sm font-mono outline-none focus:border-[#4f8ef7] text-[#4f8ef7]"
+                    placeholder="name@upi"
+                  />
+                </div>
+
+                <div className="p-4 bg-[#4f8ef7]/5 border border-[#4f8ef7]/10 rounded-xl">
+                  <p className="text-[10px] text-[#6b7599] leading-relaxed">
+                    This will generate a direct payment request to the specified UPI ID. You can then scan the QR code or open your UPI app to complete the transaction.
+                  </p>
+                </div>
+
+                <button 
+                  onClick={() => {
+                    setQrData({ upiId: directPaymentData.upiId, amount: directPaymentData.amount, name: 'Direct Payment' });
+                    setShowQRModal(true);
+                    setShowDirectPaymentModal(false);
+                  }}
+                  disabled={!directPaymentData.amount || !directPaymentData.upiId}
+                  className="w-full py-4 bg-[#4f8ef7] text-white rounded-xl font-bold text-sm hover:bg-[#3a7ae8] transition-all disabled:opacity-50 shadow-lg shadow-blue-500/20"
+                >
+                  Generate Payment QR
+                </button>
               </div>
             </motion.div>
           </div>
