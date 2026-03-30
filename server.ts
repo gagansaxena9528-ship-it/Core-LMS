@@ -211,6 +211,16 @@ async function startServer() {
     for (const b of batches) {
       insertCol.run(b.id, 'batches', JSON.stringify(b));
     }
+
+    // Initial Fee Structures
+    const feeStructures = [
+      { id: 'fs1', courseId: 'c1', courseName: 'Full Stack Web Development', totalFee: 9999, installmentOption: true, numberOfInstallments: 3, discount: 10, discountType: 'percentage', finalFee: 8999 },
+      { id: 'fs2', courseId: 'c2', courseName: 'Digital Marketing Mastery', totalFee: 4999, installmentOption: false, numberOfInstallments: 1, discount: 0, discountType: 'percentage', finalFee: 4999 }
+    ];
+
+    for (const fs of feeStructures) {
+      insertCol.run(fs.id, 'feeStructures', JSON.stringify(fs));
+    }
   }
 
   // Auth Middleware

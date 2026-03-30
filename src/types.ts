@@ -165,13 +165,47 @@ export interface Attendance {
 export interface Payment {
   id: string;
   studentId: string;
+  studentName?: string;
   courseId: string;
-  total: number;
-  paid: number;
-  pending: number;
-  mode: string;
+  courseName?: string;
+  amount: number;
+  totalFee?: number;
+  paidAmount?: number;
+  pendingAmount?: number;
+  mode: 'Cash' | 'UPI' | 'Online';
+  transactionId?: string;
   date: string;
+  notes?: string;
+  invoiceNumber?: string;
   status: 'Paid' | 'Partial' | 'Pending';
+  paymentApiRef?: string; // Reference for future API integration
+}
+
+export interface FeeStructure {
+  id: string;
+  courseId: string;
+  courseName: string;
+  totalFee: number;
+  installmentOption: boolean;
+  numberOfInstallments: number;
+  discount: number; // percentage or fixed
+  discountType: 'percentage' | 'fixed';
+  finalFee: number;
+  upiId?: string; // UPI ID for this course/fee
+}
+
+export interface Invoice {
+  id: string;
+  invoiceNumber: string;
+  studentId: string;
+  studentName: string;
+  courseId: string;
+  courseName: string;
+  amount: number;
+  gst: number;
+  total: number;
+  date: string;
+  paymentId: string;
 }
 
 export interface LiveClass {
