@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Outlet, Link, useLocation, useNavigate } from 'react-router-dom';
 import { User } from '../types';
 import { logout } from '../services/auth';
+import { useSettings } from '../SettingsContext';
 import { 
   LayoutDashboard, 
   Users, 
@@ -37,6 +38,7 @@ interface LayoutProps {
 }
 
 const Layout: React.FC<LayoutProps> = ({ user }) => {
+  const { settings } = useSettings();
   const location = useLocation();
   const navigate = useNavigate();
   const [notifOpen, setNotifOpen] = useState(false);
@@ -116,6 +118,9 @@ const Layout: React.FC<LayoutProps> = ({ user }) => {
     }
   };
 
+  const adminLogo = settings?.branding?.adminLogo || settings?.branding?.headerLogo;
+  const siteName = settings?.general?.siteName || 'CoreLMS';
+
   return (
     <div className="min-h-screen bg-[#0b0e17] text-[#e8ecf5] font-sans flex overflow-hidden">
       {/* Sidebar Backdrop for Mobile */}
@@ -138,10 +143,20 @@ const Layout: React.FC<LayoutProps> = ({ user }) => {
       )}>
         <div className="p-5 border-b border-[#242b40] flex items-center justify-between gap-3">
           <div className="flex items-center gap-3">
-            <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-[#4f8ef7] to-[#7c5fe6] flex items-center justify-center font-bold text-lg text-white font-syne">
-              C
-            </div>
-            <span className="font-syne font-extrabold text-lg">Core<span className="text-[#4f8ef7]">LMS</span></span>
+            {adminLogo ? (
+              <img src={adminLogo} alt="Logo" className="h-9 w-auto object-contain" referrerPolicy="no-referrer" />
+            ) : (
+              <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-[#4f8ef7] to-[#7c5fe6] flex items-center justify-center font-bold text-lg text-white font-syne">
+                {siteName.charAt(0)}
+              </div>
+            )}
+            <span className="font-syne font-extrabold text-lg">
+              {siteName.includes('CoreLMS') ? (
+                <>Core<span className="text-[#4f8ef7]">LMS</span></>
+              ) : (
+                siteName
+              )}
+            </span>
           </div>
           <button 
             onClick={() => setIsSidebarOpen(false)}

@@ -2,8 +2,10 @@ import React, { useState } from 'react';
 import { loginWithEmail, registerWithEmail } from '../services/auth';
 import { motion, AnimatePresence } from 'framer-motion';
 import { LogIn, UserCircle, Mail, Lock, UserPlus, Rocket, ArrowRight, CheckCircle2 } from 'lucide-react';
+import { useSettings } from '../SettingsContext';
 
 const Login: React.FC = () => {
+  const { settings } = useSettings();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
@@ -50,6 +52,9 @@ const Login: React.FC = () => {
     }
   };
 
+  const loginLogo = settings?.branding?.loginLogo || settings?.branding?.headerLogo;
+  const siteName = settings?.general?.siteName || 'CoreLMS';
+
   return (
     <div className="min-h-screen bg-[#0b0e17] flex items-center justify-center p-0 sm:p-4 relative overflow-hidden font-inter">
       {/* Background Glows */}
@@ -69,15 +74,19 @@ const Login: React.FC = () => {
           
           <div className="relative z-10">
             <div className="flex items-center gap-3 mb-16">
-              <div className="w-10 h-10 rounded-xl bg-white/20 backdrop-blur-md flex items-center justify-center border border-white/20">
-                <Rocket className="text-white" size={20} />
-              </div>
-              <span className="text-lg font-bold text-white tracking-tight font-syne">CoreLMS</span>
+              {loginLogo ? (
+                <img src={loginLogo} alt="Logo" className="h-10 w-auto object-contain" referrerPolicy="no-referrer" />
+              ) : (
+                <div className="w-10 h-10 rounded-xl bg-white/20 backdrop-blur-md flex items-center justify-center border border-white/20">
+                  <Rocket className="text-white" size={20} />
+                </div>
+              )}
+              <span className="text-lg font-bold text-white tracking-tight font-syne">{siteName}</span>
             </div>
 
             <div className="space-y-6">
               <h2 className="text-3xl sm:text-4xl xl:text-5xl font-extrabold text-white font-syne leading-[1.1] tracking-tight max-w-[320px]">
-                Welcome <br /> to <span className="text-white/80">CoreLMS</span>
+                Welcome <br /> to <span className="text-white/80">{siteName}</span>
               </h2>
               <p className="text-white/70 text-sm xl:text-base leading-relaxed max-w-[260px]">
                 Empowering education through technology. Access your courses, track progress, and achieve your goals.

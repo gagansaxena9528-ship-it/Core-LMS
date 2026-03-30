@@ -346,3 +346,70 @@ export interface Setting {
   key: string;
   value: any;
 }
+
+export interface GlobalSettings {
+  general: {
+    siteName: string;
+    siteTitle: string;
+    siteUrl: string;
+    faviconUrl: string;
+    timezone: string;
+    language: string;
+  };
+  branding: {
+    headerLogo: string;
+    footerLogo: string;
+    loginLogo: string;
+    adminLogo: string;
+  };
+  appearance: {
+    primaryColor: string;
+    secondaryColor: string;
+    buttonColor: string;
+    fontFamily: string;
+    darkMode: boolean;
+  };
+  smtp: {
+    host: string;
+    email: string;
+    password?: string;
+    port: number;
+  };
+  payment: {
+    razorpayKey: string;
+    paytmApi: string;
+    upiId: string;
+    currency: string;
+  };
+  otp: {
+    enableOtp: boolean;
+    smsApi: string;
+    expiryTime: number;
+  };
+  social: {
+    facebook: string;
+    instagram: string;
+    linkedin: string;
+    youtube: string;
+  };
+  notifications: {
+    emailEnabled: boolean;
+    smsEnabled: boolean;
+    whatsappEnabled: boolean;
+  };
+  security: {
+    passwordRules: string;
+    loginLimit: number;
+    recaptchaKey: string;
+    enable2fa: boolean;
+  };
+  backup: {
+    autoBackupInterval: 'Daily' | 'Weekly' | 'Monthly' | 'None';
+    lastBackup?: string;
+  };
+  customCode: {
+    headerCode: string;
+    footerCode: string;
+    customCss: string;
+  };
+}

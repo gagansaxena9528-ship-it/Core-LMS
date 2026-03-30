@@ -24,6 +24,8 @@ import CertificateVerification from './components/CertificateVerification';
 import CoursePlayer from './components/CoursePlayer';
 import Reports from './components/Reports';
 
+import { SettingsProvider } from './SettingsContext';
+
 const App: React.FC = () => {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
@@ -49,42 +51,44 @@ const App: React.FC = () => {
   }
 
   return (
-    <Router>
-      <Routes>
-        <Route path="/login" element={user ? <Navigate to="/" /> : <Login />} />
-        <Route path="/verify-certificate/:id" element={<CertificateVerification />} />
-        <Route path="/verify-certificate" element={<CertificateVerification />} />
-        
-        <Route element={user ? <Layout user={user} /> : <Navigate to="/login" />}>
-          <Route path="/" element={
-            user?.role === 'admin' ? <Dashboard user={user} /> : 
-            user?.role === 'teacher' ? <TeacherDashboard user={user} /> : 
-            <StudentDashboard user={user} />
-          } />
+    <SettingsProvider>
+      <Router>
+        <Routes>
+          <Route path="/login" element={user ? <Navigate to="/" /> : <Login />} />
+          <Route path="/verify-certificate/:id" element={<CertificateVerification />} />
+          <Route path="/verify-certificate" element={<CertificateVerification />} />
           
-          {/* Admin & Shared Routes */}
-          <Route path="/students" element={<Students />} />
-          <Route path="/teachers" element={<Teachers />} />
-          <Route path="/courses" element={<Courses user={user!} />} />
-          <Route path="/batches" element={<Batches />} />
-          <Route path="/content" element={<ContentManagement user={user!} />} />
-          <Route path="/exams" element={<Exams user={user!} />} />
-          <Route path="/assignments" element={<Assignments user={user!} />} />
-          <Route path="/live-classes" element={<LiveClasses user={user!} />} />
-          <Route path="/payments" element={<Payments user={user!} />} />
-          <Route path="/attendance" element={<Attendance user={user!} />} />
-          <Route path="/certificates" element={<Certificates user={user!} />} />
-          <Route path="/reports" element={<Reports user={user!} />} />
-          <Route path="/settings" element={<Settings />} />
-          <Route path="/profile" element={<Profile user={user!} />} />
+          <Route element={user ? <Layout user={user} /> : <Navigate to="/login" />}>
+            <Route path="/" element={
+              user?.role === 'admin' ? <Dashboard user={user} /> : 
+              user?.role === 'teacher' ? <TeacherDashboard user={user} /> : 
+              <StudentDashboard user={user} />
+            } />
+            
+            {/* Admin & Shared Routes */}
+            <Route path="/students" element={<Students />} />
+            <Route path="/teachers" element={<Teachers />} />
+            <Route path="/courses" element={<Courses user={user!} />} />
+            <Route path="/batches" element={<Batches />} />
+            <Route path="/content" element={<ContentManagement user={user!} />} />
+            <Route path="/exams" element={<Exams user={user!} />} />
+            <Route path="/assignments" element={<Assignments user={user!} />} />
+            <Route path="/live-classes" element={<LiveClasses user={user!} />} />
+            <Route path="/payments" element={<Payments user={user!} />} />
+            <Route path="/attendance" element={<Attendance user={user!} />} />
+            <Route path="/certificates" element={<Certificates user={user!} />} />
+            <Route path="/reports" element={<Reports user={user!} />} />
+            <Route path="/settings" element={<Settings />} />
+            <Route path="/profile" element={<Profile user={user!} />} />
+            
+            {/* Student Specific */}
+            <Route path="/course-player/:courseId" element={<CoursePlayer />} />
+          </Route>
           
-          {/* Student Specific */}
-          <Route path="/course-player/:courseId" element={<CoursePlayer />} />
-        </Route>
-        
-        <Route path="*" element={<Navigate to="/" />} />
-      </Routes>
-    </Router>
+          <Route path="*" element={<Navigate to="/" />} />
+        </Routes>
+      </Router>
+    </SettingsProvider>
   );
 };
 
