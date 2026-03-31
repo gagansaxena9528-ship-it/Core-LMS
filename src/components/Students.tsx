@@ -385,14 +385,14 @@ const Students: React.FC<StudentsProps> = ({ user }) => {
             <div className="flex items-center gap-1.5">
               <div className={`w-2 h-2 rounded-full ${
                 emailStatus === 'ok' ? 'bg-success' : 
-                emailStatus === 'error' ? 'bg-primary' : 
+                emailStatus === 'error' ? 'bg-destructive' : 
                 'bg-warning animate-pulse'
               }`} />
               <span className="text-[11px] font-bold uppercase tracking-wider text-muted">
                 Email System: {emailStatus === 'ok' ? 'Ready' : emailStatus === 'error' ? 'Error' : 'Checking...'}
               </span>
               {emailStatus === 'error' && (
-                <span className="text-[10px] text-primary/80 ml-1">({emailError})</span>
+                <span className="text-[10px] text-destructive/80 ml-1">({emailError})</span>
               )}
             </div>
           </div>
@@ -443,7 +443,7 @@ const Students: React.FC<StudentsProps> = ({ user }) => {
               </button>
               <button 
                 onClick={handleBulkDelete}
-                className="flex items-center gap-2 px-4 py-2.5 bg-primary/10 border border-primary/20 text-primary rounded-xl hover:bg-primary/20 transition-all"
+                className="flex items-center gap-2 px-4 py-2.5 bg-destructive/10 border border-destructive/20 text-destructive rounded-xl hover:bg-destructive/20 transition-all"
               >
                 <Trash2 size={18} />
                 <span className="text-sm font-bold">Delete ({selectedStudents.length})</span>
@@ -559,7 +559,7 @@ const Students: React.FC<StudentsProps> = ({ user }) => {
                           </button>
                           <button 
                             onClick={() => handleDelete(s.uid)}
-                            className="p-2 hover:bg-primary/10 text-primary rounded-lg transition-colors" 
+                            className="p-2 hover:bg-destructive/10 text-destructive rounded-lg transition-colors" 
                             title="Delete"
                           >
                             <Trash2 size={16} />
@@ -596,13 +596,13 @@ const Students: React.FC<StudentsProps> = ({ user }) => {
                 <h3 className="text-xl font-extrabold font-syne">
                   {editingStudent ? 'Edit Student' : 'Add New Student'}
                 </h3>
-                <button onClick={() => setShowModal(false)} className="p-2 hover:bg-primary/10 text-muted hover:text-primary rounded-full transition-colors">
+                <button onClick={() => setShowModal(false)} className="p-2 hover:bg-destructive/10 text-muted hover:text-destructive rounded-full transition-colors">
                   <X size={20} />
                 </button>
               </div>
 
               {error && (
-                <div className="mb-4 p-3 bg-primary/10 border border-primary/20 text-primary text-xs rounded-xl">
+                <div className="mb-4 p-3 bg-destructive/10 border border-destructive/20 text-destructive text-xs rounded-xl">
                   {error}
                 </div>
               )}
@@ -778,7 +778,7 @@ const Students: React.FC<StudentsProps> = ({ user }) => {
                     className="flex-1 bg-secondary hover:bg-secondary/90 text-white py-3 rounded-xl font-bold text-sm transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
                   >
                     {loading ? (
-                      <div className="w-4 h-4 border-foreground border-t-transparent rounded-full animate-spin" />
+                      <div className="w-4 h-4 border-white border-t-transparent rounded-full animate-spin" />
                     ) : (
                       editingStudent ? 'Update Student' : 'Create Student Account'
                     )}

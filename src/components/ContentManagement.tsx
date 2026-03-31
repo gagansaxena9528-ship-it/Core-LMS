@@ -247,8 +247,8 @@ const ContentManagement: React.FC<{ user: User }> = ({ user }) => {
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h2 className="text-2xl font-extrabold font-syne text-white">Content Management</h2>
-          <p className="text-sm text-[#6b7599] mt-1">Organize and publish your course materials</p>
+          <h2 className="text-2xl font-extrabold font-syne text-foreground">Content Management</h2>
+          <p className="text-sm text-muted mt-1">Organize and publish your course materials</p>
         </div>
         <div className="flex items-center gap-3">
           <button 
@@ -257,7 +257,7 @@ const ContentManagement: React.FC<{ user: User }> = ({ user }) => {
               setModalType('video');
               setShowModal(true);
             }}
-            className="bg-[#4f8ef7] hover:bg-[#3a7ae8] text-white px-4 py-2 rounded-xl font-bold text-xs flex items-center gap-2 transition-colors"
+            className="bg-secondary hover:bg-secondary/90 text-white px-4 py-2 rounded-xl font-bold text-xs flex items-center gap-2 transition-colors"
           >
             <Plus size={16} /> Add Content
           </button>
@@ -267,25 +267,25 @@ const ContentManagement: React.FC<{ user: User }> = ({ user }) => {
       {/* Stats Overview */}
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
         {[
-          { label: 'Videos', value: stats.totalVideos, icon: Video, color: 'text-blue-500', bg: 'bg-blue-500/10' },
-          { label: 'PDFs', value: stats.totalPDFs, icon: FileText, color: 'text-purple-500', bg: 'bg-purple-500/10' },
-          { label: 'Quizzes', value: stats.totalQuizzes, icon: HelpCircle, color: 'text-orange-500', bg: 'bg-orange-500/10' },
-          { label: 'Assignments', value: stats.totalAssignments, icon: FileUp, color: 'text-green-500', bg: 'bg-green-500/10' },
-          { label: 'Published', value: stats.publishedCount, icon: CheckCircle2, color: 'text-emerald-500', bg: 'bg-emerald-500/10' },
-          { label: 'Drafts', value: stats.draftCount, icon: AlertCircle, color: 'text-yellow-500', bg: 'bg-yellow-500/10' },
+          { label: 'Videos', value: stats.totalVideos, icon: Video, color: 'text-secondary', bg: 'bg-secondary/10' },
+          { label: 'PDFs', value: stats.totalPDFs, icon: FileText, color: 'text-accent', bg: 'bg-accent/10' },
+          { label: 'Quizzes', value: stats.totalQuizzes, icon: HelpCircle, color: 'text-orange', bg: 'bg-orange/10' },
+          { label: 'Assignments', value: stats.totalAssignments, icon: FileUp, color: 'text-success', bg: 'bg-success/10' },
+          { label: 'Published', value: stats.publishedCount, icon: CheckCircle2, color: 'text-success', bg: 'bg-success/10' },
+          { label: 'Drafts', value: stats.draftCount, icon: AlertCircle, color: 'text-warning', bg: 'bg-warning/10' },
         ].map((stat, i) => (
-          <Card key={i} className="p-3 flex flex-col items-center justify-center text-center border-[#242b40]">
+          <Card key={i} className="p-3 flex flex-col items-center justify-center text-center border-border">
             <div className={cn("p-2 rounded-lg mb-2", stat.bg, stat.color)}>
               <stat.icon size={18} />
             </div>
-            <div className="text-lg font-bold font-syne text-white">{stat.value}</div>
-            <div className="text-[10px] font-bold text-[#6b7599] uppercase tracking-wider">{stat.label}</div>
+            <div className="text-lg font-bold font-syne text-foreground">{stat.value}</div>
+            <div className="text-[10px] font-bold text-muted uppercase tracking-wider">{stat.label}</div>
           </Card>
         ))}
       </div>
 
       {/* Tabs */}
-      <div className="flex items-center gap-1 bg-[#131726] p-1 rounded-xl border border-[#242b40] w-fit">
+      <div className="flex items-center gap-1 bg-card p-1 rounded-xl border border-border w-fit">
         {[
           { id: 'overview', label: 'Overview', icon: Layers },
           { id: 'videos', label: 'Videos', icon: Video },
@@ -299,7 +299,7 @@ const ContentManagement: React.FC<{ user: User }> = ({ user }) => {
             onClick={() => setActiveTab(tab.id as any)}
             className={cn(
               "flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-bold transition-all",
-              activeTab === tab.id ? "bg-[#4f8ef7] text-white shadow-lg shadow-blue-500/20" : "text-[#6b7599] hover:text-[#e8ecf5] hover:bg-[#1a2035]"
+              activeTab === tab.id ? "bg-secondary text-white shadow-lg shadow-secondary/20" : "text-muted hover:text-foreground hover:bg-muted/10"
             )}
           >
             <tab.icon size={14} />
@@ -313,19 +313,19 @@ const ContentManagement: React.FC<{ user: User }> = ({ user }) => {
         {activeTab === 'overview' && (
           <div className="space-y-4">
             {/* Filters */}
-            <div className="flex flex-wrap items-center gap-4 bg-[#131726] p-4 rounded-2xl border border-[#242b40]">
+            <div className="flex flex-wrap items-center gap-4 bg-card p-4 rounded-2xl border border-border">
               <div className="flex-1 min-w-[200px] relative">
-                <Search size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-[#6b7599]" />
+                <Search size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-muted" />
                 <input 
                   type="text" 
                   placeholder="Search content title..." 
                   value={search}
                   onChange={(e) => setSearch(e.target.value)}
-                  className="w-full bg-[#1a2035] border border-[#242b40] rounded-xl pl-11 pr-4 py-2 text-sm outline-none focus:border-[#4f8ef7] transition-colors"
+                  className="w-full bg-muted/10 border border-border rounded-xl pl-11 pr-4 py-2 text-sm outline-none focus:border-secondary transition-colors"
                 />
               </div>
               <select 
-                className="bg-[#1a2035] border border-[#242b40] rounded-xl px-4 py-2 text-xs font-bold outline-none focus:border-[#4f8ef7]"
+                className="bg-muted/10 border border-border rounded-xl px-4 py-2 text-xs font-bold outline-none focus:border-secondary"
                 value={selectedCourseId}
                 onChange={(e) => setSelectedCourseId(e.target.value)}
               >
@@ -333,7 +333,7 @@ const ContentManagement: React.FC<{ user: User }> = ({ user }) => {
                 {courses.map(c => <option key={c.id} value={c.id}>{c.title}</option>)}
               </select>
               <select 
-                className="bg-[#1a2035] border border-[#242b40] rounded-xl px-4 py-2 text-xs font-bold outline-none focus:border-[#4f8ef7]"
+                className="bg-muted/10 border border-border rounded-xl px-4 py-2 text-xs font-bold outline-none focus:border-secondary"
                 value={selectedType}
                 onChange={(e) => setSelectedType(e.target.value)}
               >
@@ -343,7 +343,7 @@ const ContentManagement: React.FC<{ user: User }> = ({ user }) => {
                 <option value="quiz">Quiz</option>
                 <option value="assignment">Assignment</option>
               </select>
-              <button className="p-2 bg-[#1a2035] border border-[#242b40] rounded-xl text-[#6b7599] hover:text-white">
+              <button className="p-2 bg-muted/10 border border-border rounded-xl text-muted hover:text-foreground">
                 <Filter size={18} />
               </button>
             </div>
@@ -353,59 +353,59 @@ const ContentManagement: React.FC<{ user: User }> = ({ user }) => {
               <div className="overflow-x-auto">
                 <table className="w-full text-left border-collapse">
                   <thead>
-                    <tr className="bg-[#1a2035]">
-                      <th className="px-6 py-4 text-[10px] font-bold text-[#6b7599] uppercase tracking-wider">Content Title</th>
-                      <th className="px-6 py-4 text-[10px] font-bold text-[#6b7599] uppercase tracking-wider">Course / Module</th>
-                      <th className="px-6 py-4 text-[10px] font-bold text-[#6b7599] uppercase tracking-wider">Type</th>
-                      <th className="px-6 py-4 text-[10px] font-bold text-[#6b7599] uppercase tracking-wider">Date</th>
-                      <th className="px-6 py-4 text-[10px] font-bold text-[#6b7599] uppercase tracking-wider">Status</th>
-                      <th className="px-6 py-4 text-[10px] font-bold text-[#6b7599] uppercase tracking-wider text-right">Actions</th>
+                    <tr className="bg-muted/10">
+                      <th className="px-6 py-4 text-[10px] font-bold text-muted uppercase tracking-wider">Content Title</th>
+                      <th className="px-6 py-4 text-[10px] font-bold text-muted uppercase tracking-wider">Course / Module</th>
+                      <th className="px-6 py-4 text-[10px] font-bold text-muted uppercase tracking-wider">Type</th>
+                      <th className="px-6 py-4 text-[10px] font-bold text-muted uppercase tracking-wider">Date</th>
+                      <th className="px-6 py-4 text-[10px] font-bold text-muted uppercase tracking-wider">Status</th>
+                      <th className="px-6 py-4 text-[10px] font-bold text-muted uppercase tracking-wider text-right">Actions</th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-[#242b40]">
+                  <tbody className="divide-y divide-border">
                     {filteredContent.map((item) => (
                       <tr key={item.id} className="hover:bg-white/[0.01] transition-colors group">
                         <td className="px-6 py-4">
                           <div className="flex items-center gap-3">
                             <div className={cn(
                               "w-8 h-8 rounded-lg flex items-center justify-center",
-                              item.contentType === 'Video' ? "bg-blue-500/10 text-blue-500" :
-                              item.contentType === 'PDF' ? "bg-purple-500/10 text-purple-500" :
-                              item.contentType === 'Quiz' ? "bg-orange-500/10 text-orange-500" : "bg-green-500/10 text-green-500"
+                              item.contentType === 'Video' ? "bg-secondary/10 text-secondary" :
+                              item.contentType === 'PDF' ? "bg-accent/10 text-accent" :
+                              item.contentType === 'Quiz' ? "bg-orange/10 text-orange" : "bg-success/10 text-success"
                             )}>
                               {item.contentType === 'Video' ? <Video size={14} /> :
                                item.contentType === 'PDF' ? <FileText size={14} /> :
                                item.contentType === 'Quiz' ? <HelpCircle size={14} /> : <FileUp size={14} />}
                             </div>
                             <div>
-                              <div className="text-[13px] font-bold text-[#e8ecf5]">{item.title}</div>
-                              <div className="text-[10px] text-[#6b7599] font-medium">ID: {item.id.slice(0, 8)}</div>
+                              <div className="text-[13px] font-bold text-foreground">{item.title}</div>
+                              <div className="text-[10px] text-muted font-medium">ID: {item.id.slice(0, 8)}</div>
                             </div>
                           </div>
                         </td>
                         <td className="px-6 py-4">
-                          <div className="text-[12px] font-bold text-[#6b7599]">
+                          <div className="text-[12px] font-bold text-muted">
                             {courses.find(c => c.id === item.courseId)?.title || 'Unknown Course'}
                           </div>
-                          <div className="text-[10px] text-[#4f8ef7] font-bold uppercase tracking-wider mt-0.5">
+                          <div className="text-[10px] text-secondary font-bold uppercase tracking-wider mt-0.5">
                             {modules.find(m => m.id === (item as any).moduleId)?.title || 'General Module'}
                           </div>
                         </td>
                         <td className="px-6 py-4">
-                          <span className="text-[11px] font-bold text-[#e8ecf5] bg-[#1a2035] px-2 py-1 rounded-md border border-[#242b40]">
+                          <span className="text-[11px] font-bold text-foreground bg-muted/10 px-2 py-1 rounded-md border border-border">
                             {item.contentType}
                           </span>
                         </td>
                         <td className="px-6 py-4">
-                          <div className="flex items-center gap-1.5 text-[11px] text-[#6b7599]">
+                          <div className="flex items-center gap-1.5 text-[11px] text-muted">
                             <Calendar size={12} /> {new Date(item.createdAt || Date.now()).toLocaleDateString()}
                           </div>
                         </td>
                         <td className="px-6 py-4">
                           <span className={cn(
                             "px-2 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-wider",
-                            ((item as any).status === 'Published' || (item as any).status === 'Active') ? "bg-emerald-500/10 text-emerald-500" :
-                            (item as any).status === 'Draft' ? "bg-yellow-500/10 text-yellow-500" : "bg-blue-500/10 text-blue-500"
+                            ((item as any).status === 'Published' || (item as any).status === 'Active') ? "bg-success/10 text-success" :
+                            (item as any).status === 'Draft' ? "bg-warning/10 text-warning" : "bg-secondary/10 text-secondary"
                           )}>
                             {(item as any).status || 'Draft'}
                           </span>
@@ -414,13 +414,13 @@ const ContentManagement: React.FC<{ user: User }> = ({ user }) => {
                           <div className="flex items-center justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
                             <button 
                               onClick={() => handleEdit(item)}
-                              className="p-2 hover:bg-blue-500/10 text-[#4f8ef7] rounded-lg transition-colors"
+                              className="p-2 hover:bg-secondary/10 text-secondary rounded-lg transition-colors"
                             >
                               <Edit2 size={14} />
                             </button>
                             <button 
                               onClick={() => handleDelete(item)}
-                              className="p-2 hover:bg-red-500/10 text-red-500 rounded-lg transition-colors"
+                              className="p-2 hover:bg-destructive/10 text-destructive rounded-lg transition-colors"
                             >
                               <Trash2 size={14} />
                             </button>
@@ -439,11 +439,11 @@ const ContentManagement: React.FC<{ user: User }> = ({ user }) => {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {lessons.filter(l => l.type === 'video').map(video => (
               <Card key={video.id} className="p-0 overflow-hidden group">
-                <div className="aspect-video bg-[#1a2035] relative">
+                <div className="aspect-video bg-muted/10 relative">
                   {video.thumbnail ? (
                     <img src={video.thumbnail} alt={video.title} className="w-full h-full object-cover" referrerPolicy="no-referrer" />
                   ) : (
-                    <div className="w-full h-full flex items-center justify-center text-[#242b40]">
+                    <div className="w-full h-full flex items-center justify-center text-border">
                       <Video size={48} />
                     </div>
                   )}
@@ -459,27 +459,27 @@ const ContentManagement: React.FC<{ user: User }> = ({ user }) => {
                     <Clock size={10} /> {video.duration || '00:00'}
                   </div>
                   {video.dripDays ? (
-                    <div className="absolute top-3 left-3 bg-orange-500/80 backdrop-blur-md px-2 py-1 rounded text-[10px] font-bold text-white flex items-center gap-1">
+                    <div className="absolute top-3 left-3 bg-orange/80 backdrop-blur-md px-2 py-1 rounded text-[10px] font-bold text-white flex items-center gap-1">
                       <Lock size={10} /> Drip: {video.dripDays} Days
                     </div>
                   ) : null}
                 </div>
                 <div className="p-4">
                   <div className="flex items-start justify-between gap-2">
-                    <h4 className="font-bold text-[#e8ecf5] truncate flex-1">{video.title}</h4>
-                    <span className="text-[9px] font-bold text-[#4f8ef7] bg-blue-500/10 px-1.5 py-0.5 rounded uppercase">
+                    <h4 className="font-bold text-foreground truncate flex-1">{video.title}</h4>
+                    <span className="text-[9px] font-bold text-secondary bg-secondary/10 px-1.5 py-0.5 rounded uppercase">
                       {video.videoType}
                     </span>
                   </div>
-                  <p className="text-[11px] text-[#6b7599] mt-1 line-clamp-2 h-8">{video.description}</p>
-                  <div className="flex items-center justify-between mt-4 pt-4 border-t border-[#242b40]">
-                    <div className="flex items-center gap-3 text-[10px] text-[#6b7599] font-bold uppercase">
+                  <p className="text-[11px] text-muted mt-1 line-clamp-2 h-8">{video.description}</p>
+                  <div className="flex items-center justify-between mt-4 pt-4 border-t border-border">
+                    <div className="flex items-center gap-3 text-[10px] text-muted font-bold uppercase">
                       <span className="flex items-center gap-1"><Eye size={12} /> {video.analytics?.views || 0}</span>
                       <span className="flex items-center gap-1"><Users size={12} /> {video.accessControl?.batchIds?.length || 'All'}</span>
                     </div>
                     <div className={cn(
                       "text-[10px] font-bold uppercase",
-                      video.status === 'Published' ? "text-emerald-500" : "text-yellow-500"
+                      video.status === 'Published' ? "text-success" : "text-warning"
                     )}>
                       {video.status}
                     </div>
@@ -493,9 +493,9 @@ const ContentManagement: React.FC<{ user: User }> = ({ user }) => {
                 setModalType('video');
                 setShowModal(true);
               }}
-              className="aspect-video rounded-2xl border-2 border-dashed border-[#242b40] flex flex-col items-center justify-center gap-3 text-[#6b7599] hover:text-[#4f8ef7] hover:border-[#4f8ef7] transition-all group"
+              className="aspect-video rounded-2xl border-2 border-dashed border-border flex flex-col items-center justify-center gap-3 text-muted hover:text-secondary hover:border-secondary transition-all group"
             >
-              <div className="w-12 h-12 rounded-full bg-[#131726] flex items-center justify-center group-hover:scale-110 transition-transform">
+              <div className="w-12 h-12 rounded-full bg-card flex items-center justify-center group-hover:scale-110 transition-transform">
                 <Plus size={24} />
               </div>
               <span className="text-sm font-bold">Upload New Video</span>
@@ -506,27 +506,27 @@ const ContentManagement: React.FC<{ user: User }> = ({ user }) => {
         {activeTab === 'pdfs' && (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
             {lessons.filter(l => l.type === 'pdf').map(pdf => (
-              <Card key={pdf.id} className="p-4 group hover:border-[#4f8ef7] transition-all">
+              <Card key={pdf.id} className="p-4 group hover:border-secondary transition-all">
                 <div className="flex items-start justify-between mb-4">
-                  <div className="w-10 h-10 rounded-xl bg-purple-500/10 text-purple-500 flex items-center justify-center">
+                  <div className="w-10 h-10 rounded-xl bg-accent/10 text-accent flex items-center justify-center">
                     <FileText size={20} />
                   </div>
                   <div className="flex items-center gap-1">
-                    <button onClick={() => handleEdit({...pdf, contentType: 'PDF'})} className="p-1.5 text-[#6b7599] hover:text-white"><Edit2 size={14} /></button>
-                    <button onClick={() => handleDelete({...pdf, contentType: 'PDF'})} className="p-1.5 text-[#6b7599] hover:text-red-500"><Trash2 size={14} /></button>
+                    <button onClick={() => handleEdit({...pdf, contentType: 'PDF'})} className="p-1.5 text-muted hover:text-foreground"><Edit2 size={14} /></button>
+                    <button onClick={() => handleDelete({...pdf, contentType: 'PDF'})} className="p-1.5 text-muted hover:text-destructive"><Trash2 size={14} /></button>
                   </div>
                 </div>
-                <h4 className="font-bold text-[#e8ecf5] text-sm truncate mb-1">{pdf.title}</h4>
-                <p className="text-[11px] text-[#6b7599] line-clamp-2 mb-4 h-8">{pdf.description}</p>
-                <div className="flex items-center justify-between pt-4 border-t border-[#242b40]">
-                  <div className="text-[10px] font-bold text-[#6b7599] uppercase">
+                <h4 className="font-bold text-foreground text-sm truncate mb-1">{pdf.title}</h4>
+                <p className="text-[11px] text-muted line-clamp-2 mb-4 h-8">{pdf.description}</p>
+                <div className="flex items-center justify-between pt-4 border-t border-border">
+                  <div className="text-[10px] font-bold text-muted uppercase">
                     {courses.find(c => c.id === pdf.courseId)?.title.slice(0, 15)}...
                   </div>
                   <a 
                     href={pdf.fileUrl} 
                     target="_blank" 
                     rel="noopener noreferrer"
-                    className="p-1.5 bg-[#1a2035] text-[#4f8ef7] rounded-lg hover:bg-[#4f8ef7] hover:text-white transition-all"
+                    className="p-1.5 bg-muted/10 text-secondary rounded-lg hover:bg-secondary hover:text-white transition-all"
                   >
                     <Download size={14} />
                   </a>
@@ -539,7 +539,7 @@ const ContentManagement: React.FC<{ user: User }> = ({ user }) => {
                 setModalType('pdf');
                 setShowModal(true);
               }}
-              className="p-6 rounded-2xl border-2 border-dashed border-[#242b40] flex flex-col items-center justify-center gap-3 text-[#6b7599] hover:text-[#4f8ef7] hover:border-[#4f8ef7] transition-all group min-h-[160px]"
+              className="p-6 rounded-2xl border-2 border-dashed border-border flex flex-col items-center justify-center gap-3 text-muted hover:text-secondary hover:border-secondary transition-all group min-h-[160px]"
             >
               <Plus size={24} />
               <span className="text-sm font-bold">Upload PDF</span>
@@ -550,37 +550,37 @@ const ContentManagement: React.FC<{ user: User }> = ({ user }) => {
         {activeTab === 'quizzes' && (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {exams.map(quiz => (
-              <Card key={quiz.id} className="p-6 hover:border-[#f7924f] transition-all relative overflow-hidden">
-                <div className="absolute top-0 right-0 w-24 h-24 bg-orange-500/5 rounded-full -mr-12 -mt-12" />
+              <Card key={quiz.id} className="p-6 hover:border-orange transition-all relative overflow-hidden">
+                <div className="absolute top-0 right-0 w-24 h-24 bg-orange/5 rounded-full -mr-12 -mt-12" />
                 <div className="flex items-start justify-between mb-6">
-                  <div className="w-12 h-12 rounded-2xl bg-orange-500/10 text-[#f7924f] flex items-center justify-center">
+                  <div className="w-12 h-12 rounded-2xl bg-orange/10 text-orange flex items-center justify-center">
                     <HelpCircle size={24} />
                   </div>
                   <div className="flex items-center gap-2">
-                    <button onClick={() => handleEdit({...quiz, contentType: 'Quiz'})} className="p-2 bg-[#1a2035] text-[#6b7599] hover:text-white rounded-xl transition-colors"><Edit2 size={16} /></button>
-                    <button onClick={() => handleDelete({...quiz, contentType: 'Quiz'})} className="p-2 bg-[#1a2035] text-[#6b7599] hover:text-red-500 rounded-xl transition-colors"><Trash2 size={16} /></button>
+                    <button onClick={() => handleEdit({...quiz, contentType: 'Quiz'})} className="p-2 bg-muted/10 text-muted hover:text-foreground rounded-xl transition-colors"><Edit2 size={16} /></button>
+                    <button onClick={() => handleDelete({...quiz, contentType: 'Quiz'})} className="p-2 bg-muted/10 text-muted hover:text-destructive rounded-xl transition-colors"><Trash2 size={16} /></button>
                   </div>
                 </div>
-                <h4 className="text-lg font-bold text-[#e8ecf5] mb-2">{quiz.title}</h4>
+                <h4 className="text-lg font-bold text-foreground mb-2">{quiz.title}</h4>
                 <div className="grid grid-cols-2 gap-4 mb-6">
                   <div className="space-y-1">
-                    <div className="text-[10px] font-bold text-[#6b7599] uppercase tracking-wider">Duration</div>
-                    <div className="text-xs font-bold text-[#e8ecf5] flex items-center gap-1.5"><Clock size={12} /> {quiz.duration} Min</div>
+                    <div className="text-[10px] font-bold text-muted uppercase tracking-wider">Duration</div>
+                    <div className="text-xs font-bold text-foreground flex items-center gap-1.5"><Clock size={12} /> {quiz.duration} Min</div>
                   </div>
                   <div className="space-y-1">
-                    <div className="text-[10px] font-bold text-[#6b7599] uppercase tracking-wider">Passing</div>
-                    <div className="text-xs font-bold text-[#e8ecf5] flex items-center gap-1.5"><CheckCircle2 size={12} /> {quiz.passingMarks}%</div>
+                    <div className="text-[10px] font-bold text-muted uppercase tracking-wider">Passing</div>
+                    <div className="text-xs font-bold text-foreground flex items-center gap-1.5"><CheckCircle2 size={12} /> {quiz.passingMarks}%</div>
                   </div>
                 </div>
-                <div className="flex items-center justify-between pt-4 border-t border-[#242b40]">
+                <div className="flex items-center justify-between pt-4 border-t border-border">
                   <div className="flex items-center gap-2">
-                    <span className="text-[10px] font-bold text-[#6b7599] uppercase">{quiz.type}</span>
+                    <span className="text-[10px] font-bold text-muted uppercase">{quiz.type}</span>
                     <span className={cn(
                       "w-2 h-2 rounded-full",
-                      quiz.status === 'Active' ? "bg-emerald-500" : "bg-yellow-500"
+                      quiz.status === 'Active' ? "bg-success" : "bg-warning"
                     )} />
                   </div>
-                  <button className="text-[11px] font-bold text-[#4f8ef7] hover:underline">View Questions</button>
+                  <button className="text-[11px] font-bold text-secondary hover:underline">View Questions</button>
                 </div>
               </Card>
             ))}
@@ -590,7 +590,7 @@ const ContentManagement: React.FC<{ user: User }> = ({ user }) => {
                 setModalType('quiz');
                 setShowModal(true);
               }}
-              className="rounded-2xl border-2 border-dashed border-[#242b40] flex flex-col items-center justify-center gap-3 text-[#6b7599] hover:text-[#f7924f] hover:border-[#f7924f] transition-all group min-h-[220px]"
+              className="rounded-2xl border-2 border-dashed border-border flex flex-col items-center justify-center gap-3 text-muted hover:text-orange hover:border-orange transition-all group min-h-[220px]"
             >
               <Plus size={24} />
               <span className="text-sm font-bold">Create New Quiz</span>
@@ -601,35 +601,35 @@ const ContentManagement: React.FC<{ user: User }> = ({ user }) => {
         {activeTab === 'assignments' && (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {assignments.map(assignment => (
-              <Card key={assignment.id} className="p-6 hover:border-green-500 transition-all">
+              <Card key={assignment.id} className="p-6 hover:border-success transition-all">
                 <div className="flex items-start justify-between mb-6">
                   <div className="flex items-center gap-4">
-                    <div className="w-12 h-12 rounded-2xl bg-green-500/10 text-green-500 flex items-center justify-center">
+                    <div className="w-12 h-12 rounded-2xl bg-success/10 text-success flex items-center justify-center">
                       <FileUp size={24} />
                     </div>
                     <div>
-                      <h4 className="text-lg font-bold text-[#e8ecf5]">{assignment.title}</h4>
-                      <div className="text-[11px] text-[#6b7599] font-bold uppercase tracking-wider">Due: {new Date(assignment.dueDate).toLocaleDateString()}</div>
+                      <h4 className="text-lg font-bold text-foreground">{assignment.title}</h4>
+                      <div className="text-[11px] text-muted font-bold uppercase tracking-wider">Due: {new Date(assignment.dueDate).toLocaleDateString()}</div>
                     </div>
                   </div>
                   <div className="flex items-center gap-2">
-                    <button onClick={() => handleEdit({...assignment, contentType: 'Assignment'})} className="p-2 bg-[#1a2035] text-[#6b7599] hover:text-white rounded-xl transition-colors"><Edit2 size={16} /></button>
-                    <button onClick={() => handleDelete({...assignment, contentType: 'Assignment'})} className="p-2 bg-[#1a2035] text-[#6b7599] hover:text-red-500 rounded-xl transition-colors"><Trash2 size={16} /></button>
+                    <button onClick={() => handleEdit({...assignment, contentType: 'Assignment'})} className="p-2 bg-muted/10 text-muted hover:text-foreground rounded-xl transition-colors"><Edit2 size={16} /></button>
+                    <button onClick={() => handleDelete({...assignment, contentType: 'Assignment'})} className="p-2 bg-muted/10 text-muted hover:text-destructive rounded-xl transition-colors"><Trash2 size={16} /></button>
                   </div>
                 </div>
-                <p className="text-sm text-[#6b7599] line-clamp-2 mb-6">{assignment.description}</p>
-                <div className="flex items-center justify-between pt-4 border-t border-[#242b40]">
+                <p className="text-sm text-muted line-clamp-2 mb-6">{assignment.description}</p>
+                <div className="flex items-center justify-between pt-4 border-t border-border">
                   <div className="flex items-center gap-4">
                     <div className="text-center">
-                      <div className="text-sm font-bold text-[#e8ecf5]">{assignment.totalMarks}</div>
-                      <div className="text-[9px] font-bold text-[#6b7599] uppercase">Marks</div>
+                      <div className="text-sm font-bold text-foreground">{assignment.totalMarks}</div>
+                      <div className="text-[9px] font-bold text-muted uppercase">Marks</div>
                     </div>
                     <div className="text-center">
-                      <div className="text-sm font-bold text-[#4f8ef7]">24/30</div>
-                      <div className="text-[9px] font-bold text-[#6b7599] uppercase">Submissions</div>
+                      <div className="text-sm font-bold text-secondary">24/30</div>
+                      <div className="text-[9px] font-bold text-muted uppercase">Submissions</div>
                     </div>
                   </div>
-                  <button className="bg-[#1a2035] text-[#e8ecf5] px-4 py-2 rounded-xl text-xs font-bold hover:bg-[#242b40] transition-colors">
+                  <button className="bg-muted/10 text-foreground px-4 py-2 rounded-xl text-xs font-bold hover:bg-muted/20 transition-colors">
                     View Submissions
                   </button>
                 </div>
@@ -641,7 +641,7 @@ const ContentManagement: React.FC<{ user: User }> = ({ user }) => {
                 setModalType('assignment');
                 setShowModal(true);
               }}
-              className="rounded-2xl border-2 border-dashed border-[#242b40] flex flex-col items-center justify-center gap-3 text-[#6b7599] hover:text-green-500 hover:border-green-500 transition-all group min-h-[200px]"
+              className="rounded-2xl border-2 border-dashed border-border flex flex-col items-center justify-center gap-3 text-muted hover:text-success hover:border-success transition-all group min-h-[200px]"
             >
               <Plus size={24} />
               <span className="text-sm font-bold">Create Assignment</span>
@@ -653,27 +653,27 @@ const ContentManagement: React.FC<{ user: User }> = ({ user }) => {
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             <Card className="p-6">
               <div className="flex items-center justify-between mb-6">
-                <h4 className="font-bold text-[#e8ecf5] flex items-center gap-2">
-                  <Video size={18} className="text-blue-500" /> Video Performance
+                <h4 className="font-bold text-foreground flex items-center gap-2">
+                  <Video size={18} className="text-secondary" /> Video Performance
                 </h4>
-                <select className="bg-[#1a2035] border border-[#242b40] rounded-lg px-3 py-1.5 text-[10px] font-bold outline-none">
+                <select className="bg-muted/10 border border-border rounded-lg px-3 py-1.5 text-[10px] font-bold outline-none">
                   <option>Last 7 Days</option>
                   <option>Last 30 Days</option>
                 </select>
               </div>
               <div className="space-y-4">
                 {lessons.filter(l => l.type === 'video').slice(0, 5).map((v, i) => (
-                  <div key={i} className="flex items-center justify-between p-3 bg-[#1a2035] rounded-xl border border-[#242b40]">
+                  <div key={i} className="flex items-center justify-between p-3 bg-muted/10 rounded-xl border border-border">
                     <div className="flex items-center gap-3 truncate">
-                      <div className="text-xs font-bold text-[#6b7599]">0{i+1}</div>
+                      <div className="text-xs font-bold text-muted">0{i+1}</div>
                       <div className="truncate">
-                        <div className="text-xs font-bold text-[#e8ecf5] truncate">{v.title}</div>
-                        <div className="text-[10px] text-[#6b7599]">Avg. Watch: 12:45m</div>
+                        <div className="text-xs font-bold text-foreground truncate">{v.title}</div>
+                        <div className="text-[10px] text-muted">Avg. Watch: 12:45m</div>
                       </div>
                     </div>
                     <div className="text-right">
-                      <div className="text-xs font-bold text-blue-500">{v.analytics?.views || Math.floor(Math.random() * 500)}</div>
-                      <div className="text-[9px] text-[#6b7599] uppercase font-bold">Views</div>
+                      <div className="text-xs font-bold text-secondary">{v.analytics?.views || Math.floor(Math.random() * 500)}</div>
+                      <div className="text-[9px] text-muted uppercase font-bold">Views</div>
                     </div>
                   </div>
                 ))}
@@ -682,27 +682,27 @@ const ContentManagement: React.FC<{ user: User }> = ({ user }) => {
 
             <Card className="p-6">
               <div className="flex items-center justify-between mb-6">
-                <h4 className="font-bold text-[#e8ecf5] flex items-center gap-2">
-                  <HelpCircle size={18} className="text-orange-500" /> Quiz & Assignment Stats
+                <h4 className="font-bold text-foreground flex items-center gap-2">
+                  <HelpCircle size={18} className="text-orange" /> Quiz & Assignment Stats
                 </h4>
-                <button className="text-[10px] font-bold text-[#4f8ef7] hover:underline">Full Report</button>
+                <button className="text-[10px] font-bold text-secondary hover:underline">Full Report</button>
               </div>
               <div className="grid grid-cols-2 gap-4">
-                <div className="p-4 bg-[#1a2035] rounded-2xl border border-[#242b40] flex flex-col items-center justify-center text-center">
-                  <div className="text-2xl font-bold font-syne text-orange-500">84%</div>
-                  <div className="text-[10px] font-bold text-[#6b7599] uppercase tracking-wider mt-1">Avg Quiz Score</div>
+                <div className="p-4 bg-muted/10 rounded-2xl border border-border flex flex-col items-center justify-center text-center">
+                  <div className="text-2xl font-bold font-syne text-orange">84%</div>
+                  <div className="text-[10px] font-bold text-muted uppercase tracking-wider mt-1">Avg Quiz Score</div>
                 </div>
-                <div className="p-4 bg-[#1a2035] rounded-2xl border border-[#242b40] flex flex-col items-center justify-center text-center">
-                  <div className="text-2xl font-bold font-syne text-green-500">92%</div>
-                  <div className="text-[10px] font-bold text-[#6b7599] uppercase tracking-wider mt-1">Submission Rate</div>
+                <div className="p-4 bg-muted/10 rounded-2xl border border-border flex flex-col items-center justify-center text-center">
+                  <div className="text-2xl font-bold font-syne text-success">92%</div>
+                  <div className="text-[10px] font-bold text-muted uppercase tracking-wider mt-1">Submission Rate</div>
                 </div>
-                <div className="p-4 bg-[#1a2035] rounded-2xl border border-[#242b40] flex flex-col items-center justify-center text-center">
-                  <div className="text-2xl font-bold font-syne text-purple-500">1.2k</div>
-                  <div className="text-[10px] font-bold text-[#6b7599] uppercase tracking-wider mt-1">PDF Downloads</div>
+                <div className="p-4 bg-muted/10 rounded-2xl border border-border flex flex-col items-center justify-center text-center">
+                  <div className="text-2xl font-bold font-syne text-accent">1.2k</div>
+                  <div className="text-[10px] font-bold text-muted uppercase tracking-wider mt-1">PDF Downloads</div>
                 </div>
-                <div className="p-4 bg-[#1a2035] rounded-2xl border border-[#242b40] flex flex-col items-center justify-center text-center">
-                  <div className="text-2xl font-bold font-syne text-blue-500">450h</div>
-                  <div className="text-[10px] font-bold text-[#6b7599] uppercase tracking-wider mt-1">Total Watch Time</div>
+                <div className="p-4 bg-muted/10 rounded-2xl border border-border flex flex-col items-center justify-center text-center">
+                  <div className="text-2xl font-bold font-syne text-secondary">450h</div>
+                  <div className="text-[10px] font-bold text-muted uppercase tracking-wider mt-1">Total Watch Time</div>
                 </div>
               </div>
             </Card>
@@ -719,48 +719,48 @@ const ContentManagement: React.FC<{ user: User }> = ({ user }) => {
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               onClick={() => setShowModal(false)}
-              className="absolute inset-0 bg-black/70 backdrop-blur-sm"
+              className="absolute inset-0 bg-background/70 backdrop-blur-sm"
             />
             <motion.div
               initial={{ opacity: 0, scale: 0.95, y: 20 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.95, y: 20 }}
-              className="relative w-full max-w-3xl bg-[#131726] border border-[#242b40] rounded-2xl shadow-2xl p-8 overflow-y-auto max-h-[90vh]"
+              className="relative w-full max-w-3xl bg-card border border-border rounded-2xl shadow-2xl p-8 overflow-y-auto max-h-[90vh]"
             >
               <div className="flex items-center justify-between mb-6">
                 <div className="flex items-center gap-3">
                   <div className={cn(
                     "w-10 h-10 rounded-xl flex items-center justify-center",
-                    modalType === 'video' ? "bg-blue-500/10 text-blue-500" :
-                    modalType === 'pdf' ? "bg-purple-500/10 text-purple-500" :
-                    modalType === 'quiz' ? "bg-orange-500/10 text-orange-500" : "bg-green-500/10 text-green-500"
+                    modalType === 'video' ? "bg-secondary/10 text-secondary" :
+                    modalType === 'pdf' ? "bg-accent/10 text-accent" :
+                    modalType === 'quiz' ? "bg-orange/10 text-orange" : "bg-success/10 text-success"
                   )}>
                     {modalType === 'video' ? <Video size={20} /> :
                      modalType === 'pdf' ? <FileText size={20} /> :
                      modalType === 'quiz' ? <HelpCircle size={20} /> : <FileUp size={20} />}
                   </div>
                   <div>
-                    <h3 className="text-xl font-extrabold font-syne">
+                    <h3 className="text-xl font-extrabold font-syne text-foreground">
                       {editingItem ? `Edit ${modalType.toUpperCase()}` : `Add New ${modalType.toUpperCase()}`}
                     </h3>
-                    <p className="text-xs text-[#6b7599]">Fill in the details below to publish content</p>
+                    <p className="text-xs text-muted">Fill in the details below to publish content</p>
                   </div>
                 </div>
-                <button onClick={() => setShowModal(false)} className="p-2 hover:bg-red-500/10 text-[#6b7599] hover:text-red-500 rounded-full transition-colors">
+                <button onClick={() => setShowModal(false)} className="p-2 hover:bg-destructive/10 text-muted hover:text-destructive rounded-full transition-colors">
                   <X size={20} />
                 </button>
               </div>
 
               {/* Modal Type Selector (only for new items) */}
               {!editingItem && (
-                <div className="flex gap-2 mb-8 p-1 bg-[#1a2035] rounded-xl border border-[#242b40]">
+                <div className="flex gap-2 mb-8 p-1 bg-muted/10 rounded-xl border border-border">
                   {(['video', 'pdf', 'quiz', 'assignment'] as const).map(type => (
                     <button
                       key={type}
                       onClick={() => setModalType(type)}
                       className={cn(
                         "flex-1 py-2 rounded-lg text-[10px] font-bold uppercase tracking-wider transition-all",
-                        modalType === type ? "bg-[#4f8ef7] text-white" : "text-[#6b7599] hover:text-[#e8ecf5]"
+                        modalType === type ? "bg-secondary text-white" : "text-muted hover:text-foreground"
                       )}
                     >
                       {type}
@@ -774,35 +774,35 @@ const ContentManagement: React.FC<{ user: User }> = ({ user }) => {
                   {/* Common Fields */}
                   <div className="space-y-4">
                     <div className="space-y-1.5">
-                      <label className="text-[11px] font-bold text-[#6b7599] uppercase tracking-wider">Title</label>
+                      <label className="text-[11px] font-bold text-muted uppercase tracking-wider">Title</label>
                       <input 
                         required
                         type="text" 
-                        className="w-full bg-[#1a2035] border border-[#242b40] rounded-xl px-4 py-2.5 text-sm outline-none focus:border-[#4f8ef7] transition-colors"
+                        className="w-full bg-muted/10 border border-border rounded-xl px-4 py-2.5 text-sm outline-none focus:border-secondary transition-colors"
                         placeholder="Enter title..."
                         value={formData.title}
                         onChange={(e) => setFormData({ ...formData, title: e.target.value })}
                       />
                     </div>
                     <div className="space-y-1.5">
-                      <label className="text-[11px] font-bold text-[#6b7599] uppercase tracking-wider">Course</label>
+                      <label className="text-[11px] font-bold text-muted uppercase tracking-wider">Course</label>
                       <select 
                         required
                         value={formData.courseId}
                         onChange={(e) => setFormData({ ...formData, courseId: e.target.value })}
-                        className="w-full bg-[#1a2035] border border-[#242b40] rounded-xl px-4 py-2.5 text-sm outline-none focus:border-[#4f8ef7] transition-colors"
+                        className="w-full bg-muted/10 border border-border rounded-xl px-4 py-2.5 text-sm outline-none focus:border-secondary transition-colors"
                       >
                         <option value="">Select Course</option>
                         {courses.map(c => <option key={c.id} value={c.id}>{c.title}</option>)}
                       </select>
                     </div>
                     <div className="space-y-1.5">
-                      <label className="text-[11px] font-bold text-[#6b7599] uppercase tracking-wider">Module</label>
+                      <label className="text-[11px] font-bold text-muted uppercase tracking-wider">Module</label>
                       <select 
                         required
                         value={formData.moduleId}
                         onChange={(e) => setFormData({ ...formData, moduleId: e.target.value })}
-                        className="w-full bg-[#1a2035] border border-[#242b40] rounded-xl px-4 py-2.5 text-sm outline-none focus:border-[#4f8ef7] transition-colors"
+                        className="w-full bg-muted/10 border border-border rounded-xl px-4 py-2.5 text-sm outline-none focus:border-secondary transition-colors"
                       >
                         <option value="">Select Module</option>
                         {modules.filter(m => m.courseId === formData.courseId).map(m => (
@@ -811,10 +811,10 @@ const ContentManagement: React.FC<{ user: User }> = ({ user }) => {
                       </select>
                     </div>
                     <div className="space-y-1.5">
-                      <label className="text-[11px] font-bold text-[#6b7599] uppercase tracking-wider">Description</label>
+                      <label className="text-[11px] font-bold text-muted uppercase tracking-wider">Description</label>
                       <textarea 
                         rows={3}
-                        className="w-full bg-[#1a2035] border border-[#242b40] rounded-xl px-4 py-2.5 text-sm outline-none focus:border-[#4f8ef7] transition-colors resize-none"
+                        className="w-full bg-muted/10 border border-border rounded-xl px-4 py-2.5 text-sm outline-none focus:border-secondary transition-colors resize-none"
                         placeholder="Describe the content..."
                         value={formData.description}
                         onChange={(e) => setFormData({ ...formData, description: e.target.value })}
@@ -827,12 +827,12 @@ const ContentManagement: React.FC<{ user: User }> = ({ user }) => {
                     {modalType === 'video' && (
                       <>
                         <div className="space-y-1.5">
-                          <label className="text-[11px] font-bold text-[#6b7599] uppercase tracking-wider">Video Source</label>
+                          <label className="text-[11px] font-bold text-muted uppercase tracking-wider">Video Source</label>
                           <div className="flex gap-2">
                             <select 
                               value={formData.videoType}
                               onChange={(e) => setFormData({ ...formData, videoType: e.target.value })}
-                              className="flex-1 bg-[#1a2035] border border-[#242b40] rounded-xl px-4 py-2.5 text-sm outline-none focus:border-[#4f8ef7]"
+                              className="flex-1 bg-muted/10 border border-border rounded-xl px-4 py-2.5 text-sm outline-none focus:border-secondary"
                             >
                               <option value="youtube">YouTube Link</option>
                               <option value="direct">Direct Upload</option>
@@ -840,7 +840,7 @@ const ContentManagement: React.FC<{ user: User }> = ({ user }) => {
                             <input 
                               type="text" 
                               required
-                              className="flex-[2] bg-[#1a2035] border border-[#242b40] rounded-xl px-4 py-2.5 text-sm outline-none focus:border-[#4f8ef7]"
+                              className="flex-[2] bg-muted/10 border border-border rounded-xl px-4 py-2.5 text-sm outline-none focus:border-secondary"
                               placeholder="URL or File ID"
                               value={formData.videoUrl}
                               onChange={(e) => setFormData({ ...formData, videoUrl: e.target.value })}
@@ -849,20 +849,20 @@ const ContentManagement: React.FC<{ user: User }> = ({ user }) => {
                         </div>
                         <div className="grid grid-cols-2 gap-4">
                           <div className="space-y-1.5">
-                            <label className="text-[11px] font-bold text-[#6b7599] uppercase tracking-wider">Duration</label>
+                            <label className="text-[11px] font-bold text-muted uppercase tracking-wider">Duration</label>
                             <input 
                               type="text" 
-                              className="w-full bg-[#1a2035] border border-[#242b40] rounded-xl px-4 py-2.5 text-sm outline-none focus:border-[#4f8ef7]" 
+                              className="w-full bg-muted/10 border border-border rounded-xl px-4 py-2.5 text-sm outline-none focus:border-secondary" 
                               placeholder="e.g. 12:45" 
                               value={formData.duration}
                               onChange={(e) => setFormData({ ...formData, duration: e.target.value })}
                             />
                           </div>
                           <div className="space-y-1.5">
-                            <label className="text-[11px] font-bold text-[#6b7599] uppercase tracking-wider">Drip (Days)</label>
+                            <label className="text-[11px] font-bold text-muted uppercase tracking-wider">Drip (Days)</label>
                             <input 
                               type="number" 
-                              className="w-full bg-[#1a2035] border border-[#242b40] rounded-xl px-4 py-2.5 text-sm outline-none focus:border-[#4f8ef7]" 
+                              className="w-full bg-muted/10 border border-border rounded-xl px-4 py-2.5 text-sm outline-none focus:border-secondary" 
                               placeholder="0" 
                               value={formData.dripDays}
                               onChange={(e) => setFormData({ ...formData, dripDays: parseInt(e.target.value) || 0 })}
@@ -870,10 +870,10 @@ const ContentManagement: React.FC<{ user: User }> = ({ user }) => {
                           </div>
                         </div>
                         <div className="space-y-1.5">
-                          <label className="text-[11px] font-bold text-[#6b7599] uppercase tracking-wider">Thumbnail URL</label>
+                          <label className="text-[11px] font-bold text-muted uppercase tracking-wider">Thumbnail URL</label>
                           <input 
                             type="text" 
-                            className="w-full bg-[#1a2035] border border-[#242b40] rounded-xl px-4 py-2.5 text-sm outline-none focus:border-[#4f8ef7]" 
+                            className="w-full bg-muted/10 border border-border rounded-xl px-4 py-2.5 text-sm outline-none focus:border-secondary" 
                             placeholder="https://..." 
                             value={formData.thumbnail}
                             onChange={(e) => setFormData({ ...formData, thumbnail: e.target.value })}
@@ -885,22 +885,22 @@ const ContentManagement: React.FC<{ user: User }> = ({ user }) => {
                     {modalType === 'pdf' && (
                       <>
                         <div className="space-y-1.5">
-                          <label className="text-[11px] font-bold text-[#6b7599] uppercase tracking-wider">PDF File URL</label>
+                          <label className="text-[11px] font-bold text-muted uppercase tracking-wider">PDF File URL</label>
                           <input 
                             type="text" 
                             required
-                            className="w-full bg-[#1a2035] border border-[#242b40] rounded-xl px-4 py-2.5 text-sm outline-none focus:border-[#4f8ef7]" 
+                            className="w-full bg-muted/10 border border-border rounded-xl px-4 py-2.5 text-sm outline-none focus:border-secondary" 
                             placeholder="https://..." 
                             value={formData.fileUrl}
                             onChange={(e) => setFormData({ ...formData, fileUrl: e.target.value })}
                           />
                         </div>
-                        <div className="flex items-center gap-2 p-3 bg-blue-500/5 border border-blue-500/20 rounded-xl">
-                          <Download size={16} className="text-blue-500" />
-                          <span className="text-[11px] text-[#e8ecf5] font-bold">Allow students to download this file</span>
+                        <div className="flex items-center gap-2 p-3 bg-secondary/5 border border-secondary/20 rounded-xl">
+                          <Download size={16} className="text-secondary" />
+                          <span className="text-[11px] text-foreground font-bold">Allow students to download this file</span>
                           <input 
                             type="checkbox" 
-                            className="ml-auto accent-blue-500" 
+                            className="ml-auto accent-secondary" 
                             checked={formData.allowDownload}
                             onChange={(e) => setFormData({ ...formData, allowDownload: e.target.checked })}
                           />
@@ -912,32 +912,32 @@ const ContentManagement: React.FC<{ user: User }> = ({ user }) => {
                       <>
                         <div className="grid grid-cols-2 gap-4">
                           <div className="space-y-1.5">
-                            <label className="text-[11px] font-bold text-[#6b7599] uppercase tracking-wider">Time Limit (Min)</label>
+                            <label className="text-[11px] font-bold text-muted uppercase tracking-wider">Time Limit (Min)</label>
                             <input 
                               type="number" 
-                              className="w-full bg-[#1a2035] border border-[#242b40] rounded-xl px-4 py-2.5 text-sm outline-none focus:border-[#4f8ef7]" 
+                              className="w-full bg-muted/10 border border-border rounded-xl px-4 py-2.5 text-sm outline-none focus:border-secondary" 
                               placeholder="30" 
                               value={formData.quizDuration}
                               onChange={(e) => setFormData({ ...formData, quizDuration: parseInt(e.target.value) || 0 })}
                             />
                           </div>
                           <div className="space-y-1.5">
-                            <label className="text-[11px] font-bold text-[#6b7599] uppercase tracking-wider">Passing %</label>
+                            <label className="text-[11px] font-bold text-muted uppercase tracking-wider">Passing %</label>
                             <input 
                               type="number" 
-                              className="w-full bg-[#1a2035] border border-[#242b40] rounded-xl px-4 py-2.5 text-sm outline-none focus:border-[#4f8ef7]" 
+                              className="w-full bg-muted/10 border border-border rounded-xl px-4 py-2.5 text-sm outline-none focus:border-secondary" 
                               placeholder="40" 
                               value={formData.passingMarks}
                               onChange={(e) => setFormData({ ...formData, passingMarks: parseInt(e.target.value) || 0 })}
                             />
                           </div>
                         </div>
-                        <div className="flex items-center gap-2 p-3 bg-orange-500/5 border border-orange-500/20 rounded-xl">
-                          <CheckCircle2 size={16} className="text-orange-500" />
-                          <span className="text-[11px] text-[#e8ecf5] font-bold">Auto-generate result after submission</span>
+                        <div className="flex items-center gap-2 p-3 bg-orange/5 border border-orange/20 rounded-xl">
+                          <CheckCircle2 size={16} className="text-orange" />
+                          <span className="text-[11px] text-foreground font-bold">Auto-generate result after submission</span>
                           <input 
                             type="checkbox" 
-                            className="ml-auto accent-orange-500" 
+                            className="ml-auto accent-orange" 
                             checked={formData.autoResult}
                             onChange={(e) => setFormData({ ...formData, autoResult: e.target.checked })}
                           />
@@ -949,20 +949,20 @@ const ContentManagement: React.FC<{ user: User }> = ({ user }) => {
                       <>
                         <div className="grid grid-cols-2 gap-4">
                           <div className="space-y-1.5">
-                            <label className="text-[11px] font-bold text-[#6b7599] uppercase tracking-wider">Due Date</label>
+                            <label className="text-[11px] font-bold text-muted uppercase tracking-wider">Due Date</label>
                             <input 
                               type="date" 
                               required
-                              className="w-full bg-[#1a2035] border border-[#242b40] rounded-xl px-4 py-2.5 text-sm outline-none focus:border-[#4f8ef7]" 
+                              className="w-full bg-muted/10 border border-border rounded-xl px-4 py-2.5 text-sm outline-none focus:border-secondary" 
                               value={formData.dueDate}
                               onChange={(e) => setFormData({ ...formData, dueDate: e.target.value })}
                             />
                           </div>
                           <div className="space-y-1.5">
-                            <label className="text-[11px] font-bold text-[#6b7599] uppercase tracking-wider">Total Marks</label>
+                            <label className="text-[11px] font-bold text-muted uppercase tracking-wider">Total Marks</label>
                             <input 
                               type="number" 
-                              className="w-full bg-[#1a2035] border border-[#242b40] rounded-xl px-4 py-2.5 text-sm outline-none focus:border-[#4f8ef7]" 
+                              className="w-full bg-muted/10 border border-border rounded-xl px-4 py-2.5 text-sm outline-none focus:border-secondary" 
                               placeholder="100" 
                               value={formData.totalMarks}
                               onChange={(e) => setFormData({ ...formData, totalMarks: parseInt(e.target.value) || 0 })}
@@ -970,10 +970,10 @@ const ContentManagement: React.FC<{ user: User }> = ({ user }) => {
                           </div>
                         </div>
                         <div className="space-y-1.5">
-                          <label className="text-[11px] font-bold text-[#6b7599] uppercase tracking-wider">Reference File URL</label>
+                          <label className="text-[11px] font-bold text-muted uppercase tracking-wider">Reference File URL</label>
                           <input 
                             type="text" 
-                            className="w-full bg-[#1a2035] border border-[#242b40] rounded-xl px-4 py-2.5 text-sm outline-none focus:border-[#4f8ef7]" 
+                            className="w-full bg-muted/10 border border-border rounded-xl px-4 py-2.5 text-sm outline-none focus:border-secondary" 
                             placeholder="https://..." 
                             value={formData.fileUrl}
                             onChange={(e) => setFormData({ ...formData, fileUrl: e.target.value })}
@@ -983,16 +983,16 @@ const ContentManagement: React.FC<{ user: User }> = ({ user }) => {
                     )}
 
                     {/* Access Control & Status */}
-                    <div className="pt-4 space-y-4 border-t border-[#242b40]">
+                    <div className="pt-4 space-y-4 border-t border-border">
                       <div className="space-y-1.5">
-                        <label className="text-[11px] font-bold text-[#6b7599] uppercase tracking-wider">Access Control</label>
+                        <label className="text-[11px] font-bold text-muted uppercase tracking-wider">Access Control</label>
                         <div className="flex flex-wrap gap-2">
                           <button 
                             type="button" 
                             onClick={() => setFormData({ ...formData, isPaidOnly: false })}
                             className={cn(
                               "px-3 py-1.5 rounded-lg text-[10px] font-bold flex items-center gap-1.5 transition-all",
-                              !formData.isPaidOnly ? "bg-[#4f8ef7] text-white" : "bg-[#1a2035] text-[#6b7599] border border-[#242b40]"
+                              !formData.isPaidOnly ? "bg-secondary text-white" : "bg-muted/10 text-muted border border-border"
                             )}
                           >
                             <Unlock size={12} /> Free Content
@@ -1002,7 +1002,7 @@ const ContentManagement: React.FC<{ user: User }> = ({ user }) => {
                             onClick={() => setFormData({ ...formData, isPaidOnly: true })}
                             className={cn(
                               "px-3 py-1.5 rounded-lg text-[10px] font-bold flex items-center gap-1.5 transition-all",
-                              formData.isPaidOnly ? "bg-[#4f8ef7] text-white" : "bg-[#1a2035] text-[#6b7599] border border-[#242b40]"
+                              formData.isPaidOnly ? "bg-secondary text-white" : "bg-muted/10 text-muted border border-border"
                             )}
                           >
                             <Lock size={12} /> Paid Only
@@ -1010,7 +1010,7 @@ const ContentManagement: React.FC<{ user: User }> = ({ user }) => {
                         </div>
                       </div>
                       <div className="space-y-1.5">
-                        <label className="text-[11px] font-bold text-[#6b7599] uppercase tracking-wider">Publishing Status</label>
+                        <label className="text-[11px] font-bold text-muted uppercase tracking-wider">Publishing Status</label>
                         <div className="flex gap-2">
                           {(['Draft', 'Published', 'Scheduled'] as const).map(status => (
                             <button
@@ -1019,7 +1019,7 @@ const ContentManagement: React.FC<{ user: User }> = ({ user }) => {
                               onClick={() => setFormData({ ...formData, status })}
                               className={cn(
                                 "flex-1 py-2 rounded-lg text-[10px] font-bold uppercase tracking-wider border transition-all",
-                                formData.status === status ? "bg-[#1a2035] border-[#4f8ef7] text-[#4f8ef7]" : "bg-[#1a2035] border-[#242b40] text-[#6b7599]"
+                                formData.status === status ? "bg-muted/10 border-secondary text-secondary" : "bg-muted/10 border-border text-muted"
                               )}
                             >
                               {status}
@@ -1031,11 +1031,11 @@ const ContentManagement: React.FC<{ user: User }> = ({ user }) => {
                   </div>
                 </div>
 
-                <div className="pt-6 flex gap-3 border-t border-[#242b40]">
+                <div className="pt-6 flex gap-3 border-t border-border">
                   <button 
                     type="submit"
                     disabled={loading}
-                    className="flex-1 bg-[#4f8ef7] hover:bg-[#3a7ae8] text-white py-3 rounded-xl font-bold text-sm transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
+                    className="flex-1 bg-secondary hover:bg-secondary/90 text-white py-3 rounded-xl font-bold text-sm transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
                   >
                     {loading ? (
                       <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
@@ -1047,7 +1047,7 @@ const ContentManagement: React.FC<{ user: User }> = ({ user }) => {
                   <button 
                     type="button"
                     onClick={() => setShowModal(false)}
-                    className="px-8 bg-[#1a2035] border border-[#242b40] text-[#e8ecf5] rounded-xl font-bold text-sm hover:bg-[#242b40] transition-colors"
+                    className="px-8 bg-muted/10 border border-border text-foreground rounded-xl font-bold text-sm hover:bg-muted/20 transition-colors"
                   >
                     Cancel
                   </button>

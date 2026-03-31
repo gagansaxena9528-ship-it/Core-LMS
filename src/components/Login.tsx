@@ -116,7 +116,7 @@ const Login: React.FC = () => {
         <div className="flex-1 p-8 sm:p-12 xl:p-20 flex flex-col justify-center bg-card">
           <div className="max-w-[380px] mx-auto w-full">
             <div className="mb-12">
-              <h3 className="text-3xl xl:text-4xl font-extrabold text-white mb-3 font-syne tracking-tight">
+              <h3 className="text-3xl xl:text-4xl font-extrabold text-foreground mb-3 font-syne tracking-tight">
                 {isRegistering ? 'Create account' : 'Sign in'}
               </h3>
               <p className="text-muted text-sm xl:text-base">
@@ -128,9 +128,9 @@ const Login: React.FC = () => {
               <motion.div 
                 initial={{ opacity: 0, height: 0 }}
                 animate={{ opacity: 1, height: 'auto' }}
-                className="bg-red-500/10 border border-red-500/20 text-red-500 p-4 rounded-xl text-xs font-medium mb-6 flex items-center gap-3"
+                className="bg-destructive/10 border border-destructive/20 text-destructive p-4 rounded-xl text-xs font-medium mb-6 flex items-center gap-3"
               >
-                <div className="w-1.5 h-1.5 rounded-full bg-red-500" />
+                <div className="w-1.5 h-1.5 rounded-full bg-destructive" />
                 {error}
               </motion.div>
             )}
@@ -139,7 +139,7 @@ const Login: React.FC = () => {
               <motion.div 
                 initial={{ opacity: 0, height: 0 }}
                 animate={{ opacity: 1, height: 'auto' }}
-                className="bg-green-500/10 border border-green-500/20 text-green-500 p-4 rounded-xl text-xs font-medium mb-6 flex items-center gap-3"
+                className="bg-success/10 border border-success/20 text-success p-4 rounded-xl text-xs font-medium mb-6 flex items-center gap-3"
               >
                 <CheckCircle2 size={16} />
                 {success}
@@ -163,7 +163,7 @@ const Login: React.FC = () => {
                         type="text"
                         value={name}
                         onChange={(e) => setName(e.target.value)}
-                        className="w-full bg-card border border-border rounded-2xl py-3.5 pl-12 pr-4 text-white text-sm focus:outline-none focus:border-secondary transition-all focus:ring-4 focus:ring-secondary/10"
+                        className="w-full bg-card border border-border rounded-2xl py-3.5 pl-12 pr-4 text-foreground text-sm focus:outline-none focus:border-secondary transition-all focus:ring-4 focus:ring-secondary/10"
                         placeholder="Enter your name"
                       />
                     </div>
@@ -179,7 +179,7 @@ const Login: React.FC = () => {
                     type="email"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
-                    className="w-full bg-card border border-border rounded-2xl py-3.5 pl-12 pr-4 text-white text-sm focus:outline-none focus:border-secondary transition-all focus:ring-4 focus:ring-secondary/10"
+                    className="w-full bg-card border border-border rounded-2xl py-3.5 pl-12 pr-4 text-foreground text-sm focus:outline-none focus:border-secondary transition-all focus:ring-4 focus:ring-secondary/10"
                     placeholder="Enter your mail"
                   />
                 </div>
@@ -198,7 +198,7 @@ const Login: React.FC = () => {
                     type="password"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
-                    className="w-full bg-card border border-border rounded-2xl py-3.5 pl-12 pr-4 text-white text-sm focus:outline-none focus:border-secondary transition-all focus:ring-4 focus:ring-secondary/10"
+                    className="w-full bg-card border border-border rounded-2xl py-3.5 pl-12 pr-4 text-foreground text-sm focus:outline-none focus:border-secondary transition-all focus:ring-4 focus:ring-secondary/10"
                     placeholder="Enter your password"
                   />
                 </div>
@@ -227,7 +227,7 @@ const Login: React.FC = () => {
                     setError(null);
                     setSuccess(null);
                   }}
-                  className="flex-1 py-4 bg-transparent border border-border text-white rounded-2xl font-bold text-sm hover:bg-card transition-all active:scale-[0.98]"
+                  className="flex-1 py-4 bg-transparent border border-border text-foreground rounded-2xl font-bold text-sm hover:bg-card transition-all active:scale-[0.98]"
                 >
                   {isRegistering ? 'Sign In' : 'Sign Up'}
                 </button>
@@ -240,7 +240,7 @@ const Login: React.FC = () => {
                   <LogIn size={16} className="text-secondary" />
                 </div>
                 <div>
-                  <h4 className="text-[11px] font-bold text-white uppercase tracking-wider mb-1">System Access</h4>
+                  <h4 className="text-[11px] font-bold text-foreground uppercase tracking-wider mb-1">System Access</h4>
                   <p className="text-[11px] text-muted leading-relaxed">
                     Admin can create student and teacher accounts from the dashboard. Use your assigned credentials to login.
                   </p>

@@ -43,7 +43,7 @@ export const StatCard: React.FC<StatCardProps> = ({ icon, value, label, change, 
     purple: 'border-accent/20 hover:border-accent/50 after:bg-accent',
     green: 'border-success/20 hover:border-success/50 after:bg-success',
     orange: 'border-warning/20 hover:border-warning/50 after:bg-warning',
-    red: 'border-primary/20 hover:border-primary/50 after:bg-primary',
+    red: 'border-destructive/20 hover:border-destructive/50 after:bg-destructive',
   };
 
   const iconColorMap = {
@@ -51,7 +51,7 @@ export const StatCard: React.FC<StatCardProps> = ({ icon, value, label, change, 
     purple: 'text-accent',
     green: 'text-success',
     orange: 'text-warning',
-    red: 'text-primary',
+    red: 'text-destructive',
   };
 
   return (
@@ -71,7 +71,7 @@ export const StatCard: React.FC<StatCardProps> = ({ icon, value, label, change, 
       {change && (
         <div className={cn(
           "mt-3 text-[11px] font-bold flex items-center gap-1.5 px-2 py-0.5 rounded-full w-fit",
-          trend === 'up' ? "bg-success/10 text-success" : "bg-primary/10 text-primary"
+          trend === 'up' ? "bg-success/10 text-success" : "bg-destructive/10 text-destructive"
         )}>
           {trend === 'up' ? '▲' : '▼'} {change}
         </div>

@@ -66,7 +66,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user }) => {
     const unsubNotifications = subscribeToCollection('notifications', (data: AppNotification[]) => {
       const sorted = data.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
       setActivities(sorted.slice(0, 10).map(n => ({
-        color: n.type === 'success' ? 'var(--color-success)' : n.type === 'warning' ? 'var(--color-warning)' : n.type === 'error' ? 'var(--color-primary)' : 'var(--color-secondary)',
+        color: n.type === 'success' ? 'var(--color-success)' : n.type === 'warning' ? 'var(--color-warning)' : n.type === 'error' ? 'var(--color-destructive)' : 'var(--color-secondary)',
         msg: n.message,
         time: formatDistanceToNow(new Date(n.date)) + ' ago',
         type: n.title,
@@ -169,7 +169,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user }) => {
           onClick={() => navigate('/payments')}
         />
         <StatCard 
-          icon={<ClipboardList className="text-primary" />} 
+          icon={<ClipboardList className="text-destructive" />} 
           value={pendingTasksCount} 
           label="Pending Tasks" 
           color="red"
@@ -323,7 +323,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user }) => {
                   <div className="flex-1">
                     <div className="flex items-center justify-between mb-1">
                       <span className="text-sm font-medium text-foreground">Assignment: {task.assignmentId.slice(0, 8)}</span>
-                      <span className="text-[10px] font-bold px-2 py-0.5 rounded-full uppercase bg-primary/10 text-primary">
+                      <span className="text-[10px] font-bold px-2 py-0.5 rounded-full uppercase bg-destructive/10 text-destructive">
                         Pending
                       </span>
                     </div>

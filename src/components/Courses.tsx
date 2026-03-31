@@ -292,7 +292,7 @@ const Courses: React.FC<CoursesProps> = ({ user }) => {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <h2 className="text-2xl font-extrabold font-syne text-foreground">Course Management</h2>
-          <p className="text-sm text-muted-foreground mt-1">{courses.length} courses available in catalog</p>
+          <p className="text-sm text-muted mt-1">{courses.length} courses available in catalog</p>
         </div>
         {user?.role !== 'student' && (
           <button 
@@ -303,28 +303,28 @@ const Courses: React.FC<CoursesProps> = ({ user }) => {
               setModuleLessons([]);
               setShowModal(true);
             }}
-            className="bg-success hover:bg-success/90 text-white px-5 py-2.5 rounded-xl font-bold text-sm flex items-center gap-2 transition-colors w-fit"
+            className="bg-secondary hover:bg-secondary/90 shadow-lg shadow-secondary/20 text-white px-5 py-2.5 rounded-xl font-bold text-sm flex items-center gap-2 transition-all w-fit active:scale-95"
           >
             <Plus size={18} /> Create Course
           </button>
         )}
       </div>
 
-      <div className="flex items-center gap-2 bg-background border border-border rounded-xl px-4 py-2 w-full max-w-md">
-        <Search size={16} className="text-muted-foreground" />
+      <div className="flex items-center gap-2 bg-card border border-border rounded-xl px-4 py-2 w-full max-w-md focus-within:border-secondary transition-colors">
+        <Search size={16} className="text-muted" />
         <input 
           type="text" 
           placeholder="Search courses..." 
           value={search}
           onChange={(e) => setSearch(e.target.value)}
-          className="bg-transparent border-none outline-none text-sm w-full placeholder-muted-foreground"
+          className="bg-transparent border-none outline-none text-sm w-full placeholder-muted text-foreground"
         />
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
         {filteredCourses.map((c) => (
-          <Card key={c.id} className="p-0 group overflow-hidden border-border bg-card">
-            <div className="h-40 bg-muted relative overflow-hidden">
+          <Card key={c.id} className="p-0 group overflow-hidden border-border bg-card hover:border-secondary/30 transition-all duration-300">
+            <div className="h-40 bg-muted/10 relative overflow-hidden">
               {c.thumbnail ? (
                 <img 
                   src={c.thumbnail} 
@@ -333,20 +333,20 @@ const Courses: React.FC<CoursesProps> = ({ user }) => {
                   referrerPolicy="no-referrer"
                 />
               ) : (
-                <div className="w-full h-full flex items-center justify-center text-6xl bg-gradient-to-br from-muted to-background">
+                <div className="w-full h-full flex items-center justify-center text-6xl bg-gradient-to-br from-muted/10 to-background">
                   {c.emoji}
                 </div>
               )}
               <div className="absolute top-3 left-3 flex gap-2">
-                <span className="px-2 py-1 rounded-lg bg-black/50 backdrop-blur-md text-white text-[10px] font-bold uppercase tracking-wider">
+                <span className="px-2 py-1 rounded-lg bg-background/50 backdrop-blur-md text-foreground text-[10px] font-bold uppercase tracking-wider border border-border/50">
                   {c.category}
                 </span>
               </div>
               <div className="absolute top-3 right-3">
                 <span className={cn(
-                  "px-2 py-1 rounded-lg text-[10px] font-bold uppercase tracking-wider backdrop-blur-md",
-                  c.status === 'Active' ? "bg-success/20 text-success" : 
-                  c.status === 'Draft' ? "bg-warning/20 text-warning" : "bg-destructive/20 text-destructive"
+                  "px-2 py-1 rounded-lg text-[10px] font-bold uppercase tracking-wider backdrop-blur-md border",
+                  c.status === 'Active' ? "bg-success/10 text-success border-success/20" : 
+                  c.status === 'Draft' ? "bg-secondary/10 text-secondary border-secondary/20" : "bg-destructive/10 text-destructive border-destructive/20"
                 )}>
                   {c.status}
                 </span>
@@ -354,24 +354,24 @@ const Courses: React.FC<CoursesProps> = ({ user }) => {
             </div>
             
             <div className="p-6">
-              <h3 className="text-base font-bold text-foreground font-syne mb-1 line-clamp-1 group-hover:text-success transition-colors">{c.title}</h3>
-              <p className="text-xs text-muted-foreground mb-4 flex items-center gap-1">
-                <Users size={12} className="text-success" />
+              <h3 className="text-base font-bold text-foreground font-syne mb-1 line-clamp-1 group-hover:text-secondary transition-colors">{c.title}</h3>
+              <p className="text-xs text-muted mb-4 flex items-center gap-1">
+                <Users size={12} className="text-secondary" />
                 {teachers.find(t => t.uid === c.teacherId)?.name || 'Unknown Instructor'}
               </p>
               
               <div className="grid grid-cols-2 gap-y-3 mb-6">
-                <div className="flex items-center gap-2 text-[11px] text-muted-foreground">
-                  <Clock size={14} className="text-success" /> {c.duration}
+                <div className="flex items-center gap-2 text-[11px] text-muted">
+                  <Clock size={14} className="text-secondary" /> {c.duration}
                 </div>
-                <div className="flex items-center gap-2 text-[11px] text-muted-foreground">
-                  <BarChart3 size={14} className="text-success" /> {c.level}
+                <div className="flex items-center gap-2 text-[11px] text-muted">
+                  <BarChart3 size={14} className="text-secondary" /> {c.level}
                 </div>
-                <div className="flex items-center gap-2 text-[11px] text-muted-foreground">
-                  <Users size={14} className="text-success" /> {c.studentsCount} Students
+                <div className="flex items-center gap-2 text-[11px] text-muted">
+                  <Users size={14} className="text-secondary" /> {c.studentsCount} Students
                 </div>
-                <div className="flex items-center gap-2 text-[11px] text-muted-foreground">
-                  <Star size={14} className="text-warning" fill="currentColor" /> {c.rating || '4.8'}
+                <div className="flex items-center gap-2 text-[11px] text-muted">
+                  <Star size={14} className="text-accent" fill="currentColor" /> {c.rating || '4.8'}
                 </div>
               </div>
 
@@ -383,7 +383,7 @@ const Courses: React.FC<CoursesProps> = ({ user }) => {
                     <>
                       <div className="text-lg font-extrabold text-foreground font-syne">₹{c.price.toLocaleString()}</div>
                       {c.discountPrice > 0 && (
-                        <div className="text-[10px] text-muted-foreground line-through">₹{c.discountPrice.toLocaleString()}</div>
+                        <div className="text-[10px] text-muted line-through">₹{c.discountPrice.toLocaleString()}</div>
                       )}
                     </>
                   )}
@@ -392,14 +392,14 @@ const Courses: React.FC<CoursesProps> = ({ user }) => {
                   <div className="flex gap-2">
                     <button 
                       onClick={() => handleEdit(c)}
-                      className="p-2 bg-accent/10 hover:bg-accent/20 text-accent rounded-xl transition-colors"
+                      className="p-2 bg-muted/10 hover:bg-muted/20 text-muted hover:text-foreground rounded-xl transition-colors"
                       title="Edit Course"
                     >
                       <Edit2 size={16} />
                     </button>
                     <button 
                       onClick={() => handleDelete(c.id)}
-                      className="p-2 bg-destructive/10 hover:bg-destructive/20 text-destructive rounded-xl transition-colors"
+                      className="p-2 bg-muted/10 hover:bg-destructive/10 text-muted hover:text-destructive rounded-xl transition-colors"
                       title="Delete Course"
                     >
                       <Trash2 size={16} />
@@ -421,33 +421,33 @@ const Courses: React.FC<CoursesProps> = ({ user }) => {
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               onClick={() => setShowModal(false)}
-              className="fixed inset-0 bg-black/70 backdrop-blur-sm"
+              className="fixed inset-0 bg-background/70 backdrop-blur-sm"
             />
             <motion.div
               initial={{ opacity: 0, scale: 0.95, y: 20 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.95, y: 20 }}
-              className="relative w-full max-w-[900px] bg-background border border-border rounded-2xl shadow-2xl overflow-hidden my-8"
+              className="relative w-full max-w-[900px] bg-card border border-border rounded-2xl shadow-2xl overflow-hidden my-8"
             >
               <div className="flex items-center justify-between p-6 border-b border-border">
                 <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-xl bg-success/10 text-success flex items-center justify-center">
+                  <div className="w-10 h-10 rounded-xl bg-secondary/10 text-secondary flex items-center justify-center">
                     <BookOpen size={20} />
                   </div>
                   <div>
                     <h3 className="text-xl font-extrabold font-syne text-foreground">
                       {editingCourse ? 'Edit Course' : 'Create New Course'}
                     </h3>
-                    <p className="text-[10px] text-muted-foreground uppercase font-bold tracking-widest">Course Management System</p>
+                    <p className="text-[10px] text-muted uppercase font-bold tracking-widest">Course Management System</p>
                   </div>
                 </div>
-                <button onClick={() => setShowModal(false)} className="p-2 hover:bg-destructive/10 text-muted-foreground hover:text-destructive rounded-full transition-colors">
+                <button onClick={() => setShowModal(false)} className="p-2 hover:bg-destructive/10 text-muted hover:text-destructive rounded-full transition-colors">
                   <X size={20} />
                 </button>
               </div>
 
               {/* Tabs */}
-              <div className="flex items-center gap-1 p-2 bg-muted/50 border-b border-border overflow-x-auto no-scrollbar">
+              <div className="flex items-center gap-1 p-2 bg-muted/10 border-b border-border overflow-x-auto no-scrollbar">
                 {[
                   { id: 'basic', label: 'Basic Info', icon: Layout },
                   { id: 'details', label: 'Details', icon: FileText },
@@ -461,8 +461,8 @@ const Courses: React.FC<CoursesProps> = ({ user }) => {
                     className={cn(
                       "flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition-all whitespace-nowrap",
                       activeTab === tab.id 
-                        ? "bg-success text-white shadow-lg shadow-success/20" 
-                        : "text-muted-foreground hover:text-foreground hover:bg-muted"
+                        ? "bg-secondary text-white shadow-lg shadow-secondary/20" 
+                        : "text-muted hover:text-foreground hover:bg-muted/20"
                     )}
                   >
                     <tab.icon size={14} />
@@ -476,11 +476,11 @@ const Courses: React.FC<CoursesProps> = ({ user }) => {
                   {activeTab === 'basic' && (
                     <div className="space-y-6 animate-in fade-in slide-in-from-bottom-2 duration-300">
                       <div className="space-y-2">
-                        <label className="text-[11px] font-bold text-muted-foreground uppercase tracking-wider">Course Title</label>
+                        <label className="text-[11px] font-bold text-muted uppercase tracking-wider">Course Title</label>
                         <input 
                           required
                           type="text" 
-                          className="w-full bg-muted/50 border border-border rounded-xl px-4 py-3 text-sm text-foreground outline-none focus:border-success transition-colors"
+                          className="w-full bg-muted/10 border border-border rounded-xl px-4 py-3 text-sm text-foreground outline-none focus:border-secondary transition-colors"
                           placeholder="e.g. Advanced Web Development"
                           value={formData.title}
                           onChange={(e) => setFormData({...formData, title: e.target.value})}
@@ -488,10 +488,10 @@ const Courses: React.FC<CoursesProps> = ({ user }) => {
                       </div>
 
                       <div className="space-y-2">
-                        <label className="text-[11px] font-bold text-muted-foreground uppercase tracking-wider">Description</label>
+                        <label className="text-[11px] font-bold text-muted uppercase tracking-wider">Description</label>
                         <textarea 
                           required
-                          className="w-full bg-muted/50 border border-border rounded-xl px-4 py-3 text-sm text-foreground outline-none focus:border-success transition-colors min-h-[120px]"
+                          className="w-full bg-muted/10 border border-border rounded-xl px-4 py-3 text-sm text-foreground outline-none focus:border-secondary transition-colors min-h-[120px]"
                           placeholder="Detailed course overview..."
                           value={formData.description}
                           onChange={(e) => setFormData({...formData, description: e.target.value})}
@@ -500,39 +500,39 @@ const Courses: React.FC<CoursesProps> = ({ user }) => {
 
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <div className="space-y-2">
-                          <label className="text-[11px] font-bold text-muted-foreground uppercase tracking-wider">Category</label>
+                          <label className="text-[11px] font-bold text-muted uppercase tracking-wider">Category</label>
                           <select 
-                            className="w-full bg-muted/50 border border-border rounded-xl px-4 py-3 text-sm text-foreground outline-none focus:border-success transition-colors"
+                            className="w-full bg-muted/10 border border-border rounded-xl px-4 py-3 text-sm text-foreground outline-none focus:border-secondary transition-colors"
                             value={formData.category}
                             onChange={(e) => setFormData({...formData, category: e.target.value})}
                           >
-                            <option>Technology</option>
-                            <option>Marketing</option>
-                            <option>Design</option>
-                            <option>Business</option>
-                            <option>Health</option>
-                            <option>Other</option>
+                            <option className="bg-card">Technology</option>
+                            <option className="bg-card">Marketing</option>
+                            <option className="bg-card">Design</option>
+                            <option className="bg-card">Business</option>
+                            <option className="bg-card">Health</option>
+                            <option className="bg-card">Other</option>
                           </select>
                         </div>
                         <div className="space-y-2">
-                          <label className="text-[11px] font-bold text-muted-foreground uppercase tracking-wider">Instructor</label>
+                          <label className="text-[11px] font-bold text-muted uppercase tracking-wider">Instructor</label>
                           <select 
                             required
-                            className="w-full bg-muted/50 border border-border rounded-xl px-4 py-3 text-sm text-foreground outline-none focus:border-success transition-colors"
+                            className="w-full bg-muted/10 border border-border rounded-xl px-4 py-3 text-sm text-foreground outline-none focus:border-secondary transition-colors"
                             value={formData.teacherId}
                             onChange={(e) => setFormData({...formData, teacherId: e.target.value})}
                           >
-                            <option value="">Select Instructor</option>
-                            {teachers.map(t => <option key={t.uid} value={t.uid}>{t.name}</option>)}
+                            <option value="" className="bg-card">Select Instructor</option>
+                            {teachers.map(t => <option key={t.uid} value={t.uid} className="bg-card">{t.name}</option>)}
                           </select>
                         </div>
                       </div>
 
                       <div className="space-y-2">
-                        <label className="text-[11px] font-bold text-muted-foreground uppercase tracking-wider">Thumbnail Image URL</label>
+                        <label className="text-[11px] font-bold text-muted uppercase tracking-wider">Thumbnail Image URL</label>
                         <input 
                           type="url" 
-                          className="w-full bg-muted/50 border border-border rounded-xl px-4 py-3 text-sm text-foreground outline-none focus:border-success transition-colors"
+                          className="w-full bg-muted/10 border border-border rounded-xl px-4 py-3 text-sm text-foreground outline-none focus:border-secondary transition-colors"
                           placeholder="https://images.unsplash.com/..."
                           value={formData.thumbnail}
                           onChange={(e) => setFormData({...formData, thumbnail: e.target.value})}
@@ -545,45 +545,45 @@ const Courses: React.FC<CoursesProps> = ({ user }) => {
                     <div className="space-y-6 animate-in fade-in slide-in-from-bottom-2 duration-300">
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <div className="space-y-2">
-                          <label className="text-[11px] font-bold text-muted-foreground uppercase tracking-wider">Duration</label>
+                          <label className="text-[11px] font-bold text-muted uppercase tracking-wider">Duration</label>
                           <input 
                             type="text" 
-                            className="w-full bg-muted/50 border border-border rounded-xl px-4 py-3 text-sm text-foreground outline-none focus:border-success transition-colors"
+                            className="w-full bg-muted/10 border border-border rounded-xl px-4 py-3 text-sm text-foreground outline-none focus:border-secondary transition-colors"
                             placeholder="e.g. 12 Weeks"
                             value={formData.duration}
                             onChange={(e) => setFormData({...formData, duration: e.target.value})}
                           />
                         </div>
                         <div className="space-y-2">
-                          <label className="text-[11px] font-bold text-muted-foreground uppercase tracking-wider">Level</label>
+                          <label className="text-[11px] font-bold text-muted uppercase tracking-wider">Level</label>
                           <select 
-                            className="w-full bg-muted/50 border border-border rounded-xl px-4 py-3 text-sm text-foreground outline-none focus:border-success transition-colors"
+                            className="w-full bg-muted/10 border border-border rounded-xl px-4 py-3 text-sm text-foreground outline-none focus:border-secondary transition-colors"
                             value={formData.level}
                             onChange={(e) => setFormData({...formData, level: e.target.value as any})}
                           >
-                            <option>Beginner</option>
-                            <option>Intermediate</option>
-                            <option>Advanced</option>
+                            <option className="bg-card">Beginner</option>
+                            <option className="bg-card">Intermediate</option>
+                            <option className="bg-card">Advanced</option>
                           </select>
                         </div>
                       </div>
 
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <div className="space-y-2">
-                          <label className="text-[11px] font-bold text-muted-foreground uppercase tracking-wider">Language</label>
+                          <label className="text-[11px] font-bold text-muted uppercase tracking-wider">Language</label>
                           <input 
                             type="text" 
-                            className="w-full bg-muted/50 border border-border rounded-xl px-4 py-3 text-sm text-foreground outline-none focus:border-success transition-colors"
+                            className="w-full bg-muted/10 border border-border rounded-xl px-4 py-3 text-sm text-foreground outline-none focus:border-secondary transition-colors"
                             placeholder="e.g. English, Hindi"
                             value={formData.language}
                             onChange={(e) => setFormData({...formData, language: e.target.value})}
                           />
                         </div>
                         <div className="space-y-2">
-                          <label className="text-[11px] font-bold text-muted-foreground uppercase tracking-wider">Emoji Icon</label>
+                          <label className="text-[11px] font-bold text-muted uppercase tracking-wider">Emoji Icon</label>
                           <input 
                             type="text" 
-                            className="w-full bg-muted/50 border border-border rounded-xl px-4 py-3 text-sm text-foreground outline-none focus:border-success transition-colors"
+                            className="w-full bg-muted/10 border border-border rounded-xl px-4 py-3 text-sm text-foreground outline-none focus:border-secondary transition-colors"
                             placeholder="e.g. 💻"
                             value={formData.emoji}
                             onChange={(e) => setFormData({...formData, emoji: e.target.value})}
@@ -592,10 +592,10 @@ const Courses: React.FC<CoursesProps> = ({ user }) => {
                       </div>
 
                       <div className="space-y-2">
-                        <label className="text-[11px] font-bold text-muted-foreground uppercase tracking-wider">Tags (Comma separated)</label>
+                        <label className="text-[11px] font-bold text-muted uppercase tracking-wider">Tags (Comma separated)</label>
                         <input 
                           type="text" 
-                          className="w-full bg-muted/50 border border-border rounded-xl px-4 py-3 text-sm text-foreground outline-none focus:border-success transition-colors"
+                          className="w-full bg-muted/10 border border-border rounded-xl px-4 py-3 text-sm text-foreground outline-none focus:border-secondary transition-colors"
                           placeholder="e.g. Web, React, JavaScript"
                           value={formData.tags}
                           onChange={(e) => setFormData({...formData, tags: e.target.value})}
@@ -607,9 +607,9 @@ const Courses: React.FC<CoursesProps> = ({ user }) => {
                   {activeTab === 'structure' && (
                     <div className="space-y-6 animate-in fade-in slide-in-from-bottom-2 duration-300">
                       {!editingCourse ? (
-                        <div className="p-12 text-center bg-muted/50 rounded-2xl border border-dashed border-border">
-                          <Zap size={40} className="mx-auto text-success mb-4 opacity-20" />
-                          <p className="text-muted-foreground text-sm">Please save the course first to manage its structure.</p>
+                        <div className="p-12 text-center bg-muted/10 rounded-2xl border border-dashed border-border">
+                          <Zap size={40} className="mx-auto text-secondary mb-4 opacity-20" />
+                          <p className="text-muted text-sm">Please save the course first to manage its structure.</p>
                         </div>
                       ) : (
                         <div className="space-y-4">
@@ -621,7 +621,7 @@ const Courses: React.FC<CoursesProps> = ({ user }) => {
                                 const title = window.prompt('Enter Module Title:');
                                 if (title) handleAddModule(title);
                               }}
-                              className="text-[11px] font-bold text-success hover:underline flex items-center gap-1"
+                              className="text-[11px] font-bold text-secondary hover:underline flex items-center gap-1"
                             >
                               <Plus size={14} /> Add Module
                             </button>
@@ -629,10 +629,10 @@ const Courses: React.FC<CoursesProps> = ({ user }) => {
 
                           <div className="space-y-3">
                             {courseModules.map((module, mIdx) => (
-                              <div key={module.id} className="bg-muted/50 border border-border rounded-xl overflow-hidden">
-                                <div className="p-4 flex items-center justify-between bg-muted">
+                              <div key={module.id} className="bg-muted/10 border border-border rounded-xl overflow-hidden">
+                                <div className="p-4 flex items-center justify-between bg-muted/20">
                                   <div className="flex items-center gap-3">
-                                    <span className="w-6 h-6 rounded-lg bg-success/10 text-success flex items-center justify-center text-[10px] font-bold">
+                                    <span className="w-6 h-6 rounded-lg bg-secondary/10 text-secondary flex items-center justify-center text-[10px] font-bold">
                                       {mIdx + 1}
                                     </span>
                                     <h5 className="text-sm font-bold text-foreground">{module.title}</h5>
@@ -656,7 +656,7 @@ const Courses: React.FC<CoursesProps> = ({ user }) => {
                                         });
                                         setShowLessonModal(true);
                                       }}
-                                      className="p-1.5 hover:bg-success/10 text-success rounded-lg transition-colors"
+                                      className="p-1.5 hover:bg-secondary/10 text-secondary rounded-lg transition-colors"
                                       title="Add Lesson"
                                     >
                                       <Plus size={14} />
@@ -677,9 +677,9 @@ const Courses: React.FC<CoursesProps> = ({ user }) => {
                                 </div>
                                 <div className="p-2 space-y-1">
                                   {moduleLessons.filter(l => l.moduleId === module.id).map((lesson, lIdx) => (
-                                    <div key={lesson.id} className="flex items-center justify-between p-2 hover:bg-muted rounded-lg transition-colors group">
+                                    <div key={lesson.id} className="flex items-center justify-between p-2 hover:bg-muted/20 rounded-lg transition-colors group">
                                       <div className="flex items-center gap-3">
-                                        {lesson.type === 'video' ? <PlayCircle size={14} className="text-accent" /> : <FileText size={14} className="text-success" />}
+                                        {lesson.type === 'video' ? <PlayCircle size={14} className="text-secondary" /> : <FileText size={14} className="text-secondary" />}
                                         <span className="text-xs text-foreground/90">{lesson.title}</span>
                                       </div>
                                       <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
@@ -718,19 +718,19 @@ const Courses: React.FC<CoursesProps> = ({ user }) => {
                                     </div>
                                   ))}
                                   {moduleLessons.filter(l => l.moduleId === module.id).length === 0 && (
-                                    <div className="p-4 text-center text-[10px] text-muted-foreground italic">No lessons added yet.</div>
+                                    <div className="p-4 text-center text-[10px] text-muted italic">No lessons added yet.</div>
                                   )}
                                 </div>
                               </div>
                             ))}
                             {courseModules.length === 0 && (
-                              <div className="p-8 text-center bg-muted/30 rounded-xl border border-dashed border-border">
-                                <Layers size={24} className="mx-auto text-muted-foreground mb-2 opacity-20" />
-                                <p className="text-[11px] text-muted-foreground">No modules created for this course.</p>
+                              <div className="p-8 text-center bg-muted/5 rounded-xl border border-dashed border-border">
+                                <Layers size={24} className="mx-auto text-muted mb-2 opacity-20" />
+                                <p className="text-[11px] text-muted">No modules created for this course.</p>
                               </div>
                             )}
                           </div>
-                        </div>
+                        )
                       )}
                     </div>
                   )}
@@ -739,12 +739,12 @@ const Courses: React.FC<CoursesProps> = ({ user }) => {
                     <div className="space-y-6 animate-in fade-in slide-in-from-bottom-2 duration-300">
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <div className="space-y-4">
-                          <label className="text-[11px] font-bold text-muted-foreground uppercase tracking-wider">Pricing Settings</label>
-                          <div className="flex items-center gap-4 p-4 bg-muted/50 rounded-xl border border-border">
+                          <label className="text-[11px] font-bold text-muted uppercase tracking-wider">Pricing Settings</label>
+                          <div className="flex items-center gap-4 p-4 bg-muted/10 rounded-xl border border-border">
                             <input 
                               type="checkbox" 
                               id="isFree"
-                              className="w-4 h-4 rounded border-border text-success focus:ring-success bg-transparent"
+                              className="w-4 h-4 rounded border-border text-secondary focus:ring-secondary bg-transparent"
                               checked={formData.isFree}
                               onChange={(e) => setFormData({...formData, isFree: e.target.checked})}
                             />
@@ -754,19 +754,19 @@ const Courses: React.FC<CoursesProps> = ({ user }) => {
                           {!formData.isFree && (
                             <div className="grid grid-cols-2 gap-4">
                               <div className="space-y-2">
-                                <label className="text-[10px] font-bold text-muted-foreground uppercase">Price (₹)</label>
+                                <label className="text-[10px] font-bold text-muted uppercase">Price (₹)</label>
                                 <input 
                                   type="number" 
-                                  className="w-full bg-muted/50 border border-border rounded-xl px-4 py-2.5 text-sm text-foreground outline-none focus:border-success"
+                                  className="w-full bg-muted/10 border border-border rounded-xl px-4 py-2.5 text-sm text-foreground outline-none focus:border-secondary"
                                   value={formData.price}
                                   onChange={(e) => setFormData({...formData, price: parseInt(e.target.value)})}
                                 />
                               </div>
                               <div className="space-y-2">
-                                <label className="text-[10px] font-bold text-muted-foreground uppercase">Discount Price (₹)</label>
+                                <label className="text-[10px] font-bold text-muted uppercase">Discount Price (₹)</label>
                                 <input 
                                   type="number" 
-                                  className="w-full bg-muted/50 border border-border rounded-xl px-4 py-2.5 text-sm text-foreground outline-none focus:border-success"
+                                  className="w-full bg-muted/10 border border-border rounded-xl px-4 py-2.5 text-sm text-foreground outline-none focus:border-secondary"
                                   value={formData.discountPrice}
                                   onChange={(e) => setFormData({...formData, discountPrice: parseInt(e.target.value)})}
                                 />
@@ -776,7 +776,7 @@ const Courses: React.FC<CoursesProps> = ({ user }) => {
                         </div>
 
                         <div className="space-y-4">
-                          <label className="text-[11px] font-bold text-muted-foreground uppercase tracking-wider">Course Status</label>
+                          <label className="text-[11px] font-bold text-muted uppercase tracking-wider">Course Status</label>
                           <div className="grid grid-cols-1 gap-2">
                             {['Draft', 'Active', 'Archived'].map((status) => (
                               <button
@@ -786,8 +786,8 @@ const Courses: React.FC<CoursesProps> = ({ user }) => {
                                 className={cn(
                                   "flex items-center justify-between p-3 rounded-xl border text-xs font-bold transition-all",
                                   formData.status === status 
-                                    ? "bg-success/10 border-success text-success" 
-                                    : "bg-muted/50 border-border text-muted-foreground hover:border-muted-foreground"
+                                    ? "bg-secondary/10 border-secondary text-secondary" 
+                                    : "bg-muted/10 border-border text-muted hover:border-muted"
                                 )}
                               >
                                 {status}
@@ -800,45 +800,45 @@ const Courses: React.FC<CoursesProps> = ({ user }) => {
 
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <div className="space-y-4">
-                          <label className="text-[11px] font-bold text-muted-foreground uppercase tracking-wider">Pro Features</label>
+                          <label className="text-[11px] font-bold text-muted uppercase tracking-wider">Pro Features</label>
                           <div className="space-y-3">
                             <div className="flex items-center justify-between p-4 bg-card rounded-xl border border-border">
                               <div className="flex items-center gap-3">
-                                <Clock size={18} className="text-success" />
+                                <Clock size={18} className="text-secondary" />
                                 <div>
                                   <div className="text-xs font-bold text-foreground">Drip Content</div>
-                                  <div className="text-[10px] text-muted-foreground">Unlock lessons daily</div>
+                                  <div className="text-[10px] text-muted">Unlock lessons daily</div>
                                 </div>
                               </div>
                               <input 
                                 type="checkbox" 
                                 checked={formData.dripContent}
                                 onChange={(e) => setFormData({...formData, dripContent: e.target.checked})}
-                                className="w-4 h-4 rounded border-border text-success focus:ring-success bg-transparent"
+                                className="w-4 h-4 rounded border-border text-secondary focus:ring-secondary bg-transparent"
                               />
                             </div>
                             <div className="flex items-center justify-between p-4 bg-card rounded-xl border border-border">
                               <div className="flex items-center gap-3">
-                                <Award size={18} className="text-success" />
+                                <Award size={18} className="text-secondary" />
                                 <div>
                                   <div className="text-xs font-bold text-foreground">Certificates</div>
-                                  <div className="text-[10px] text-muted-foreground">Enable completion certificate</div>
+                                  <div className="text-[10px] text-muted">Enable completion certificate</div>
                                 </div>
                               </div>
                               <input 
                                 type="checkbox" 
                                 checked={formData.certificateEnabled}
                                 onChange={(e) => setFormData({...formData, certificateEnabled: e.target.checked})}
-                                className="w-4 h-4 rounded border-border text-success focus:ring-success bg-transparent"
+                                className="w-4 h-4 rounded border-border text-secondary focus:ring-secondary bg-transparent"
                               />
                             </div>
                           </div>
                         </div>
                         <div className="space-y-2">
-                          <label className="text-[11px] font-bold text-muted-foreground uppercase tracking-wider">Offer Banner Text</label>
+                          <label className="text-[11px] font-bold text-muted uppercase tracking-wider">Offer Banner Text</label>
                           <input 
                             type="text" 
-                            className="w-full bg-card border border-border rounded-xl px-4 py-3 text-sm outline-none focus:border-success transition-colors text-foreground"
+                            className="w-full bg-card border border-border rounded-xl px-4 py-3 text-sm outline-none focus:border-secondary transition-colors text-foreground"
                             placeholder="e.g. Special 50% Off for New Students!"
                             value={formData.offerBanner}
                             onChange={(e) => setFormData({...formData, offerBanner: e.target.value})}
@@ -853,16 +853,16 @@ const Courses: React.FC<CoursesProps> = ({ user }) => {
                       <div className="bg-card rounded-2xl border border-border overflow-hidden">
                         <table className="w-full text-left border-collapse">
                           <thead>
-                            <tr className="bg-muted/30">
-                              <th className="px-6 py-4 text-[11px] font-bold text-muted-foreground uppercase tracking-wider">Student</th>
-                              <th className="px-6 py-4 text-[11px] font-bold text-muted-foreground uppercase tracking-wider">Progress</th>
-                              <th className="px-6 py-4 text-[11px] font-bold text-muted-foreground uppercase tracking-wider">Status</th>
-                              <th className="px-6 py-4 text-[11px] font-bold text-muted-foreground uppercase tracking-wider">Joined</th>
+                            <tr className="bg-muted/10">
+                              <th className="px-6 py-4 text-[11px] font-bold text-muted uppercase tracking-wider">Student</th>
+                              <th className="px-6 py-4 text-[11px] font-bold text-muted uppercase tracking-wider">Progress</th>
+                              <th className="px-6 py-4 text-[11px] font-bold text-muted uppercase tracking-wider">Status</th>
+                              <th className="px-6 py-4 text-[11px] font-bold text-muted uppercase tracking-wider">Joined</th>
                             </tr>
                           </thead>
                           <tbody className="divide-y divide-border">
                             {enrolledStudents.map((student) => (
-                              <tr key={student.uid} className="hover:bg-muted/20 transition-colors">
+                              <tr key={student.uid} className="hover:bg-muted/5 transition-colors">
                                 <td className="px-6 py-4">
                                   <div className="flex items-center gap-3">
                                     <div className="w-8 h-8 rounded-lg bg-secondary/10 text-secondary flex items-center justify-center text-xs font-bold">
@@ -870,15 +870,15 @@ const Courses: React.FC<CoursesProps> = ({ user }) => {
                                     </div>
                                     <div>
                                       <div className="text-xs font-bold text-foreground">{student.name}</div>
-                                      <div className="text-[10px] text-muted-foreground">{student.email}</div>
+                                      <div className="text-[10px] text-muted">{student.email}</div>
                                     </div>
                                   </div>
                                 </td>
                                 <td className="px-6 py-4">
                                   <div className="flex items-center gap-3">
-                                    <div className="flex-1 h-1.5 bg-muted rounded-full overflow-hidden">
+                                    <div className="flex-1 h-1.5 bg-muted/20 rounded-full overflow-hidden">
                                       <div 
-                                        className="h-full bg-success rounded-full transition-all duration-500"
+                                        className="h-full bg-secondary rounded-full transition-all duration-500"
                                         style={{ width: `${student.progress || 0}%` }}
                                       />
                                     </div>
@@ -888,17 +888,17 @@ const Courses: React.FC<CoursesProps> = ({ user }) => {
                                 <td className="px-6 py-4">
                                   <span className={cn(
                                     "px-2 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-wider",
-                                    student.status === 'Active' ? "bg-success/10 text-success" : "bg-destructive/10 text-destructive"
+                                    student.status === 'Active' ? "bg-secondary/10 text-secondary" : "bg-destructive/10 text-destructive"
                                   )}>
                                     {student.status}
                                   </span>
                                 </td>
-                                <td className="px-6 py-4 text-[10px] text-muted-foreground">{student.joined}</td>
+                                <td className="px-6 py-4 text-[10px] text-muted">{student.joined}</td>
                               </tr>
                             ))}
                             {enrolledStudents.length === 0 && (
                               <tr>
-                                <td colSpan={4} className="px-6 py-12 text-center text-muted-foreground text-sm italic">
+                                <td colSpan={4} className="px-6 py-12 text-center text-muted text-sm italic">
                                   No students enrolled in this course yet.
                                 </td>
                               </tr>
@@ -912,14 +912,14 @@ const Courses: React.FC<CoursesProps> = ({ user }) => {
               </div>
 
               <div className="p-6 border-t border-border bg-card/30 flex items-center justify-between">
-                <div className="flex items-center gap-2 text-[10px] text-muted-foreground font-bold uppercase tracking-widest">
+                <div className="flex items-center gap-2 text-[10px] text-muted font-bold uppercase tracking-widest">
                   {loading ? 'Processing...' : 'Ready to save'}
                 </div>
                 <div className="flex gap-3">
                   <button 
                     type="button"
                     onClick={() => setShowModal(false)}
-                    className="px-6 py-2.5 bg-card border border-border text-foreground rounded-xl font-bold text-xs hover:bg-muted transition-colors"
+                    className="px-6 py-2.5 bg-card border border-border text-foreground rounded-xl font-bold text-xs hover:bg-muted/20 transition-colors"
                   >
                     Cancel
                   </button>
@@ -927,7 +927,7 @@ const Courses: React.FC<CoursesProps> = ({ user }) => {
                     form="courseForm"
                     type="submit"
                     disabled={loading}
-                    className="px-8 py-2.5 bg-success hover:bg-success/90 text-white rounded-xl font-bold text-xs transition-all shadow-lg shadow-success/20 disabled:opacity-50 flex items-center gap-2"
+                    className="px-8 py-2.5 bg-secondary hover:bg-secondary/90 text-white rounded-xl font-bold text-xs transition-all shadow-lg shadow-secondary/20 disabled:opacity-50 flex items-center gap-2"
                   >
                     {loading ? (
                       <div className="w-3 h-3 border-2 border-white border-t-transparent rounded-full animate-spin" />

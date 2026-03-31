@@ -12,10 +12,13 @@
   --color-accent: #7c5fe6;
   --color-success: #2ecc8a;
   --color-warning: #f7d04f;
+  --color-orange: #f7924f;
   --color-muted: #6b7599;
   --color-border: #242b40;
   --color-button: #4f8ef7;
   --color-foreground: #e8ecf5;
+  --color-destructive: #f75f6a;
+  --color-secondary-muted: #4f8ef74d;
 }
 
 @layer base {

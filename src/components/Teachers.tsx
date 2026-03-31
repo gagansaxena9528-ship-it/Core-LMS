@@ -299,7 +299,7 @@ const Teachers: React.FC = () => {
                   </button>
                   <button 
                     onClick={() => handleEdit(t)}
-                    className="flex-1 min-w-[80px] py-2 bg-primary/10 border border-primary/20 rounded-xl text-[12px] font-bold text-primary hover:bg-primary/20 transition-colors flex items-center justify-center gap-2"
+                    className="flex-1 min-w-[80px] py-2 bg-accent/10 border border-accent/20 rounded-xl text-[12px] font-bold text-accent hover:bg-accent/20 transition-colors flex items-center justify-center gap-2"
                   >
                     <Edit2 size={14} /> Edit
                   </button>
@@ -540,7 +540,7 @@ const Teachers: React.FC = () => {
               className="relative w-full max-w-[800px] bg-card border border-border rounded-2xl shadow-2xl overflow-hidden my-8"
             >
               {/* Header/Banner */}
-              <div className="h-32 bg-gradient-to-r from-secondary to-primary relative">
+              <div className="h-32 bg-gradient-to-r from-secondary to-accent relative">
                 <button 
                   onClick={() => setShowProfileModal(false)}
                   className="absolute top-4 right-4 p-2 bg-background/20 hover:bg-background/40 text-foreground rounded-full transition-colors"
@@ -607,7 +607,7 @@ const Teachers: React.FC = () => {
                         </div>
                         <div className="flex items-center justify-between">
                           <div className="flex items-center gap-2 text-foreground text-sm">
-                            <Clock size={14} className="text-primary" /> Classes
+                            <Clock size={14} className="text-accent" /> Classes
                           </div>
                           <span className="font-bold text-foreground">{selectedTeacher.classesTaken || '0'}</span>
                         </div>
@@ -680,7 +680,7 @@ const Teachers: React.FC = () => {
                         </div>
                       </div>
                       <div className="bg-muted/5 rounded-2xl p-5 border border-border flex items-center gap-4">
-                        <div className="w-10 h-10 rounded-xl bg-primary/10 text-primary flex items-center justify-center">
+                        <div className="w-10 h-10 rounded-xl bg-accent/10 text-accent flex items-center justify-center">
                           <Layers size={20} />
                         </div>
                         <div>
@@ -718,7 +718,6 @@ const Teachers: React.FC = () => {
             </motion.div>
           </div>
         )}
-      </AnimatePresence>
       </AnimatePresence>
     </div>
   );

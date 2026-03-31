@@ -236,23 +236,23 @@ const Certificates: React.FC<CertificatesProps> = ({ user }) => {
     <div className="p-6 space-y-6">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-white flex items-center gap-2">
-            <Award className="w-8 h-8 text-blue-500" />
+          <h1 className="text-2xl font-bold text-foreground flex items-center gap-2">
+            <Award className="w-8 h-8 text-secondary" />
             Certificates Management
           </h1>
-          <p className="text-gray-400">Design, generate, and manage student certificates</p>
+          <p className="text-muted">Design, generate, and manage student certificates</p>
         </div>
         <div className="flex items-center gap-3">
           <button
             onClick={() => setShowTemplateModal(true)}
-            className="px-4 py-2 bg-gray-800 text-white rounded-lg hover:bg-gray-700 transition-colors flex items-center gap-2"
+            className="px-4 py-2 bg-muted/10 text-foreground rounded-lg hover:bg-muted/20 transition-colors flex items-center gap-2"
           >
             <LayoutIcon className="w-4 h-4" />
             Templates
           </button>
           <button
             onClick={() => setShowGenerateModal(true)}
-            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-500 transition-colors flex items-center gap-2 shadow-lg shadow-blue-500/20"
+            className="px-4 py-2 bg-secondary text-white rounded-lg hover:bg-secondary/90 transition-colors flex items-center gap-2 shadow-lg shadow-secondary/20"
           >
             <Plus className="w-4 h-4" />
             Generate Certificate
@@ -261,12 +261,12 @@ const Certificates: React.FC<CertificatesProps> = ({ user }) => {
       </div>
 
       {/* Tabs */}
-      <div className="flex items-center gap-1 p-1 bg-gray-900/50 rounded-xl w-fit border border-gray-800">
+      <div className="flex items-center gap-1 p-1 bg-card/50 rounded-xl w-fit border border-border">
         <button
           onClick={() => setActiveTab('certificates')}
           className={clsx(
             "px-4 py-2 rounded-lg text-sm font-medium transition-all flex items-center gap-2",
-            activeTab === 'certificates' ? "bg-blue-600 text-white shadow-lg" : "text-gray-400 hover:text-white hover:bg-gray-800"
+            activeTab === 'certificates' ? "bg-secondary text-white shadow-lg" : "text-muted hover:text-foreground hover:bg-muted/10"
           )}
         >
           <FileText className="w-4 h-4" />
@@ -276,7 +276,7 @@ const Certificates: React.FC<CertificatesProps> = ({ user }) => {
           onClick={() => setActiveTab('templates')}
           className={clsx(
             "px-4 py-2 rounded-lg text-sm font-medium transition-all flex items-center gap-2",
-            activeTab === 'templates' ? "bg-blue-600 text-white shadow-lg" : "text-gray-400 hover:text-white hover:bg-gray-800"
+            activeTab === 'templates' ? "bg-secondary text-white shadow-lg" : "text-muted hover:text-foreground hover:bg-muted/10"
           )}
         >
           <LayoutIcon className="w-4 h-4" />
@@ -286,7 +286,7 @@ const Certificates: React.FC<CertificatesProps> = ({ user }) => {
           onClick={() => setActiveTab('verification')}
           className={clsx(
             "px-4 py-2 rounded-lg text-sm font-medium transition-all flex items-center gap-2",
-            activeTab === 'verification' ? "bg-blue-600 text-white shadow-lg" : "text-gray-400 hover:text-white hover:bg-gray-800"
+            activeTab === 'verification' ? "bg-secondary text-white shadow-lg" : "text-muted hover:text-foreground hover:bg-muted/10"
           )}
         >
           <ShieldCheck className="w-4 h-4" />
@@ -296,7 +296,7 @@ const Certificates: React.FC<CertificatesProps> = ({ user }) => {
           onClick={() => setActiveTab('settings')}
           className={clsx(
             "px-4 py-2 rounded-lg text-sm font-medium transition-all flex items-center gap-2",
-            activeTab === 'settings' ? "bg-blue-600 text-white shadow-lg" : "text-gray-400 hover:text-white hover:bg-gray-800"
+            activeTab === 'settings' ? "bg-secondary text-white shadow-lg" : "text-muted hover:text-foreground hover:bg-muted/10"
           )}
         >
           <Settings className="w-4 h-4" />
@@ -308,25 +308,25 @@ const Certificates: React.FC<CertificatesProps> = ({ user }) => {
         <div className="space-y-4">
           <div className="flex flex-col md:flex-row gap-4">
             <div className="relative flex-1">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-500" />
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted" />
               <input
                 type="text"
                 placeholder="Search by student, course or ID..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full pl-10 pr-4 py-2 bg-gray-900 border border-gray-800 rounded-lg text-white focus:outline-none focus:border-blue-500 transition-colors"
+                className="w-full pl-10 pr-4 py-2 bg-card border border-border rounded-lg text-foreground focus:outline-none focus:border-secondary transition-colors"
               />
             </div>
-            <button className="px-4 py-2 bg-gray-900 border border-gray-800 text-gray-400 rounded-lg hover:text-white hover:border-gray-700 transition-all flex items-center gap-2">
+            <button className="px-4 py-2 bg-card border border-border text-muted rounded-lg hover:text-foreground hover:border-muted transition-all flex items-center gap-2">
               <Filter className="w-4 h-4" />
               Filter
             </button>
           </div>
 
-          <div className="bg-gray-900/50 border border-gray-800 rounded-xl overflow-hidden">
+          <div className="bg-card/50 border border-border rounded-xl overflow-hidden">
             <table className="w-full text-left">
               <thead>
-                <tr className="bg-gray-800/50 text-gray-400 text-sm uppercase tracking-wider">
+                <tr className="bg-muted/5 text-muted text-sm uppercase tracking-wider">
                   <th className="px-6 py-4 font-semibold">Student</th>
                   <th className="px-6 py-4 font-semibold">Course</th>
                   <th className="px-6 py-4 font-semibold">Certificate ID</th>
@@ -335,28 +335,28 @@ const Certificates: React.FC<CertificatesProps> = ({ user }) => {
                   <th className="px-6 py-4 font-semibold text-right">Actions</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-gray-800">
+              <tbody className="divide-y divide-border">
                 {filteredCertificates.map((cert) => (
-                  <tr key={cert.id} className="hover:bg-gray-800/30 transition-colors group">
+                  <tr key={cert.id} className="hover:bg-muted/5 transition-colors group">
                     <td className="px-6 py-4">
                       <div className="flex items-center gap-3">
-                        <div className="w-8 h-8 rounded-full bg-blue-500/10 flex items-center justify-center">
-                          <User className="w-4 h-4 text-blue-500" />
+                        <div className="w-8 h-8 rounded-full bg-secondary/10 flex items-center justify-center">
+                          <User className="w-4 h-4 text-secondary" />
                         </div>
-                        <span className="text-white font-medium">{cert.studentName}</span>
+                        <span className="text-foreground font-medium">{cert.studentName}</span>
                       </div>
                     </td>
-                    <td className="px-6 py-4 text-gray-300">{cert.courseName}</td>
+                    <td className="px-6 py-4 text-foreground/80">{cert.courseName}</td>
                     <td className="px-6 py-4">
-                      <span className="px-2 py-1 bg-gray-800 text-blue-400 rounded text-xs font-mono">
+                      <span className="px-2 py-1 bg-muted/10 text-secondary rounded text-xs font-mono">
                         {cert.certificateId}
                       </span>
                     </td>
-                    <td className="px-6 py-4 text-gray-400 text-sm">
+                    <td className="px-6 py-4 text-muted text-sm">
                       {format(new Date(cert.issueDate), 'MMM dd, yyyy')}
                     </td>
                     <td className="px-6 py-4">
-                      <span className="px-2 py-1 bg-green-500/10 text-green-500 rounded text-xs font-bold">
+                      <span className="px-2 py-1 bg-success/10 text-success rounded text-xs font-bold">
                         {cert.grade || 'A'}
                       </span>
                     </td>
@@ -364,20 +364,20 @@ const Certificates: React.FC<CertificatesProps> = ({ user }) => {
                       <div className="flex items-center justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
                         <button 
                           onClick={() => downloadPDF(cert)}
-                          className="p-2 text-gray-400 hover:text-blue-500 hover:bg-blue-500/10 rounded-lg transition-all"
+                          className="p-2 text-muted hover:text-secondary hover:bg-secondary/10 rounded-lg transition-all"
                           title="Download PDF"
                         >
                           <Download className="w-4 h-4" />
                         </button>
                         <button 
-                          className="p-2 text-gray-400 hover:text-green-500 hover:bg-green-500/10 rounded-lg transition-all"
+                          className="p-2 text-muted hover:text-success hover:bg-success/10 rounded-lg transition-all"
                           title="Share"
                         >
                           <Share2 className="w-4 h-4" />
                         </button>
                         <button 
                           onClick={() => handleDeleteCertificate(cert.id)}
-                          className="p-2 text-gray-400 hover:text-red-500 hover:bg-red-500/10 rounded-lg transition-all"
+                          className="p-2 text-muted hover:text-destructive hover:bg-destructive/10 rounded-lg transition-all"
                           title="Delete"
                         >
                           <Trash2 className="w-4 h-4" />
@@ -388,7 +388,7 @@ const Certificates: React.FC<CertificatesProps> = ({ user }) => {
                 ))}
                 {filteredCertificates.length === 0 && (
                   <tr>
-                    <td colSpan={6} className="px-6 py-12 text-center text-gray-500">
+                    <td colSpan={6} className="px-6 py-12 text-center text-muted">
                       No certificates found matching your search.
                     </td>
                   </tr>
@@ -402,37 +402,37 @@ const Certificates: React.FC<CertificatesProps> = ({ user }) => {
       {activeTab === 'templates' && (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {templates.map((template) => (
-            <div key={template.id} className="bg-gray-900/50 border border-gray-800 rounded-xl p-6 space-y-4 group hover:border-blue-500/50 transition-all">
-              <div className="aspect-video bg-gray-800 rounded-lg border border-gray-700 flex items-center justify-center relative overflow-hidden">
+            <div key={template.id} className="bg-card/50 border border-border rounded-xl p-6 space-y-4 group hover:border-secondary/50 transition-all">
+              <div className="aspect-video bg-muted/10 rounded-lg border border-border flex items-center justify-center relative overflow-hidden">
                 {template.backgroundUrl ? (
                   <img src={template.backgroundUrl} alt="Background" className="w-full h-full object-cover" />
                 ) : (
-                  <LayoutIcon className="w-12 h-12 text-gray-700" />
+                  <LayoutIcon className="w-12 h-12 text-muted" />
                 )}
                 {template.isDefault && (
-                  <div className="absolute top-2 right-2 px-2 py-1 bg-blue-600 text-white text-[10px] font-bold rounded uppercase tracking-wider">
+                  <div className="absolute top-2 right-2 px-2 py-1 bg-secondary text-white text-[10px] font-bold rounded uppercase tracking-wider">
                     Default
                   </div>
                 )}
               </div>
               <div>
-                <h3 className="text-white font-semibold">{template.name}</h3>
-                <p className="text-sm text-gray-400">{template.instituteName}</p>
+                <h3 className="text-foreground font-semibold">{template.name}</h3>
+                <p className="text-sm text-muted">{template.instituteName}</p>
               </div>
-              <div className="flex items-center justify-between pt-4 border-t border-gray-800">
+              <div className="flex items-center justify-between pt-4 border-t border-border">
                 <div className="flex items-center gap-2">
                   <button 
                     onClick={() => {
                       setTemplateData(template);
                       setShowTemplateModal(true);
                     }}
-                    className="p-2 text-gray-400 hover:text-white hover:bg-gray-800 rounded-lg transition-all"
+                    className="p-2 text-muted hover:text-foreground hover:bg-muted/10 rounded-lg transition-all"
                   >
                     <Settings className="w-4 h-4" />
                   </button>
                   <button 
                     onClick={() => handleDeleteTemplate(template.id)}
-                    className="p-2 text-gray-400 hover:text-red-500 hover:bg-red-500/10 rounded-lg transition-all"
+                    className="p-2 text-muted hover:text-destructive hover:bg-destructive/10 rounded-lg transition-all"
                   >
                     <Trash2 className="w-4 h-4" />
                   </button>
@@ -440,7 +440,7 @@ const Certificates: React.FC<CertificatesProps> = ({ user }) => {
                 {!template.isDefault && (
                   <button 
                     onClick={() => updateDoc('certificateTemplates', template.id, { isDefault: true })}
-                    className="text-xs text-blue-500 hover:underline font-medium"
+                    className="text-xs text-secondary hover:underline font-medium"
                   >
                     Set as Default
                   </button>
@@ -459,9 +459,9 @@ const Certificates: React.FC<CertificatesProps> = ({ user }) => {
               });
               setShowTemplateModal(true);
             }}
-            className="border-2 border-dashed border-gray-800 rounded-xl p-6 flex flex-col items-center justify-center gap-3 text-gray-500 hover:border-blue-500/50 hover:text-blue-500 transition-all group"
+            className="border-2 border-dashed border-border rounded-xl p-6 flex flex-col items-center justify-center gap-3 text-muted hover:border-secondary/50 hover:text-secondary transition-all group"
           >
-            <div className="w-12 h-12 rounded-full bg-gray-900 flex items-center justify-center group-hover:bg-blue-500/10 transition-all">
+            <div className="w-12 h-12 rounded-full bg-card flex items-center justify-center group-hover:bg-secondary/10 transition-all">
               <Plus className="w-6 h-6" />
             </div>
             <span className="font-medium">Create New Template</span>
@@ -472,27 +472,27 @@ const Certificates: React.FC<CertificatesProps> = ({ user }) => {
       {activeTab === 'verification' && (
         <div className="max-w-2xl mx-auto space-y-8 py-12">
           <div className="text-center space-y-4">
-            <div className="w-20 h-20 bg-blue-500/10 rounded-full flex items-center justify-center mx-auto">
-              <ShieldCheck className="w-10 h-10 text-blue-500" />
+            <div className="w-20 h-20 bg-secondary/10 rounded-full flex items-center justify-center mx-auto">
+              <ShieldCheck className="w-10 h-10 text-secondary" />
             </div>
-            <h2 className="text-3xl font-bold text-white">Certificate Verification</h2>
-            <p className="text-gray-400">Enter a certificate ID to verify its authenticity and view student details.</p>
+            <h2 className="text-3xl font-bold text-foreground">Certificate Verification</h2>
+            <p className="text-muted">Enter a certificate ID to verify its authenticity and view student details.</p>
           </div>
 
-          <div className="bg-gray-900/50 border border-gray-800 rounded-2xl p-8 space-y-6">
+          <div className="bg-card/50 border border-border rounded-2xl p-8 space-y-6">
             <div className="space-y-2">
-              <label className="text-sm font-medium text-gray-400 uppercase tracking-wider">Certificate ID</label>
+              <label className="text-sm font-medium text-muted uppercase tracking-wider">Certificate ID</label>
               <div className="flex gap-3">
                 <input
                   type="text"
                   placeholder="e.g. CERT-ABC123XYZ"
                   value={verificationId}
                   onChange={(e) => setVerificationId(e.target.value)}
-                  className="flex-1 px-4 py-3 bg-gray-800 border border-gray-700 rounded-xl text-white text-lg font-mono focus:outline-none focus:border-blue-500 transition-all"
+                  className="flex-1 px-4 py-3 bg-card border border-border rounded-xl text-foreground text-lg font-mono focus:outline-none focus:border-secondary transition-all"
                 />
                 <button 
                   onClick={handleVerify}
-                  className="px-8 py-3 bg-blue-600 text-white font-bold rounded-xl hover:bg-blue-500 transition-all shadow-lg shadow-blue-500/20"
+                  className="px-8 py-3 bg-secondary text-white font-bold rounded-xl hover:bg-secondary/90 transition-all shadow-lg shadow-secondary/20"
                 >
                   Verify
                 </button>
@@ -503,28 +503,28 @@ const Certificates: React.FC<CertificatesProps> = ({ user }) => {
               <motion.div
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
-                className="p-6 bg-green-500/5 border border-green-500/20 rounded-xl space-y-4"
+                className="p-6 bg-success/5 border border-success/20 rounded-xl space-y-4"
               >
-                <div className="flex items-center gap-3 text-green-500">
+                <div className="flex items-center gap-3 text-success">
                   <CheckCircle2 className="w-6 h-6" />
                   <span className="font-bold text-lg">Valid Certificate Found</span>
                 </div>
                 <div className="grid grid-cols-2 gap-4 text-sm">
                   <div>
-                    <p className="text-gray-500 uppercase text-[10px] font-bold">Student</p>
-                    <p className="text-white font-medium">{verificationResult.studentName}</p>
+                    <p className="text-muted uppercase text-[10px] font-bold">Student</p>
+                    <p className="text-foreground font-medium">{verificationResult.studentName}</p>
                   </div>
                   <div>
-                    <p className="text-gray-500 uppercase text-[10px] font-bold">Course</p>
-                    <p className="text-white font-medium">{verificationResult.courseName}</p>
+                    <p className="text-muted uppercase text-[10px] font-bold">Course</p>
+                    <p className="text-foreground font-medium">{verificationResult.courseName}</p>
                   </div>
                   <div>
-                    <p className="text-gray-500 uppercase text-[10px] font-bold">Issue Date</p>
-                    <p className="text-white font-medium">{format(new Date(verificationResult.issueDate), 'MMM dd, yyyy')}</p>
+                    <p className="text-muted uppercase text-[10px] font-bold">Issue Date</p>
+                    <p className="text-foreground font-medium">{format(new Date(verificationResult.issueDate), 'MMM dd, yyyy')}</p>
                   </div>
                   <div>
-                    <p className="text-gray-500 uppercase text-[10px] font-bold">Grade</p>
-                    <p className="text-white font-medium">{verificationResult.grade || 'A'}</p>
+                    <p className="text-muted uppercase text-[10px] font-bold">Grade</p>
+                    <p className="text-foreground font-medium">{verificationResult.grade || 'A'}</p>
                   </div>
                 </div>
               </motion.div>
@@ -532,15 +532,15 @@ const Certificates: React.FC<CertificatesProps> = ({ user }) => {
               <motion.div
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
-                className="p-6 bg-red-500/5 border border-red-500/20 rounded-xl flex items-center gap-3 text-red-500"
+                className="p-6 bg-destructive/5 border border-destructive/20 rounded-xl flex items-center gap-3 text-destructive"
               >
                 <XCircle className="w-6 h-6" />
                 <span className="font-bold">No certificate found with this ID</span>
               </motion.div>
             )}
 
-            <div className="pt-6 border-t border-gray-800">
-              <h4 className="text-sm font-medium text-gray-500 uppercase tracking-wider mb-4">Verification Features</h4>
+            <div className="pt-6 border-t border-border">
+              <h4 className="text-sm font-medium text-muted uppercase tracking-wider mb-4">Verification Features</h4>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {[
                   { icon: QrCode, title: 'QR Code Support', desc: 'Scan to verify instantly' },
@@ -548,11 +548,11 @@ const Certificates: React.FC<CertificatesProps> = ({ user }) => {
                   { icon: BookOpen, title: 'Course Details', desc: 'View full curriculum info' },
                   { icon: Calendar, title: 'Issue History', desc: 'Track issuance timeline' }
                 ].map((item, i) => (
-                  <div key={i} className="flex gap-3 p-3 bg-gray-800/30 rounded-lg border border-gray-800">
-                    <item.icon className="w-5 h-5 text-blue-500 shrink-0" />
+                  <div key={i} className="flex gap-3 p-3 bg-muted/5 rounded-lg border border-border">
+                    <item.icon className="w-5 h-5 text-secondary shrink-0" />
                     <div>
-                      <p className="text-white text-sm font-medium">{item.title}</p>
-                      <p className="text-gray-500 text-xs">{item.desc}</p>
+                      <p className="text-foreground text-sm font-medium">{item.title}</p>
+                      <p className="text-muted text-xs">{item.desc}</p>
                     </div>
                   </div>
                 ))}
@@ -565,21 +565,21 @@ const Certificates: React.FC<CertificatesProps> = ({ user }) => {
       {/* Generate Certificate Modal */}
       <AnimatePresence>
         {showGenerateModal && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-background/60 backdrop-blur-sm">
             <motion.div
               initial={{ opacity: 0, scale: 0.95, y: 20 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.95, y: 20 }}
-              className="bg-gray-900 border border-gray-800 rounded-2xl w-full max-w-2xl overflow-hidden shadow-2xl"
+              className="bg-card border border-border rounded-2xl w-full max-w-2xl overflow-hidden shadow-2xl"
             >
-              <div className="p-6 border-b border-gray-800 flex items-center justify-between">
-                <h2 className="text-xl font-bold text-white flex items-center gap-2">
-                  <Award className="w-6 h-6 text-blue-500" />
+              <div className="p-6 border-b border-border flex items-center justify-between">
+                <h2 className="text-xl font-bold text-foreground flex items-center gap-2">
+                  <Award className="w-6 h-6 text-secondary" />
                   Generate New Certificate
                 </h2>
                 <button 
                   onClick={() => setShowGenerateModal(false)}
-                  className="p-2 text-gray-400 hover:text-white hover:bg-gray-800 rounded-lg transition-all"
+                  className="p-2 text-muted hover:text-foreground hover:bg-muted/10 rounded-lg transition-all"
                 >
                   <XCircle className="w-6 h-6" />
                 </button>
@@ -588,12 +588,12 @@ const Certificates: React.FC<CertificatesProps> = ({ user }) => {
               <form onSubmit={handleGenerateCertificate} className="p-6 space-y-6">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div className="space-y-2">
-                    <label className="text-sm font-medium text-gray-400 uppercase tracking-wider">Select Student</label>
+                    <label className="text-sm font-medium text-muted uppercase tracking-wider">Select Student</label>
                     <select
                       required
                       value={formData.studentId}
                       onChange={(e) => setFormData({ ...formData, studentId: e.target.value })}
-                      className="w-full px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white focus:outline-none focus:border-blue-500"
+                      className="w-full px-4 py-2 bg-muted/5 border border-border rounded-lg text-foreground focus:outline-none focus:border-secondary"
                     >
                       <option value="">Select Student</option>
                       {students.map(s => (
@@ -603,12 +603,12 @@ const Certificates: React.FC<CertificatesProps> = ({ user }) => {
                   </div>
 
                   <div className="space-y-2">
-                    <label className="text-sm font-medium text-gray-400 uppercase tracking-wider">Select Course</label>
+                    <label className="text-sm font-medium text-muted uppercase tracking-wider">Select Course</label>
                     <select
                       required
                       value={formData.courseId}
                       onChange={(e) => setFormData({ ...formData, courseId: e.target.value })}
-                      className="w-full px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white focus:outline-none focus:border-blue-500"
+                      className="w-full px-4 py-2 bg-muted/5 border border-border rounded-lg text-foreground focus:outline-none focus:border-secondary"
                     >
                       <option value="">Select Course</option>
                       {courses.map(c => (
@@ -618,22 +618,22 @@ const Certificates: React.FC<CertificatesProps> = ({ user }) => {
                   </div>
 
                   <div className="space-y-2">
-                    <label className="text-sm font-medium text-gray-400 uppercase tracking-wider">Issue Date</label>
+                    <label className="text-sm font-medium text-muted uppercase tracking-wider">Issue Date</label>
                     <input
                       type="date"
                       required
                       value={formData.issueDate}
                       onChange={(e) => setFormData({ ...formData, issueDate: e.target.value })}
-                      className="w-full px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white focus:outline-none focus:border-blue-500"
+                      className="w-full px-4 py-2 bg-muted/5 border border-border rounded-lg text-foreground focus:outline-none focus:border-secondary"
                     />
                   </div>
 
                   <div className="space-y-2">
-                    <label className="text-sm font-medium text-gray-400 uppercase tracking-wider">Template</label>
+                    <label className="text-sm font-medium text-muted uppercase tracking-wider">Template</label>
                     <select
                       value={formData.templateId}
                       onChange={(e) => setFormData({ ...formData, templateId: e.target.value })}
-                      className="w-full px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white focus:outline-none focus:border-blue-500"
+                      className="w-full px-4 py-2 bg-muted/5 border border-border rounded-lg text-foreground focus:outline-none focus:border-secondary"
                     >
                       <option value="">Default Template</option>
                       {templates.map(t => (
@@ -643,49 +643,49 @@ const Certificates: React.FC<CertificatesProps> = ({ user }) => {
                   </div>
 
                   <div className="space-y-2">
-                    <label className="text-sm font-medium text-gray-400 uppercase tracking-wider">Grade (Optional)</label>
+                    <label className="text-sm font-medium text-muted uppercase tracking-wider">Grade (Optional)</label>
                     <input
                       type="text"
                       placeholder="e.g. A+, Distinction"
                       value={formData.grade}
                       onChange={(e) => setFormData({ ...formData, grade: e.target.value })}
-                      className="w-full px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white focus:outline-none focus:border-blue-500"
+                      className="w-full px-4 py-2 bg-muted/5 border border-border rounded-lg text-foreground focus:outline-none focus:border-secondary"
                     />
                   </div>
 
                   <div className="space-y-2">
-                    <label className="text-sm font-medium text-gray-400 uppercase tracking-wider">Score (Optional)</label>
+                    <label className="text-sm font-medium text-muted uppercase tracking-wider">Score (Optional)</label>
                     <div className="flex items-center gap-2">
                       <input
                         type="number"
                         placeholder="Score"
                         value={formData.score}
                         onChange={(e) => setFormData({ ...formData, score: parseInt(e.target.value) })}
-                        className="w-full px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white focus:outline-none focus:border-blue-500"
+                        className="w-full px-4 py-2 bg-muted/5 border border-border rounded-lg text-foreground focus:outline-none focus:border-secondary"
                       />
-                      <span className="text-gray-500">/</span>
+                      <span className="text-muted">/</span>
                       <input
                         type="number"
                         placeholder="Total"
                         value={formData.totalMarks}
                         onChange={(e) => setFormData({ ...formData, totalMarks: parseInt(e.target.value) })}
-                        className="w-full px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white focus:outline-none focus:border-blue-500"
+                        className="w-full px-4 py-2 bg-muted/5 border border-border rounded-lg text-foreground focus:outline-none focus:border-secondary"
                       />
                     </div>
                   </div>
                 </div>
 
-                <div className="pt-6 border-t border-gray-800 flex justify-end gap-3">
+                <div className="pt-6 border-t border-border flex justify-end gap-3">
                   <button
                     type="button"
                     onClick={() => setShowGenerateModal(false)}
-                    className="px-6 py-2 bg-gray-800 text-white rounded-lg hover:bg-gray-700 transition-colors"
+                    className="px-6 py-2 bg-muted/10 text-foreground rounded-lg hover:bg-muted/20 transition-colors"
                   >
                     Cancel
                   </button>
                   <button
                     type="submit"
-                    className="px-6 py-2 bg-blue-600 text-white font-bold rounded-lg hover:bg-blue-500 transition-all shadow-lg shadow-blue-500/20"
+                    className="px-6 py-2 bg-secondary text-white font-bold rounded-lg hover:bg-secondary/90 transition-all shadow-lg shadow-secondary/20"
                   >
                     Generate & Issue
                   </button>
@@ -699,21 +699,21 @@ const Certificates: React.FC<CertificatesProps> = ({ user }) => {
       {/* Template Modal */}
       <AnimatePresence>
         {showTemplateModal && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-background/60 backdrop-blur-sm">
             <motion.div
               initial={{ opacity: 0, scale: 0.95, y: 20 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.95, y: 20 }}
-              className="bg-gray-900 border border-gray-800 rounded-2xl w-full max-w-3xl overflow-hidden shadow-2xl"
+              className="bg-card border border-border rounded-2xl w-full max-w-3xl overflow-hidden shadow-2xl"
             >
-              <div className="p-6 border-b border-gray-800 flex items-center justify-between">
-                <h2 className="text-xl font-bold text-white flex items-center gap-2">
-                  <LayoutIcon className="w-6 h-6 text-blue-500" />
+              <div className="p-6 border-b border-border flex items-center justify-between">
+                <h2 className="text-xl font-bold text-foreground flex items-center gap-2">
+                  <LayoutIcon className="w-6 h-6 text-secondary" />
                   {templateData.id ? 'Edit Template' : 'Create New Template'}
                 </h2>
                 <button 
                   onClick={() => setShowTemplateModal(false)}
-                  className="p-2 text-gray-400 hover:text-white hover:bg-gray-800 rounded-lg transition-all"
+                  className="p-2 text-muted hover:text-foreground hover:bg-muted/10 rounded-lg transition-all"
                 >
                   <XCircle className="w-6 h-6" />
                 </button>
@@ -722,69 +722,69 @@ const Certificates: React.FC<CertificatesProps> = ({ user }) => {
               <form onSubmit={handleSaveTemplate} className="p-6 space-y-6">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div className="space-y-2">
-                    <label className="text-sm font-medium text-gray-400 uppercase tracking-wider">Template Name</label>
+                    <label className="text-sm font-medium text-muted uppercase tracking-wider">Template Name</label>
                     <input
                       type="text"
                       required
                       placeholder="e.g. Standard Completion"
                       value={templateData.name}
                       onChange={(e) => setTemplateData({ ...templateData, name: e.target.value })}
-                      className="w-full px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white focus:outline-none focus:border-blue-500"
+                      className="w-full px-4 py-2 bg-muted/5 border border-border rounded-lg text-foreground focus:outline-none focus:border-secondary"
                     />
                   </div>
 
                   <div className="space-y-2">
-                    <label className="text-sm font-medium text-gray-400 uppercase tracking-wider">Institute Name</label>
+                    <label className="text-sm font-medium text-muted uppercase tracking-wider">Institute Name</label>
                     <input
                       type="text"
                       required
                       value={templateData.instituteName}
                       onChange={(e) => setTemplateData({ ...templateData, instituteName: e.target.value })}
-                      className="w-full px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white focus:outline-none focus:border-blue-500"
+                      className="w-full px-4 py-2 bg-muted/5 border border-border rounded-lg text-foreground focus:outline-none focus:border-secondary"
                     />
                   </div>
 
                   <div className="space-y-2">
-                    <label className="text-sm font-medium text-gray-400 uppercase tracking-wider">Certificate Title</label>
+                    <label className="text-sm font-medium text-muted uppercase tracking-wider">Certificate Title</label>
                     <input
                       type="text"
                       required
                       value={templateData.title}
                       onChange={(e) => setTemplateData({ ...templateData, title: e.target.value })}
-                      className="w-full px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white focus:outline-none focus:border-blue-500"
+                      className="w-full px-4 py-2 bg-muted/5 border border-border rounded-lg text-foreground focus:outline-none focus:border-secondary"
                     />
                   </div>
 
                   <div className="space-y-2">
-                    <label className="text-sm font-medium text-gray-400 uppercase tracking-wider">Signature Name/Role</label>
+                    <label className="text-sm font-medium text-muted uppercase tracking-wider">Signature Name/Role</label>
                     <input
                       type="text"
                       required
                       value={templateData.signatureName}
                       onChange={(e) => setTemplateData({ ...templateData, signatureName: e.target.value })}
-                      className="w-full px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white focus:outline-none focus:border-blue-500"
+                      className="w-full px-4 py-2 bg-muted/5 border border-border rounded-lg text-foreground focus:outline-none focus:border-secondary"
                     />
                   </div>
 
                   <div className="space-y-2">
-                    <label className="text-sm font-medium text-gray-400 uppercase tracking-wider">Logo URL (Optional)</label>
+                    <label className="text-sm font-medium text-muted uppercase tracking-wider">Logo URL (Optional)</label>
                     <input
                       type="url"
                       placeholder="https://..."
                       value={templateData.logoUrl}
                       onChange={(e) => setTemplateData({ ...templateData, logoUrl: e.target.value })}
-                      className="w-full px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white focus:outline-none focus:border-blue-500"
+                      className="w-full px-4 py-2 bg-muted/5 border border-border rounded-lg text-foreground focus:outline-none focus:border-secondary"
                     />
                   </div>
 
                   <div className="space-y-2">
-                    <label className="text-sm font-medium text-gray-400 uppercase tracking-wider">Background URL (Optional)</label>
+                    <label className="text-sm font-medium text-muted uppercase tracking-wider">Background URL (Optional)</label>
                     <input
                       type="url"
                       placeholder="https://..."
                       value={templateData.backgroundUrl}
                       onChange={(e) => setTemplateData({ ...templateData, backgroundUrl: e.target.value })}
-                      className="w-full px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white focus:outline-none focus:border-blue-500"
+                      className="w-full px-4 py-2 bg-muted/5 border border-border rounded-lg text-foreground focus:outline-none focus:border-secondary"
                     />
                   </div>
                 </div>
@@ -795,22 +795,22 @@ const Certificates: React.FC<CertificatesProps> = ({ user }) => {
                     id="isDefault"
                     checked={templateData.isDefault}
                     onChange={(e) => setTemplateData({ ...templateData, isDefault: e.target.checked })}
-                    className="w-4 h-4 bg-gray-800 border-gray-700 rounded text-blue-600 focus:ring-blue-500"
+                    className="w-4 h-4 bg-muted/5 border-border rounded text-secondary focus:ring-secondary"
                   />
-                  <label htmlFor="isDefault" className="text-sm text-gray-400">Set as default template for all courses</label>
+                  <label htmlFor="isDefault" className="text-sm text-muted">Set as default template for all courses</label>
                 </div>
 
-                <div className="pt-6 border-t border-gray-800 flex justify-end gap-3">
+                <div className="pt-6 border-t border-border flex justify-end gap-3">
                   <button
                     type="button"
                     onClick={() => setShowTemplateModal(false)}
-                    className="px-6 py-2 bg-gray-800 text-white rounded-lg hover:bg-gray-700 transition-colors"
+                    className="px-6 py-2 bg-muted/10 text-foreground rounded-lg hover:bg-muted/20 transition-colors"
                   >
                     Cancel
                   </button>
                   <button
                     type="submit"
-                    className="px-6 py-2 bg-blue-600 text-white font-bold rounded-lg hover:bg-blue-500 transition-all shadow-lg shadow-blue-500/20"
+                    className="px-6 py-2 bg-secondary text-white font-bold rounded-lg hover:bg-secondary/90 transition-all shadow-lg shadow-secondary/20"
                   >
                     {templateData.id ? 'Update Template' : 'Create Template'}
                   </button>
@@ -822,20 +822,20 @@ const Certificates: React.FC<CertificatesProps> = ({ user }) => {
       </AnimatePresence>
       {activeTab === 'settings' && (
         <div className="max-w-4xl mx-auto space-y-8 py-12">
-          <div className="bg-gray-900/50 border border-gray-800 rounded-2xl p-8 space-y-8">
+          <div className="bg-card/50 border border-border rounded-2xl p-8 space-y-8">
             <div className="flex items-center justify-between">
               <div>
-                <h3 className="text-xl font-bold text-white">Auto Certificate Issuance</h3>
-                <p className="text-gray-400">Automatically issue certificates when students complete a course and pass the final exam.</p>
+                <h3 className="text-xl font-bold text-foreground">Auto Certificate Issuance</h3>
+                <p className="text-muted">Automatically issue certificates when students complete a course and pass the final exam.</p>
               </div>
               <div className="relative inline-flex items-center cursor-pointer">
                 <input type="checkbox" value="" className="sr-only peer" defaultChecked />
-                <div className="w-11 h-6 bg-gray-700 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-800 rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+                <div className="w-11 h-6 bg-muted/20 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-secondary/50 rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-border after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-secondary"></div>
               </div>
             </div>
 
-            <div className="space-y-4 pt-8 border-t border-gray-800">
-              <h4 className="text-sm font-medium text-gray-500 uppercase tracking-wider">Issuance Conditions</h4>
+            <div className="space-y-4 pt-8 border-t border-border">
+              <h4 className="text-sm font-medium text-muted uppercase tracking-wider">Issuance Conditions</h4>
               <div className="space-y-3">
                 {[
                   { label: 'Course Progress = 100%', enabled: true },
@@ -843,20 +843,20 @@ const Certificates: React.FC<CertificatesProps> = ({ user }) => {
                   { label: 'All Assignments Submitted', enabled: false },
                   { label: 'Minimum Attendance (80%)', enabled: false }
                 ].map((condition, i) => (
-                  <div key={i} className="flex items-center justify-between p-4 bg-gray-800/30 rounded-xl border border-gray-800">
-                    <span className="text-white font-medium">{condition.label}</span>
+                  <div key={i} className="flex items-center justify-between p-4 bg-muted/5 rounded-xl border border-border">
+                    <span className="text-foreground font-medium">{condition.label}</span>
                     <input 
                       type="checkbox" 
                       defaultChecked={condition.enabled}
-                      className="w-4 h-4 bg-gray-800 border-gray-700 rounded text-blue-600 focus:ring-blue-500"
+                      className="w-4 h-4 bg-muted/5 border-border rounded text-secondary focus:ring-secondary"
                     />
                   </div>
                 ))}
               </div>
             </div>
 
-            <div className="pt-8 border-t border-gray-800 flex justify-end">
-              <button className="px-8 py-3 bg-blue-600 text-white font-bold rounded-xl hover:bg-blue-500 transition-all shadow-lg shadow-blue-500/20">
+            <div className="pt-8 border-t border-border flex justify-end">
+              <button className="px-8 py-3 bg-secondary text-white font-bold rounded-xl hover:bg-secondary/90 transition-all shadow-lg shadow-secondary/20">
                 Save Settings
               </button>
             </div>

@@ -180,7 +180,7 @@ const AttendanceComponent: React.FC<AttendanceProps> = ({ user }) => {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <h2 className="text-2xl font-extrabold font-syne text-foreground">Attendance Tracking</h2>
-          <p className="text-sm text-muted-foreground mt-1">Mark and manage daily student attendance</p>
+          <p className="text-sm text-muted mt-1">Mark and manage daily student attendance</p>
         </div>
         <div className="flex items-center gap-3">
           {success && (
@@ -192,7 +192,7 @@ const AttendanceComponent: React.FC<AttendanceProps> = ({ user }) => {
               <CheckCircle2 size={16} /> Attendance saved
             </motion.div>
           )}
-          <button className="p-2.5 bg-card border border-border rounded-xl text-muted-foreground hover:text-foreground transition-all">
+          <button className="p-2.5 bg-card border border-border rounded-xl text-muted hover:text-foreground transition-all">
             <Download size={20} />
           </button>
         </div>
@@ -205,22 +205,22 @@ const AttendanceComponent: React.FC<AttendanceProps> = ({ user }) => {
             <Card className="p-6 space-y-6">
               <div className="space-y-4">
                 <div className="space-y-2">
-                  <label className="text-[11px] font-bold text-muted-foreground uppercase tracking-wider">Select Batch</label>
+                  <label className="text-[11px] font-bold text-muted uppercase tracking-wider">Select Batch</label>
                   <select 
                     value={selectedBatchId}
                     onChange={(e) => setSelectedBatchId(e.target.value)}
                     className="w-full bg-background border border-border rounded-xl px-4 py-3 text-sm outline-none focus:border-secondary transition-colors text-foreground"
                   >
                     {batches.map(b => (
-                      <option key={b.id} value={b.id} className="bg-background">{b.name}</option>
+                      <option key={b.id} value={b.id} className="bg-card">{b.name}</option>
                     ))}
                   </select>
                 </div>
 
                 <div className="space-y-2">
-                  <label className="text-[11px] font-bold text-muted-foreground uppercase tracking-wider">Select Date</label>
+                  <label className="text-[11px] font-bold text-muted uppercase tracking-wider">Select Date</label>
                   <div className="relative">
-                    <Calendar size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground" />
+                    <Calendar size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-muted" />
                     <input 
                       type="date" 
                       value={selectedDate}
@@ -232,7 +232,7 @@ const AttendanceComponent: React.FC<AttendanceProps> = ({ user }) => {
               </div>
 
               <div className="pt-6 border-t border-border space-y-4">
-                <h4 className="text-[11px] font-bold text-muted-foreground uppercase tracking-wider">Quick Actions</h4>
+                <h4 className="text-[11px] font-bold text-muted uppercase tracking-wider">Quick Actions</h4>
                 <div className="grid grid-cols-2 gap-3">
                   <button 
                     onClick={() => handleMarkAll('Present')}
@@ -258,7 +258,7 @@ const AttendanceComponent: React.FC<AttendanceProps> = ({ user }) => {
                   <Calendar size={32} />
                 </div>
                 <h3 className="text-lg font-bold text-foreground">Mark Attendance</h3>
-                <p className="text-xs text-muted-foreground mt-2">Mark your presence for today: {new Date().toLocaleDateString()}</p>
+                <p className="text-xs text-muted mt-2">Mark your presence for today: {new Date().toLocaleDateString()}</p>
               </div>
               <button 
                 onClick={() => handleMarkAttendance(user.uid, 'Present')}
@@ -271,26 +271,26 @@ const AttendanceComponent: React.FC<AttendanceProps> = ({ user }) => {
           )}
 
           <Card className="p-6">
-            <h4 className="text-[11px] font-bold text-muted-foreground uppercase tracking-wider mb-4">Summary for Today</h4>
+            <h4 className="text-[11px] font-bold text-muted uppercase tracking-wider mb-4">Summary for Today</h4>
             <div className="space-y-4">
               <div className="flex items-center justify-between">
-                <span className="text-sm text-muted-foreground">Total Students</span>
+                <span className="text-sm text-muted">Total Students</span>
                 <span className="text-sm font-bold text-foreground">{stats.total}</span>
               </div>
               <div className="flex items-center justify-between">
-                <span className="text-sm text-muted-foreground">Present</span>
+                <span className="text-sm text-muted">Present</span>
                 <span className="text-sm font-bold text-success">{stats.present}</span>
               </div>
               <div className="flex items-center justify-between">
-                <span className="text-sm text-muted-foreground">Absent</span>
+                <span className="text-sm text-muted">Absent</span>
                 <span className="text-sm font-bold text-destructive">{stats.absent}</span>
               </div>
               <div className="flex items-center justify-between">
-                <span className="text-sm text-muted-foreground">Pending</span>
+                <span className="text-sm text-muted">Pending</span>
                 <span className="text-sm font-bold text-accent">{stats.pending}</span>
               </div>
               <div className="pt-4 mt-4 border-t border-border">
-                <div className="w-full h-2 bg-muted rounded-full overflow-hidden flex">
+                <div className="w-full h-2 bg-muted/20 rounded-full overflow-hidden flex">
                   <div 
                     className="h-full bg-success transition-all duration-500" 
                     style={{ width: `${(stats.present / stats.total) * 100 || 0}%` }} 
@@ -300,7 +300,7 @@ const AttendanceComponent: React.FC<AttendanceProps> = ({ user }) => {
                     style={{ width: `${(stats.absent / stats.total) * 100 || 0}%` }} 
                   />
                 </div>
-                <p className="text-[10px] text-muted-foreground mt-2 text-center font-bold uppercase tracking-widest">
+                <p className="text-[10px] text-muted mt-2 text-center font-bold uppercase tracking-widest">
                   Attendance Rate: {Math.round((stats.present / (stats.present + stats.absent || 1)) * 100)}%
                 </p>
               </div>
@@ -311,38 +311,38 @@ const AttendanceComponent: React.FC<AttendanceProps> = ({ user }) => {
         {/* Students List */}
         <div className="lg:col-span-3 space-y-4">
           <div className="flex items-center gap-3 bg-card border border-border rounded-xl px-4 py-2">
-            <Search size={18} className="text-muted-foreground" />
+            <Search size={18} className="text-muted" />
             <input 
               type="text" 
               placeholder="Search students in this batch..." 
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              className="bg-transparent border-none outline-none text-sm w-full placeholder-muted-foreground text-foreground"
+              className="bg-transparent border-none outline-none text-sm w-full placeholder-muted text-foreground"
             />
           </div>
 
           <div className="bg-card border border-border rounded-2xl overflow-hidden">
             <table className="w-full text-left">
               <thead>
-                <tr className="border-b border-border bg-muted/30">
-                  <th className="px-6 py-4 text-[11px] font-bold text-muted-foreground uppercase tracking-wider">Student</th>
-                  <th className="px-6 py-4 text-[11px] font-bold text-muted-foreground uppercase tracking-wider">Status</th>
-                  <th className="px-6 py-4 text-[11px] font-bold text-muted-foreground uppercase tracking-wider text-right">Actions</th>
+                <tr className="border-b border-border bg-muted/10">
+                  <th className="px-6 py-4 text-[11px] font-bold text-muted uppercase tracking-wider">Student</th>
+                  <th className="px-6 py-4 text-[11px] font-bold text-muted uppercase tracking-wider">Status</th>
+                  <th className="px-6 py-4 text-[11px] font-bold text-muted uppercase tracking-wider text-right">Actions</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-border">
                 {filteredStudents.map((student) => {
                   const status = getAttendanceStatus(student.id);
                   return (
-                    <tr key={student.id} className="hover:bg-muted/20 transition-colors group">
+                    <tr key={student.id} className="hover:bg-muted/10 transition-colors group">
                       <td className="px-6 py-4">
                         <div className="flex items-center gap-3">
-                          <div className="w-10 h-10 rounded-full bg-muted overflow-hidden border border-border">
+                          <div className="w-10 h-10 rounded-full bg-muted/20 overflow-hidden border border-border">
                             <img src={student.av} alt={student.name} className="w-full h-full object-cover" />
                           </div>
                           <div>
                             <div className="text-sm font-bold text-foreground">{student.name}</div>
-                            <div className="text-[11px] text-muted-foreground">{student.email}</div>
+                            <div className="text-[11px] text-muted">{student.email}</div>
                           </div>
                         </div>
                       </td>
@@ -357,7 +357,7 @@ const AttendanceComponent: React.FC<AttendanceProps> = ({ user }) => {
                               <XCircle size={12} /> Absent
                             </span>
                           ) : (
-                            <span className="flex items-center gap-1.5 text-[11px] font-bold text-muted-foreground bg-muted/50 px-3 py-1 rounded-full">
+                            <span className="flex items-center gap-1.5 text-[11px] font-bold text-muted bg-muted/10 px-3 py-1 rounded-full">
                               <Clock size={12} /> Pending
                             </span>
                           )}
@@ -369,7 +369,7 @@ const AttendanceComponent: React.FC<AttendanceProps> = ({ user }) => {
                             onClick={() => handleMarkAttendance(student.id, 'Present')}
                             className={cn(
                               "w-10 h-10 rounded-xl flex items-center justify-center transition-all",
-                              status === 'Present' ? "bg-success text-white shadow-lg shadow-success/20" : "bg-muted text-muted-foreground hover:text-success hover:bg-success/10"
+                              status === 'Present' ? "bg-success text-white shadow-lg shadow-success/20" : "bg-muted/10 text-muted hover:text-success hover:bg-success/10"
                             )}
                           >
                             <CheckCircle2 size={18} />
@@ -378,7 +378,7 @@ const AttendanceComponent: React.FC<AttendanceProps> = ({ user }) => {
                             onClick={() => handleMarkAttendance(student.id, 'Absent')}
                             className={cn(
                               "w-10 h-10 rounded-xl flex items-center justify-center transition-all",
-                              status === 'Absent' ? "bg-destructive text-white shadow-lg shadow-destructive/20" : "bg-muted text-muted-foreground hover:text-destructive hover:bg-destructive/10"
+                              status === 'Absent' ? "bg-destructive text-white shadow-lg shadow-destructive/20" : "bg-muted/10 text-muted hover:text-destructive hover:bg-destructive/10"
                             )}
                           >
                             <XCircle size={18} />
@@ -392,8 +392,8 @@ const AttendanceComponent: React.FC<AttendanceProps> = ({ user }) => {
                 {filteredStudents.length === 0 && (
                   <tr>
                     <td colSpan={3} className="px-6 py-20 text-center">
-                      <Users size={48} className="mx-auto text-border mb-4" />
-                      <p className="text-muted-foreground">No students found in this batch</p>
+                      <Users size={48} className="mx-auto text-muted/20 mb-4" />
+                      <p className="text-muted">No students found in this batch</p>
                     </td>
                   </tr>
                 )}

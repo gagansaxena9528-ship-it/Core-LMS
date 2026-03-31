@@ -180,7 +180,7 @@ const Layout: React.FC<LayoutProps> = ({ user }) => {
             <span className="text-[11px] font-bold text-muted-foreground uppercase tracking-wider">{user.role}</span>
             <span className="px-1.5 py-0.5 rounded bg-success/10 text-success text-[8px] font-bold uppercase tracking-tighter">Live</span>
           </div>
-          <div className="w-2 h-2 rounded-full bg-success shadow-[0_0_8px_rgba(46,204,138,0.5)]"></div>
+          <div className="w-2 h-2 rounded-full bg-success shadow-lg shadow-success/50"></div>
         </div>
 
         <nav className="flex-1 overflow-y-auto py-2 scrollbar-hide">
