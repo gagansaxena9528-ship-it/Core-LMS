@@ -301,13 +301,6 @@ const Teachers: React.FC = () => {
                   >
                     <Key size={14} />
                   </button>
-                  <button 
-                    onClick={() => handleDelete(t.uid)}
-                    className="p-2 bg-destructive/10 border border-destructive/20 rounded-xl text-destructive hover:bg-destructive/20 transition-colors"
-                    title="Delete"
-                  >
-                    <Trash2 size={14} />
-                  </button>
                 </div>
               </div>
             </Card>

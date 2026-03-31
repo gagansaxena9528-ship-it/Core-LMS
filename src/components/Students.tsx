@@ -28,6 +28,7 @@ const Students: React.FC<StudentsProps> = ({ user }) => {
   const [students, setStudents] = useState<User[]>([]);
   const [courses, setCourses] = useState<Course[]>([]);
   const [batches, setBatches] = useState<Batch[]>([]);
+  const [teachers, setTeachers] = useState<User[]>([]);
   const [search, setSearch] = useState('');
   const [filterCourse, setFilterCourse] = useState('All');
   const [showModal, setShowModal] = useState(false);
@@ -49,7 +50,8 @@ const Students: React.FC<StudentsProps> = ({ user }) => {
     batch: '',
     fee: '',
     password: '',
-    profilePhoto: ''
+    profilePhoto: '',
+    teacherId: ''
   });
 
   const [selectedStudents, setSelectedStudents] = useState<string[]>([]);
@@ -81,6 +83,7 @@ const Students: React.FC<StudentsProps> = ({ user }) => {
   useEffect(() => {
     const unsubUsers = subscribeToCollection('users', (data) => {
       const allStudents = data.filter(u => u.role === 'student');
+      setTeachers(data.filter(u => u.role === 'teacher'));
       if (user?.role === 'teacher') {
         setStudents(allStudents.filter(s => s.teacherId === user.uid));
       } else {
@@ -200,7 +203,8 @@ const Students: React.FC<StudentsProps> = ({ user }) => {
       batch: student.batch || '',
       fee: student.fee?.toString() || '',
       password: '', // Don't show password for security
-      profilePhoto: student.profilePhoto || ''
+      profilePhoto: student.profilePhoto || '',
+      teacherId: student.teacherId || ''
     });
     setShowModal(true);
   };
@@ -314,7 +318,7 @@ const Students: React.FC<StudentsProps> = ({ user }) => {
           pendingAmount: feeNum - paid,
           courseId: selectedCourse?.id || '',
           batchId: selectedBatch?.id || '',
-          teacherId: selectedBatch?.teacherId || ''
+          teacherId: formData.teacherId || selectedBatch?.teacherId || ''
         });
         
         // Send update notification
@@ -341,7 +345,7 @@ const Students: React.FC<StudentsProps> = ({ user }) => {
             pendingAmount: feeNum,
             courseId: selectedCourse?.id || '',
             batchId: selectedBatch?.id || '',
-            teacherId: selectedBatch?.teacherId || ''
+            teacherId: formData.teacherId || selectedBatch?.teacherId || ''
           });
 
           // Send welcome email
@@ -352,7 +356,8 @@ const Students: React.FC<StudentsProps> = ({ user }) => {
       setEditingStudent(null);
       setFormData({ 
         firstName: '', lastName: '', email: '', phone: '', fatherName: '', motherName: '', 
-        dob: '', address: '', course: '', batch: '', fee: '', password: '', profilePhoto: ''
+        dob: '', address: '', course: '', batch: '', fee: '', password: '', profilePhoto: '',
+        teacherId: ''
       });
     } catch (err: any) {
       console.error(err);
@@ -441,13 +446,6 @@ const Students: React.FC<StudentsProps> = ({ user }) => {
                 <Plus size={18} />
                 <span className="text-sm font-bold">Assign Course</span>
               </button>
-              <button 
-                onClick={handleBulkDelete}
-                className="flex items-center gap-2 px-4 py-2.5 bg-destructive/10 border border-destructive/20 text-destructive rounded-xl hover:bg-destructive/20 transition-all"
-              >
-                <Trash2 size={18} />
-                <span className="text-sm font-bold">Delete ({selectedStudents.length})</span>
-              </button>
             </>
           )}
           <button 
@@ -519,7 +517,12 @@ const Students: React.FC<StudentsProps> = ({ user }) => {
                         </div>
                       )}
                       <div>
-                        <div className="text-[13.5px] font-semibold text-foreground">{s.name}</div>
+                        <div className="flex items-center gap-2">
+                          <div className="text-[13.5px] font-semibold text-foreground">{s.name}</div>
+                          {new Date().getTime() - new Date(s.joined).getTime() < 24 * 60 * 60 * 1000 && (
+                            <span className="px-1.5 py-0.5 bg-secondary/10 text-secondary text-[9px] font-bold rounded uppercase">New</span>
+                          )}
+                        </div>
                         <div className="text-[11px] text-muted">{s.email}</div>
                       </div>
                     </div>
@@ -556,13 +559,6 @@ const Students: React.FC<StudentsProps> = ({ user }) => {
                             title="Reset Password"
                           >
                             <Key size={16} />
-                          </button>
-                          <button 
-                            onClick={() => handleDelete(s.uid)}
-                            className="p-2 hover:bg-destructive/10 text-destructive rounded-lg transition-colors" 
-                            title="Delete"
-                          >
-                            <Trash2 size={16} />
                           </button>
                         </>
                       )}
@@ -767,6 +763,17 @@ const Students: React.FC<StudentsProps> = ({ user }) => {
                     >
                       <option value="">Choose Batch</option>
                       {batches.map(b => <option key={b.id} value={b.name}>{b.name}</option>)}
+                    </select>
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-[11px] font-bold text-muted uppercase tracking-wider">Assign Teacher</label>
+                    <select 
+                      className="w-full bg-card border border-border rounded-xl px-4 py-2.5 text-sm outline-none focus:border-secondary transition-colors"
+                      value={formData.teacherId}
+                      onChange={(e) => setFormData({...formData, teacherId: e.target.value})}
+                    >
+                      <option value="">Auto (From Batch)</option>
+                      {teachers.map(t => <option key={t.uid} value={t.uid}>{t.name}</option>)}
                     </select>
                   </div>
                 </div>

@@ -409,13 +409,15 @@ const Courses: React.FC<CoursesProps> = ({ user }) => {
                     >
                       <Edit2 size={16} />
                     </button>
-                    <button 
-                      onClick={() => handleDelete(c.id)}
-                      className="p-2 bg-muted/10 hover:bg-destructive/10 text-muted hover:text-destructive rounded-xl transition-colors"
-                      title="Delete Course"
-                    >
-                      <Trash2 size={16} />
-                    </button>
+                    {user?.role === 'admin' && (
+                      <button 
+                        onClick={() => handleDelete(c.id)}
+                        className="p-2 bg-muted/10 hover:bg-destructive/10 text-muted hover:text-destructive rounded-xl transition-colors"
+                        title="Delete Course"
+                      >
+                        <Trash2 size={16} />
+                      </button>
+                    )}
                   </div>
                 )}
               </div>

@@ -420,9 +420,6 @@ const Batches: React.FC<BatchesProps> = ({ user }) => {
                       <button onClick={() => handleEdit(batch)} className="p-1.5 bg-muted/10 text-muted hover:text-secondary rounded-lg transition-colors">
                         <Edit2 size={14} />
                       </button>
-                      <button onClick={() => handleDelete(batch.id)} className="p-1.5 bg-muted/10 text-muted hover:text-destructive rounded-lg transition-colors">
-                        <Trash2 size={14} />
-                      </button>
                     </>
                   )}
                 </div>
