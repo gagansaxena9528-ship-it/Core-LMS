@@ -730,7 +730,7 @@ const Courses: React.FC<CoursesProps> = ({ user }) => {
                               </div>
                             )}
                           </div>
-                        )
+                        </div>
                       )}
                     </div>
                   )}
