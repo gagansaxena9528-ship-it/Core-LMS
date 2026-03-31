@@ -117,7 +117,7 @@ const StudentDashboard: React.FC<StudentDashboardProps> = ({ user }) => {
             {user?.av || 'S'}
           </div>
           <div>
-            <h1 className="text-2xl font-extrabold font-syne text-foreground">Welcome back, {user?.name.split(' ')[0] || 'Student'}! 👋</h1>
+            <h1 className="text-2xl font-extrabold font-syne text-foreground">Welcome back, {user?.name?.split(' ')[0] || 'Student'}! 👋</h1>
             <p className="text-sm text-muted-foreground mt-1">{user?.course || 'No Course'} · {user?.batch || 'No Batch'} · Last login: Today 9:30 AM</p>
           </div>
         </div>
@@ -153,7 +153,11 @@ const StudentDashboard: React.FC<StudentDashboardProps> = ({ user }) => {
       {teacher && (
         <div className="bg-card border border-border rounded-2xl p-4 flex items-center gap-4">
           <div className="w-12 h-12 rounded-full bg-muted/30 flex items-center justify-center text-secondary font-bold text-lg overflow-hidden border border-border">
-            {teacher.av ? <img src={teacher.av} alt={teacher.name} className="w-full h-full object-cover" /> : teacher.name[0]}
+            {teacher.av ? (
+              <img src={teacher.av} alt={teacher.name} className="w-full h-full object-cover" />
+            ) : (
+              teacher.name ? teacher.name[0] : 'T'
+            )}
           </div>
           <div>
             <div className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">Assigned Teacher</div>
