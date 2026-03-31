@@ -131,7 +131,7 @@ const Layout: React.FC<LayoutProps> = ({ user }) => {
   const siteName = settings?.general?.siteName || 'CoreLMS';
 
   return (
-    <div className="min-h-screen bg-background text-white font-sans flex overflow-hidden">
+    <div className="min-h-screen bg-background text-foreground font-sans flex overflow-hidden">
       {/* Sidebar Backdrop for Mobile */}
       <AnimatePresence>
         {isSidebarOpen && (
@@ -140,7 +140,7 @@ const Layout: React.FC<LayoutProps> = ({ user }) => {
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             onClick={() => setIsSidebarOpen(false)}
-            className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[60] md:hidden"
+            className="fixed inset-0 bg-background/60 backdrop-blur-sm z-[60] md:hidden"
           />
         )}
       </AnimatePresence>
@@ -155,11 +155,11 @@ const Layout: React.FC<LayoutProps> = ({ user }) => {
             {adminLogo ? (
               <img src={adminLogo} alt="Logo" className="h-9 w-auto object-contain" referrerPolicy="no-referrer" />
             ) : (
-              <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-secondary to-accent flex items-center justify-center font-bold text-lg text-white font-syne">
+              <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-secondary to-accent flex items-center justify-center font-bold text-lg text-foreground font-syne">
                 {siteName.charAt(0)}
               </div>
             )}
-            <span className="font-syne font-extrabold text-lg">
+            <span className="font-syne font-extrabold text-lg text-foreground">
               {siteName.includes('CoreLMS') ? (
                 <>Core<span className="text-secondary">LMS</span></>
               ) : (
@@ -169,7 +169,7 @@ const Layout: React.FC<LayoutProps> = ({ user }) => {
           </div>
           <button 
             onClick={() => setIsSidebarOpen(false)}
-            className="p-2 text-muted hover:text-white md:hidden"
+            className="p-2 text-muted-foreground hover:text-foreground md:hidden"
           >
             <X size={20} />
           </button>
@@ -177,7 +177,7 @@ const Layout: React.FC<LayoutProps> = ({ user }) => {
 
         <div className="mx-3 my-3 p-2 px-3 rounded-lg bg-card/50 border border-border flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <span className="text-[11px] font-bold text-muted uppercase tracking-wider">{user.role}</span>
+            <span className="text-[11px] font-bold text-muted-foreground uppercase tracking-wider">{user.role}</span>
             <span className="px-1.5 py-0.5 rounded bg-success/10 text-success text-[8px] font-bold uppercase tracking-tighter">Live</span>
           </div>
           <div className="w-2 h-2 rounded-full bg-success shadow-[0_0_8px_rgba(46,204,138,0.5)]"></div>
@@ -186,7 +186,7 @@ const Layout: React.FC<LayoutProps> = ({ user }) => {
         <nav className="flex-1 overflow-y-auto py-2 scrollbar-hide">
           {currentNav.map((section, idx) => (
             <div key={idx} className="mb-4">
-              <div className="px-5 py-2 text-[10px] font-bold text-muted uppercase tracking-[1.2px]">
+              <div className="px-5 py-2 text-[10px] font-bold text-muted-foreground uppercase tracking-[1.2px]">
                 {section.label}
               </div>
               {section.items.map((item) => (
@@ -198,7 +198,7 @@ const Layout: React.FC<LayoutProps> = ({ user }) => {
                     "flex items-center gap-3 px-4 py-2.5 mx-2 rounded-lg transition-all duration-200 group relative",
                     location.pathname === item.id 
                       ? "bg-secondary/10 text-secondary font-medium" 
-                      : "text-muted hover:bg-card/50 hover:text-white"
+                      : "text-muted-foreground hover:bg-card/50 hover:text-foreground"
                   )}
                 >
                   {location.pathname === item.id && (
@@ -206,7 +206,7 @@ const Layout: React.FC<LayoutProps> = ({ user }) => {
                   )}
                   <span className={cn(
                     "transition-colors",
-                    location.pathname === item.id ? "text-secondary" : "group-hover:text-white"
+                    location.pathname === item.id ? "text-secondary" : "group-hover:text-foreground"
                   )}>
                     {item.icon}
                   </span>
@@ -218,16 +218,16 @@ const Layout: React.FC<LayoutProps> = ({ user }) => {
         </nav>
 
         <div className="p-4 border-t border-border flex items-center gap-3">
-          <div className="w-9 h-9 rounded-full bg-gradient-to-br from-secondary to-accent flex items-center justify-center font-bold text-sm text-white flex-shrink-0">
+          <div className="w-9 h-9 rounded-full bg-gradient-to-br from-secondary to-accent flex items-center justify-center font-bold text-sm text-foreground flex-shrink-0">
             {user.av}
           </div>
           <div className="flex-1 min-w-0">
-            <div className="text-[13px] font-medium truncate">{user.name}</div>
-            <div className="text-[11px] text-muted capitalize">{user.role}</div>
+            <div className="text-[13px] font-medium truncate text-foreground">{user.name}</div>
+            <div className="text-[11px] text-muted-foreground capitalize">{user.role}</div>
           </div>
           <button 
             onClick={handleLogout}
-            className="w-8 h-8 rounded-lg bg-card/50 border border-border flex items-center justify-center text-muted hover:text-secondary hover:bg-secondary/10 transition-colors"
+            className="w-8 h-8 rounded-lg bg-card/50 border border-border flex items-center justify-center text-muted-foreground hover:text-secondary hover:bg-secondary/10 transition-colors"
           >
             <LogOut size={14} />
           </button>
@@ -240,7 +240,7 @@ const Layout: React.FC<LayoutProps> = ({ user }) => {
         <header className="h-[60px] bg-card border-b border-border flex items-center px-4 md:px-6 gap-4 z-40 sticky top-0">
           <button 
             onClick={() => setIsSidebarOpen(true)}
-            className="p-2 text-muted hover:text-white md:hidden"
+            className="p-2 text-muted-foreground hover:text-foreground md:hidden"
           >
             <Menu size={20} />
           </button>
@@ -249,7 +249,7 @@ const Layout: React.FC<LayoutProps> = ({ user }) => {
             <button onClick={() => navigate(-1)} className="p-1.5 md:p-2 hover:bg-card/50 rounded-lg transition-colors hidden sm:block">
               <ChevronLeft size={18} />
             </button>
-            <h2 className="font-syne font-bold text-sm md:text-base truncate">
+            <h2 className="font-syne font-bold text-sm md:text-base truncate text-foreground">
               {location.pathname === '/' ? 'Dashboard' : location.pathname.split('/')[1].replace('-', ' ').toUpperCase()}
             </h2>
             <button onClick={() => navigate(1)} className="p-1.5 md:p-2 hover:bg-card/50 rounded-lg transition-colors hidden sm:block">
@@ -259,11 +259,11 @@ const Layout: React.FC<LayoutProps> = ({ user }) => {
 
           <div className="flex items-center gap-2 md:gap-3">
             <div className="hidden lg:flex items-center gap-2 bg-card/50 border border-border rounded-lg px-3 py-1.5 w-[200px]">
-              <Search size={14} className="text-muted" />
+              <Search size={14} className="text-muted-foreground" />
               <input 
                 type="text" 
                 placeholder="Search..." 
-                className="bg-transparent border-none outline-none text-[13px] w-full placeholder-muted"
+                className="bg-transparent border-none outline-none text-[13px] w-full placeholder-muted-foreground text-foreground"
               />
             </div>
             
@@ -309,7 +309,7 @@ const Layout: React.FC<LayoutProps> = ({ user }) => {
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               onClick={() => setNotifOpen(false)}
-              className="fixed inset-0 bg-black/50 z-[80] backdrop-blur-sm"
+              className="fixed inset-0 bg-background/50 z-[80] backdrop-blur-sm"
             />
             <motion.div
               initial={{ x: '100%' }}
@@ -318,10 +318,10 @@ const Layout: React.FC<LayoutProps> = ({ user }) => {
               className="fixed top-0 right-0 w-full sm:w-[320px] h-screen bg-card border-l border-border z-[90] shadow-2xl"
             >
               <div className="p-5 border-b border-border flex items-center justify-between">
-                <h3 className="font-syne font-bold">Notifications</h3>
+                <h3 className="font-syne font-bold text-foreground">Notifications</h3>
                 <div className="flex items-center gap-3">
                   <button className="text-[12px] text-secondary hover:underline">Mark all read</button>
-                  <button onClick={() => setNotifOpen(false)} className="md:hidden p-1">
+                  <button onClick={() => setNotifOpen(false)} className="md:hidden p-1 text-foreground">
                     <X size={18} />
                   </button>
                 </div>
@@ -336,9 +336,9 @@ const Layout: React.FC<LayoutProps> = ({ user }) => {
                     "p-4 border-b border-border cursor-pointer hover:bg-card/50 transition-colors",
                     n.unread && "border-l-2 border-l-secondary"
                   )}>
-                    <div className={cn("text-[13.5px]", n.unread ? "font-medium" : "text-[#e8ecf5]")}>{n.title}</div>
-                    <div className="text-[12px] text-muted mt-1">{n.desc}</div>
-                    <div className="text-[11px] text-muted mt-2">{n.time}</div>
+                    <div className={cn("text-[13.5px]", n.unread ? "font-medium text-foreground" : "text-foreground")}>{n.title}</div>
+                    <div className="text-[12px] text-muted-foreground mt-1">{n.desc}</div>
+                    <div className="text-[11px] text-muted-foreground mt-2">{n.time}</div>
                   </div>
                 ))}
               </div>

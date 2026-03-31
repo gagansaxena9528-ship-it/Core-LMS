@@ -104,46 +104,46 @@ const StudentDashboard: React.FC<StudentDashboardProps> = ({ user }) => {
     : 100;
 
   const upcomingEvents = [
-    ...liveClasses.map(c => ({ icon: <Video size={16} />, title: `Live: ${c.title}`, sub: `${c.date} ${c.time}`, color: '#f75f6a', type: 'live' })),
-    ...exams.map(e => ({ icon: <FileText size={16} />, title: `Exam: ${e.title}`, sub: `Duration: ${e.duration}m`, color: '#f7924f', type: 'exam' })),
-    ...assignments.map(a => ({ icon: <Calendar size={16} />, title: `Task: ${a.title}`, sub: `Due: ${a.dueDate}`, color: '#4f8ef7', type: 'assignment' })),
+    ...liveClasses.map(c => ({ icon: <Video size={16} />, title: `Live: ${c.title}`, sub: `${c.date} ${c.time}`, color: 'var(--color-primary)', type: 'live' })),
+    ...exams.map(e => ({ icon: <FileText size={16} />, title: `Exam: ${e.title}`, sub: `Duration: ${e.duration}m`, color: 'var(--color-warning)', type: 'exam' })),
+    ...assignments.map(a => ({ icon: <Calendar size={16} />, title: `Task: ${a.title}`, sub: `Due: ${a.dueDate}`, color: 'var(--color-secondary)', type: 'assignment' })),
   ].sort((a, b) => a.sub.localeCompare(b.sub)).slice(0, 5);
 
   return (
     <div className="space-y-8">
-      <div className="bg-gradient-to-r from-[#4f8ef7]/10 to-[#7c5fe6]/10 border border-[#4f8ef7]/20 rounded-2xl p-8">
+      <div className="bg-gradient-to-r from-secondary/10 to-accent/10 border border-secondary/20 rounded-2xl p-8">
         <div className="flex items-center gap-6">
-          <div className="w-16 h-16 rounded-full bg-gradient-to-br from-[#4f8ef7] to-[#7c5fe6] flex items-center justify-center font-bold text-2xl text-white font-syne">
+          <div className="w-16 h-16 rounded-full bg-gradient-to-br from-secondary to-accent flex items-center justify-center font-bold text-2xl text-foreground font-syne">
             {user?.av || 'S'}
           </div>
           <div>
-            <h1 className="text-2xl font-extrabold font-syne text-white">Welcome back, {user?.name.split(' ')[0] || 'Student'}! 👋</h1>
-            <p className="text-sm text-[#6b7599] mt-1">{user?.course || 'No Course'} · {user?.batch || 'No Batch'} · Last login: Today 9:30 AM</p>
+            <h1 className="text-2xl font-extrabold font-syne text-foreground">Welcome back, {user?.name.split(' ')[0] || 'Student'}! 👋</h1>
+            <p className="text-sm text-muted-foreground mt-1">{user?.course || 'No Course'} · {user?.batch || 'No Batch'} · Last login: Today 9:30 AM</p>
           </div>
         </div>
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <StatCard 
-          icon={<BookOpen className="text-[#4f8ef7]" />} 
+          icon={<BookOpen className="text-secondary" />} 
           value={courses.length.toString()} 
           label="Active Courses" 
           color="blue"
         />
         <StatCard 
-          icon={<TrendingUp className="text-[#2ecc8a]" />} 
+          icon={<TrendingUp className="text-success" />} 
           value={`${(user as any).progress || 0}%`} 
           label="Overall Progress" 
           color="green"
         />
         <StatCard 
-          icon={<CheckCircle2 className="text-[#f7924f]" />} 
+          icon={<CheckCircle2 className="text-warning" />} 
           value={`${attendanceRate}%`} 
           label="Attendance" 
           color="orange"
         />
         <StatCard 
-          icon={<Award className="text-[#7c5fe6]" />} 
+          icon={<Award className="text-accent" />} 
           value={certificates.length.toString()} 
           label="Certificates" 
           color="purple"
@@ -151,35 +151,35 @@ const StudentDashboard: React.FC<StudentDashboardProps> = ({ user }) => {
       </div>
 
       {teacher && (
-        <div className="bg-[#131726] border border-[#242b40] rounded-2xl p-4 flex items-center gap-4">
-          <div className="w-12 h-12 rounded-full bg-[#1a2035] flex items-center justify-center text-[#4f8ef7] font-bold text-lg overflow-hidden border border-[#242b40]">
+        <div className="bg-card border border-border rounded-2xl p-4 flex items-center gap-4">
+          <div className="w-12 h-12 rounded-full bg-muted/30 flex items-center justify-center text-secondary font-bold text-lg overflow-hidden border border-border">
             {teacher.av ? <img src={teacher.av} alt={teacher.name} className="w-full h-full object-cover" /> : teacher.name[0]}
           </div>
           <div>
-            <div className="text-[10px] font-bold text-[#6b7599] uppercase tracking-wider">Assigned Teacher</div>
-            <div className="text-sm font-bold text-white">{teacher.name}</div>
-            <div className="text-[11px] text-[#4f8ef7]">{teacher.email}</div>
+            <div className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">Assigned Teacher</div>
+            <div className="text-sm font-bold text-foreground">{teacher.name}</div>
+            <div className="text-[11px] text-secondary">{teacher.email}</div>
           </div>
         </div>
       )}
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <Card title="My Course Progress">
-          <div className="p-4 bg-[#1a2035] border border-[#242b40] rounded-xl flex items-center gap-6">
-            <div className="w-20 h-14 rounded-lg bg-gradient-to-br from-[#0f2027] to-[#203a43] flex items-center justify-center text-3xl">📱</div>
+          <div className="p-4 bg-muted/30 border border-border rounded-xl flex items-center gap-6">
+            <div className="w-20 h-14 rounded-lg bg-gradient-to-br from-background to-muted/50 flex items-center justify-center text-3xl">📱</div>
             <div className="flex-1 min-w-0">
-              <div className="text-[14.5px] font-bold text-[#e8ecf5] truncate">{user?.course || 'No Course'}</div>
-              <div className="mt-2 h-1.5 bg-[#131726] rounded-full overflow-hidden">
-                <div className="h-full bg-gradient-to-r from-[#4f8ef7] to-[#7c5fe6]" style={{ width: `${(user as any).progress || 0}%` }} />
+              <div className="text-[14.5px] font-bold text-foreground truncate">{user?.course || 'No Course'}</div>
+              <div className="mt-2 h-1.5 bg-card rounded-full overflow-hidden">
+                <div className="h-full bg-gradient-to-r from-secondary to-accent" style={{ width: `${(user as any).progress || 0}%` }} />
               </div>
-              <div className="flex justify-between mt-2 text-[11px] text-[#6b7599]">
+              <div className="flex justify-between mt-2 text-[11px] text-muted-foreground">
                 <span>Module 0 of 0</span>
                 <span>{(user as any).progress || 0}% complete</span>
               </div>
             </div>
             <button 
               onClick={() => navigate('/course-player/1')}
-              className="bg-[#4f8ef7] hover:bg-[#3a7ae8] text-white px-4 py-2 rounded-lg font-bold text-xs flex items-center gap-2 transition-colors"
+              className="bg-secondary hover:bg-secondary/80 text-foreground px-4 py-2 rounded-lg font-bold text-xs flex items-center gap-2 transition-colors"
             >
               <Play size={12} fill="currentColor" /> Continue
             </button>
@@ -189,19 +189,19 @@ const StudentDashboard: React.FC<StudentDashboardProps> = ({ user }) => {
         <Card title="Upcoming Events">
           <div className="space-y-4">
             {upcomingEvents.length > 0 ? upcomingEvents.map((event, i) => (
-              <div key={i} className="flex items-center gap-4 py-3 border-b border-[#242b40] last:border-0">
+              <div key={i} className="flex items-center gap-4 py-3 border-b border-border last:border-0">
                 <div className="w-10 h-10 rounded-xl flex items-center justify-center text-lg" style={{ backgroundColor: `${event.color}15`, color: event.color }}>
                   {event.icon}
                 </div>
                 <div>
-                  <div className="text-[13.5px] font-semibold text-[#e8ecf5]">{event.title}</div>
-                  <div className="text-[11px] text-[#6b7599] mt-0.5">{event.sub}</div>
+                  <div className="text-[13.5px] font-semibold text-foreground">{event.title}</div>
+                  <div className="text-[11px] text-muted-foreground mt-0.5">{event.sub}</div>
                 </div>
               </div>
             )) : (
               <div className="text-center py-8">
-                <Calendar size={32} className="mx-auto text-[#242b40] mb-2" />
-                <p className="text-sm text-[#6b7599]">No upcoming events</p>
+                <Calendar size={32} className="mx-auto text-border mb-2" />
+                <p className="text-sm text-muted-foreground">No upcoming events</p>
               </div>
             )}
           </div>
@@ -212,17 +212,17 @@ const StudentDashboard: React.FC<StudentDashboardProps> = ({ user }) => {
         <Card title="My Certificates">
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
             {certificates.map((cert) => (
-              <div key={cert.id} className="p-4 bg-[#1a2035] border border-[#242b40] rounded-xl flex items-center gap-4">
-                <div className="w-12 h-12 rounded-lg bg-purple-500/10 flex items-center justify-center text-purple-500">
+              <div key={cert.id} className="p-4 bg-muted/30 border border-border rounded-xl flex items-center gap-4">
+                <div className="w-12 h-12 rounded-lg bg-accent/10 flex items-center justify-center text-accent">
                   <Award size={24} />
                 </div>
                 <div className="flex-1 min-w-0">
-                  <div className="text-[13.5px] font-bold text-[#e8ecf5] truncate">{cert.courseName}</div>
-                  <div className="text-[11px] text-[#6b7599] mt-0.5">Issued on {cert.issueDate}</div>
+                  <div className="text-[13.5px] font-bold text-foreground truncate">{cert.courseName}</div>
+                  <div className="text-[11px] text-muted-foreground mt-0.5">Issued on {cert.issueDate}</div>
                 </div>
                 <button 
                   onClick={() => window.open(cert.url, '_blank')}
-                  className="p-2 text-[#4f8ef7] hover:bg-[#4f8ef7]/10 rounded-lg transition-colors"
+                  className="p-2 text-secondary hover:bg-secondary/10 rounded-lg transition-colors"
                   title="Download Certificate"
                 >
                   <Award size={18} />

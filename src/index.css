@@ -15,6 +15,7 @@
   --color-muted: #6b7599;
   --color-border: #242b40;
   --color-button: #4f8ef7;
+  --color-foreground: #e8ecf5;
 }
 
 @layer base {

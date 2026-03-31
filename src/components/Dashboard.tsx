@@ -112,15 +112,15 @@ const Dashboard: React.FC<DashboardProps> = ({ user }) => {
     <div className="space-y-8">
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-2xl font-extrabold font-syne text-white">System Overview</h2>
-          <p className="text-sm text-muted mt-1">Real-time analytics and management</p>
+          <h2 className="text-2xl font-extrabold font-syne text-foreground">System Overview</h2>
+          <p className="text-sm text-muted-foreground mt-1">Real-time analytics and management</p>
         </div>
         <div className="flex items-center gap-3 px-4 py-2 bg-card border border-border rounded-xl shadow-lg">
           <div className="relative flex h-3 w-3">
             <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-success opacity-75"></span>
             <span className="relative inline-flex rounded-full h-3 w-3 bg-success"></span>
           </div>
-          <span className="text-xs font-bold text-white uppercase tracking-widest">System Live</span>
+          <span className="text-xs font-bold text-foreground uppercase tracking-widest">System Live</span>
         </div>
       </div>
 
@@ -204,7 +204,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user }) => {
                   tickFormatter={(val) => `₹${val/1000}k`}
                 />
                 <Tooltip 
-                  cursor={{ fill: 'rgba(79, 142, 247, 0.05)' }}
+                  cursor={{ fill: 'var(--color-secondary-muted)' }}
                   contentStyle={{ 
                     backgroundColor: 'var(--color-card)', 
                     border: '1px solid var(--color-border)', 
@@ -217,7 +217,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user }) => {
                 />
                 <Bar dataKey="revenue" radius={[4, 4, 0, 0]}>
                   {revenueData.map((entry, index) => (
-                    <Cell key={`cell-${index}`} fill={index === revenueData.length - 1 ? 'var(--color-secondary)' : 'rgba(79, 142, 247, 0.5)'} />
+                    <Cell key={`cell-${index}`} fill={index === revenueData.length - 1 ? 'var(--color-secondary)' : 'var(--color-secondary-muted)'} />
                   ))}
                 </Bar>
               </BarChart>
@@ -231,12 +231,12 @@ const Dashboard: React.FC<DashboardProps> = ({ user }) => {
               <div key={i} className="flex gap-4 items-start">
                 <div className="w-2 h-2 rounded-full mt-1.5 flex-shrink-0" style={{ backgroundColor: activity.color }} />
                 <div className="flex-1 min-w-0">
-                  <div className="text-[13.5px] font-medium text-white">{activity.msg}</div>
-                  <div className="text-[11px] text-muted mt-1">{activity.time}</div>
+                  <div className="text-[13.5px] font-medium text-foreground">{activity.msg}</div>
+                  <div className="text-[11px] text-muted-foreground mt-1">{activity.time}</div>
                 </div>
               </div>
             )) : (
-              <div className="text-center py-8 text-muted text-sm italic">No recent activity</div>
+              <div className="text-center py-8 text-muted-foreground text-sm italic">No recent activity</div>
             )}
           </div>
           <button 
@@ -257,11 +257,11 @@ const Dashboard: React.FC<DashboardProps> = ({ user }) => {
         <div className="space-y-6">
           <div className="grid grid-cols-2 gap-4">
             <div className="p-4 bg-background border border-border rounded-2xl">
-              <div className="text-[11px] text-muted font-bold uppercase mb-1">Total Revenue</div>
-              <div className="text-2xl font-bold text-white">₹{selectedMonthData?.revenue.toLocaleString()}</div>
+              <div className="text-[11px] text-muted-foreground font-bold uppercase mb-1">Total Revenue</div>
+              <div className="text-2xl font-bold text-foreground">₹{selectedMonthData?.revenue.toLocaleString()}</div>
             </div>
             <div className="p-4 bg-background border border-border rounded-2xl">
-              <div className="text-[11px] text-muted font-bold uppercase mb-1">Payments</div>
+              <div className="text-[11px] text-muted-foreground font-bold uppercase mb-1">Payments</div>
               <div className="text-2xl font-bold text-success">
                 {payments.filter(p => {
                   const pDate = parseISO(p.date);
@@ -275,7 +275,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user }) => {
           </div>
           
           <div className="space-y-4">
-            <h4 className="text-sm font-bold text-white">Recent Payments this Month</h4>
+            <h4 className="text-sm font-bold text-foreground">Recent Payments this Month</h4>
             {payments
               .filter(p => {
                 const pDate = parseISO(p.date);
@@ -286,12 +286,12 @@ const Dashboard: React.FC<DashboardProps> = ({ user }) => {
               })
               .slice(0, 5)
               .map((p, i) => (
-                <div key={i} className="flex items-center justify-between p-3 bg-white/5 rounded-xl">
+                <div key={i} className="flex items-center justify-between p-3 bg-muted/30 rounded-xl">
                   <div className="flex items-center gap-3">
                     <div className="w-2 h-2 rounded-full bg-secondary" />
-                    <span className="text-sm text-white">Payment ID: {p.id.slice(0, 8)}</span>
+                    <span className="text-sm text-foreground">Payment ID: {p.id.slice(0, 8)}</span>
                   </div>
-                  <span className="text-sm font-bold text-white">₹{p.paid.toLocaleString()}</span>
+                  <span className="text-sm font-bold text-foreground">₹{p.paid.toLocaleString()}</span>
                 </div>
               ))}
             {payments.filter(p => {
@@ -301,7 +301,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user }) => {
                 end: endOfMonth(selectedMonthData?.date || new Date()) 
               });
             }).length === 0 && (
-              <div className="text-center py-4 text-muted text-xs">No payments recorded for this period</div>
+              <div className="text-center py-4 text-muted-foreground text-xs">No payments recorded for this period</div>
             )}
           </div>
         </div>
@@ -315,20 +315,20 @@ const Dashboard: React.FC<DashboardProps> = ({ user }) => {
         <div className="space-y-4">
           {submissions.filter(s => s.status === 'Pending').length > 0 ? (
             submissions.filter(s => s.status === 'Pending').map((task, i) => (
-              <div key={i} className="group p-4 bg-background border border-border rounded-2xl hover:border-secondary/30 transition-all cursor-pointer">
+              <div key={i} className="group p-4 bg-card border border-border rounded-2xl hover:border-secondary/30 transition-all cursor-pointer">
                 <div className="flex items-start gap-4">
-                  <div className="p-2 rounded-xl bg-white/5 text-muted group-hover:text-secondary transition-colors">
+                  <div className="p-2 rounded-xl bg-muted/50 text-muted-foreground group-hover:text-secondary transition-colors">
                     <ClipboardList size={16} />
                   </div>
                   <div className="flex-1">
                     <div className="flex items-center justify-between mb-1">
-                      <span className="text-sm font-medium text-white">Assignment: {task.assignmentId.slice(0, 8)}</span>
+                      <span className="text-sm font-medium text-foreground">Assignment: {task.assignmentId.slice(0, 8)}</span>
                       <span className="text-[10px] font-bold px-2 py-0.5 rounded-full uppercase bg-primary/10 text-primary">
                         Pending
                       </span>
                     </div>
-                    <div className="text-[12px] text-white mb-1">Student: {task.studentName}</div>
-                    <div className="flex items-center gap-2 text-[11px] text-muted">
+                    <div className="text-[12px] text-foreground mb-1">Student: {task.studentName}</div>
+                    <div className="flex items-center gap-2 text-[11px] text-muted-foreground">
                       <Clock size={12} /> Submitted: {format(parseISO(task.submissionDate), 'PPP')}
                     </div>
                   </div>
@@ -340,8 +340,8 @@ const Dashboard: React.FC<DashboardProps> = ({ user }) => {
               <div className="w-16 h-16 bg-success/10 text-success rounded-full flex items-center justify-center mx-auto mb-4">
                 <CheckCircle2 size={32} />
               </div>
-              <h4 className="text-white font-bold">All caught up!</h4>
-              <p className="text-muted text-sm mt-1">No pending assignment submissions to check.</p>
+              <h4 className="text-foreground font-bold">All caught up!</h4>
+              <p className="text-muted-foreground text-sm mt-1">No pending assignment submissions to check.</p>
             </div>
           )}
         </div>
@@ -356,22 +356,22 @@ const Dashboard: React.FC<DashboardProps> = ({ user }) => {
           {activities.length > 0 ? (
             <div className="space-y-4">
               {activities.map((item, j) => (
-                <div key={j} className="flex gap-4 items-start p-3 hover:bg-white/[0.02] rounded-xl transition-colors">
-                  <div className="w-10 h-10 rounded-xl bg-white/5 flex items-center justify-center flex-shrink-0" style={{ color: item.color }}>
+                <div key={j} className="flex gap-4 items-start p-3 hover:bg-muted/30 rounded-xl transition-colors">
+                  <div className="w-10 h-10 rounded-xl bg-muted/50 flex items-center justify-center flex-shrink-0" style={{ color: item.color }}>
                     <TrendingUp size={18} />
                   </div>
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center justify-between mb-1">
                       <span className="text-[11px] font-bold uppercase tracking-wider" style={{ color: item.color }}>{item.type}</span>
-                      <span className="text-[11px] text-muted">{item.time}</span>
+                      <span className="text-[11px] text-muted-foreground">{item.time}</span>
                     </div>
-                    <div className="text-[13.5px] font-medium text-white">{item.msg}</div>
+                    <div className="text-[13.5px] font-medium text-foreground">{item.msg}</div>
                   </div>
                 </div>
               ))}
             </div>
           ) : (
-            <div className="text-center py-12 text-muted">No activity logs found</div>
+            <div className="text-center py-12 text-muted-foreground">No activity logs found</div>
           )}
         </div>
       </Modal>
@@ -390,34 +390,34 @@ const Dashboard: React.FC<DashboardProps> = ({ user }) => {
         <div className="overflow-x-auto -mx-6">
           <table className="w-full text-left border-collapse">
             <thead>
-              <tr className="bg-background">
-                <th className="px-6 py-3 text-[10px] font-bold text-muted uppercase tracking-wider">Student</th>
-                <th className="px-6 py-3 text-[10px] font-bold text-muted uppercase tracking-wider">Course</th>
-                <th className="px-6 py-3 text-[10px] font-bold text-muted uppercase tracking-wider">Progress</th>
-                <th className="px-6 py-3 text-[10px] font-bold text-muted uppercase tracking-wider">Status</th>
+              <tr className="bg-muted/30">
+                <th className="px-6 py-3 text-[10px] font-bold text-muted-foreground uppercase tracking-wider">Student</th>
+                <th className="px-6 py-3 text-[10px] font-bold text-muted-foreground uppercase tracking-wider">Course</th>
+                <th className="px-6 py-3 text-[10px] font-bold text-muted-foreground uppercase tracking-wider">Progress</th>
+                <th className="px-6 py-3 text-[10px] font-bold text-muted-foreground uppercase tracking-wider">Status</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-border">
               {students.slice(0, 5).map((s) => (
-                <tr key={s.uid} className="hover:bg-white/[0.02] transition-colors">
+                <tr key={s.uid} className="hover:bg-muted/30 transition-colors">
                   <td className="px-6 py-4">
                     <div className="flex items-center gap-3">
                       <div className="w-8 h-8 rounded-full bg-secondary/10 text-secondary flex items-center justify-center font-bold text-xs">
                         {s.av}
                       </div>
                       <div>
-                        <div className="text-[13px] font-medium">{s.name}</div>
-                        <div className="text-[11px] text-muted">{s.email}</div>
+                        <div className="text-[13px] font-medium text-foreground">{s.name}</div>
+                        <div className="text-[11px] text-muted-foreground">{s.email}</div>
                       </div>
                     </div>
                   </td>
-                  <td className="px-6 py-4 text-[13px] text-muted">{s.course || 'No Course'}</td>
+                  <td className="px-6 py-4 text-[13px] text-muted-foreground">{s.course || 'No Course'}</td>
                   <td className="px-6 py-4">
                     <div className="flex items-center gap-2">
-                      <div className="w-24 h-1.5 bg-background rounded-full overflow-hidden">
+                      <div className="w-24 h-1.5 bg-muted rounded-full overflow-hidden">
                         <div className="h-full bg-gradient-to-r from-secondary to-accent" style={{ width: `${(s as any).progress || 0}%` }} />
                       </div>
-                      <span className="text-[11px] text-muted">{(s as any).progress || 0}%</span>
+                      <span className="text-[11px] text-muted-foreground">{(s as any).progress || 0}%</span>
                     </div>
                   </td>
                   <td className="px-6 py-4">

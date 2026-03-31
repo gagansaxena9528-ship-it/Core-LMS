@@ -378,7 +378,7 @@ const Students: React.FC<StudentsProps> = ({ user }) => {
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h2 className="text-2xl font-extrabold font-syne text-white">Student Management</h2>
+          <h2 className="text-2xl font-extrabold font-syne text-foreground">Student Management</h2>
           <div className="flex items-center gap-2 mt-1">
             <p className="text-sm text-muted">{students.length} total students enrolled</p>
             <span className="text-muted">•</span>
@@ -500,7 +500,7 @@ const Students: React.FC<StudentsProps> = ({ user }) => {
             </thead>
             <tbody className="divide-y divide-border">
               {filteredStudents.map((s, i) => (
-                <tr key={s.uid} className="hover:bg-white/[0.01] transition-colors group">
+                <tr key={s.uid} className="hover:bg-muted/10 transition-colors group">
                   <td className="px-6 py-4">
                     <input 
                       type="checkbox" 
@@ -519,14 +519,14 @@ const Students: React.FC<StudentsProps> = ({ user }) => {
                         </div>
                       )}
                       <div>
-                        <div className="text-[13.5px] font-semibold">{s.name}</div>
+                        <div className="text-[13.5px] font-semibold text-foreground">{s.name}</div>
                         <div className="text-[11px] text-muted">{s.email}</div>
                       </div>
                     </div>
                   </td>
                   <td className="px-6 py-4 text-[13px] text-muted">{s.phone || '—'}</td>
                   <td className="px-6 py-4">
-                    <div className="text-[13px] font-medium text-white">{s.course || 'No Course'}</div>
+                    <div className="text-[13px] font-medium text-foreground">{s.course || 'No Course'}</div>
                     <div className="text-[11px] text-muted">{s.batch || 'No Batch'}</div>
                   </td>
                   <td className="px-6 py-4 text-[13px] text-muted">
@@ -584,7 +584,7 @@ const Students: React.FC<StudentsProps> = ({ user }) => {
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               onClick={() => setShowModal(false)}
-              className="absolute inset-0 bg-black/70 backdrop-blur-sm"
+              className="absolute inset-0 bg-background/70 backdrop-blur-sm"
             />
             <motion.div
               initial={{ opacity: 0, scale: 0.95, y: 20 }}
@@ -778,7 +778,7 @@ const Students: React.FC<StudentsProps> = ({ user }) => {
                     className="flex-1 bg-secondary hover:bg-secondary/90 text-white py-3 rounded-xl font-bold text-sm transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
                   >
                     {loading ? (
-                      <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                      <div className="w-4 h-4 border-foreground border-t-transparent rounded-full animate-spin" />
                     ) : (
                       editingStudent ? 'Update Student' : 'Create Student Account'
                     )}
