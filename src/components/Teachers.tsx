@@ -158,19 +158,10 @@ const Teachers: React.FC = () => {
         await sendEmail(formData.email, 'Account Update Notification - Core LMS', html);
       } else {
         const password = formData.password || Math.random().toString(36).slice(-8);
-        await adminCreateUser(formData.email, password, fullName);
+        const userCredential = await adminCreateUser(formData.email, password, fullName);
         
-        // Find the newly created user to update additional fields
-        const users = await new Promise<User[]>((resolve) => {
-          const unsub = subscribeToCollection('users', (data) => {
-            unsub();
-            resolve(data);
-          });
-        });
-        
-        const newUser = users.find(u => u.email === formData.email);
-        if (newUser) {
-          await updateDocument('users', newUser.uid, {
+        if (userCredential?.uid) {
+          await updateDocument('users', userCredential.uid, {
             ...teacherData,
             rating: 4.5,
             coursesCount: 0,

@@ -37,12 +37,14 @@ import { sendEmail, getNewRecordTemplate, getUpdateNotificationTemplate } from '
 import { cn } from '../lib/utils';
 import { Course, User, Module, Lesson, Student } from '../types';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useNavigate } from 'react-router-dom';
 
 interface CoursesProps {
   user?: User;
 }
 
 const Courses: React.FC<CoursesProps> = ({ user }) => {
+  const navigate = useNavigate();
   const [courses, setCourses] = useState<Course[]>([]);
   const [teachers, setTeachers] = useState<User[]>([]);
   const [students, setStudents] = useState<Student[]>([]);
@@ -98,6 +100,9 @@ const Courses: React.FC<CoursesProps> = ({ user }) => {
     const unsubCourses = subscribeToCollection('courses', (data) => {
       if (user?.role === 'teacher') {
         setCourses(data.filter(c => c.teacherId === user.uid));
+      } else if (user?.role === 'student') {
+        const studentCourseId = (user as any).courseId;
+        setCourses(data.filter(c => c.id === studentCourseId || c.title === user.course));
       } else {
         setCourses(data);
       }
@@ -388,7 +393,14 @@ const Courses: React.FC<CoursesProps> = ({ user }) => {
                     </>
                   )}
                 </div>
-                {user?.role !== 'student' && (
+                {user?.role === 'student' ? (
+                  <button 
+                    onClick={() => navigate(`/course-player/${c.id}`)}
+                    className="bg-secondary hover:bg-secondary/90 text-white px-4 py-2 rounded-xl font-bold text-xs flex items-center gap-2 transition-all active:scale-95"
+                  >
+                    <PlayCircle size={16} /> Start Learning
+                  </button>
+                ) : (
                   <div className="flex gap-2">
                     <button 
                       onClick={() => handleEdit(c)}

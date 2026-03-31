@@ -123,7 +123,7 @@ const StudentDashboard: React.FC<StudentDashboardProps> = ({ user }) => {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
         <StatCard 
           icon={<BookOpen className="text-secondary" />} 
           value={courses.length.toString()} 
@@ -141,12 +141,6 @@ const StudentDashboard: React.FC<StudentDashboardProps> = ({ user }) => {
           value={`${attendanceRate}%`} 
           label="Attendance" 
           color="orange"
-        />
-        <StatCard 
-          icon={<Award className="text-accent" />} 
-          value={certificates.length.toString()} 
-          label="Certificates" 
-          color="purple"
         />
       </div>
 
@@ -168,25 +162,40 @@ const StudentDashboard: React.FC<StudentDashboardProps> = ({ user }) => {
       )}
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <Card title="My Course Progress">
-          <div className="p-4 bg-muted/30 border border-border rounded-xl flex items-center gap-6">
-            <div className="w-20 h-14 rounded-lg bg-gradient-to-br from-background to-muted/50 flex items-center justify-center text-3xl">📱</div>
-            <div className="flex-1 min-w-0">
-              <div className="text-[14.5px] font-bold text-foreground truncate">{user?.course || 'No Course'}</div>
-              <div className="mt-2 h-1.5 bg-card rounded-full overflow-hidden">
-                <div className="h-full bg-gradient-to-r from-secondary to-accent" style={{ width: `${(user as any).progress || 0}%` }} />
+        <Card title="My Courses">
+          <div className="space-y-4">
+            {courses.length > 0 ? courses.map((course) => (
+              <div key={course.id} className="p-4 bg-muted/30 border border-border rounded-xl flex items-center gap-6">
+                <div className="w-20 h-14 rounded-lg bg-gradient-to-br from-background to-muted/50 flex items-center justify-center text-3xl">
+                  {course.thumbnail ? (
+                    <img src={course.thumbnail} alt={course.title} className="w-full h-full object-cover rounded-lg" referrerPolicy="no-referrer" />
+                  ) : (
+                    '📱'
+                  )}
+                </div>
+                <div className="flex-1 min-w-0">
+                  <div className="text-[14.5px] font-bold text-foreground truncate">{course.title}</div>
+                  <div className="mt-2 h-1.5 bg-card rounded-full overflow-hidden">
+                    <div className="h-full bg-gradient-to-r from-secondary to-accent" style={{ width: `${(user as any).progress || 0}%` }} />
+                  </div>
+                  <div className="flex justify-between mt-2 text-[11px] text-muted-foreground">
+                    <span>{course.modules?.length || 0} Modules</span>
+                    <span>{(user as any).progress || 0}% complete</span>
+                  </div>
+                </div>
+                <button 
+                  onClick={() => navigate(`/course-player/${course.id}`)}
+                  className="bg-secondary hover:bg-secondary/80 text-foreground px-4 py-2 rounded-lg font-bold text-xs flex items-center gap-2 transition-colors"
+                >
+                  <Play size={12} fill="currentColor" /> Continue
+                </button>
               </div>
-              <div className="flex justify-between mt-2 text-[11px] text-muted-foreground">
-                <span>Module 0 of 0</span>
-                <span>{(user as any).progress || 0}% complete</span>
+            )) : (
+              <div className="text-center py-8">
+                <BookOpen size={32} className="mx-auto text-border mb-2" />
+                <p className="text-sm text-muted-foreground">No courses assigned yet</p>
               </div>
-            </div>
-            <button 
-              onClick={() => navigate('/course-player/1')}
-              className="bg-secondary hover:bg-secondary/80 text-foreground px-4 py-2 rounded-lg font-bold text-xs flex items-center gap-2 transition-colors"
-            >
-              <Play size={12} fill="currentColor" /> Continue
-            </button>
+            )}
           </div>
         </Card>
 
@@ -211,31 +220,6 @@ const StudentDashboard: React.FC<StudentDashboardProps> = ({ user }) => {
           </div>
         </Card>
       </div>
-
-      {certificates.length > 0 && (
-        <Card title="My Certificates">
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-            {certificates.map((cert) => (
-              <div key={cert.id} className="p-4 bg-muted/30 border border-border rounded-xl flex items-center gap-4">
-                <div className="w-12 h-12 rounded-lg bg-accent/10 flex items-center justify-center text-accent">
-                  <Award size={24} />
-                </div>
-                <div className="flex-1 min-w-0">
-                  <div className="text-[13.5px] font-bold text-foreground truncate">{cert.courseName}</div>
-                  <div className="text-[11px] text-muted-foreground mt-0.5">Issued on {cert.issueDate}</div>
-                </div>
-                <button 
-                  onClick={() => window.open(cert.url, '_blank')}
-                  className="p-2 text-secondary hover:bg-secondary/10 rounded-lg transition-colors"
-                  title="Download Certificate"
-                >
-                  <Award size={18} />
-                </button>
-              </div>
-            ))}
-          </div>
-        </Card>
-      )}
     </div>
   );
 };

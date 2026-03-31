@@ -105,7 +105,6 @@ const Layout: React.FC<LayoutProps> = ({ user }) => {
         { id: '/exams', icon: <FileText size={18} />, label: 'Exams' },
         { id: '/assignments', icon: <FileText size={18} />, label: 'Assignments' },
         { id: '/attendance', icon: <CheckCircle2 size={18} />, label: 'Attendance' },
-        { id: '/certificates', icon: <Award size={18} />, label: 'Certificates' },
       ]},
       { label: 'Account', items: [
         { id: '/payments', icon: <CreditCard size={18} />, label: 'Fees' },
