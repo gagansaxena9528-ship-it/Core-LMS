@@ -143,6 +143,9 @@ const LiveClasses: React.FC<LiveClassesProps> = ({ user }) => {
       
       return matchesSearch && matchesCourse && matchesBatch;
     }
+    if (user.role === 'teacher') {
+      return matchesSearch && c.teacherId === user.uid;
+    }
     return matchesSearch;
   }).sort((a, b) => new Date(`${a.date} ${a.startTime}`).getTime() - new Date(`${b.date} ${b.startTime}`).getTime());
 

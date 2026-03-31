@@ -95,7 +95,13 @@ const Courses: React.FC<CoursesProps> = ({ user }) => {
   });
 
   useEffect(() => {
-    const unsubCourses = subscribeToCollection('courses', setCourses);
+    const unsubCourses = subscribeToCollection('courses', (data) => {
+      if (user?.role === 'teacher') {
+        setCourses(data.filter(c => c.teacherId === user.uid));
+      } else {
+        setCourses(data);
+      }
+    });
     const unsubTeachers = subscribeToCollection('users', (data) => {
       setTeachers(data.filter(u => u.role === 'teacher'));
       setStudents(data.filter(u => u.role === 'student') as Student[]);
@@ -109,7 +115,7 @@ const Courses: React.FC<CoursesProps> = ({ user }) => {
       unsubModules();
       unsubLessons();
     };
-  }, []);
+  }, [user?.uid, user?.role]);
 
   const filteredCourses = courses.filter(c => 
     c.title.toLowerCase().includes(search.toLowerCase()) || 

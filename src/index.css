@@ -14,12 +14,12 @@
   --color-warning: #f7d04f;
   --color-muted: #6b7599;
   --color-border: #242b40;
+  --color-button: #4f8ef7;
 }
 
 @layer base {
   body {
     @apply bg-background text-[#e8ecf5] font-sans antialiased;
-    background-color: #0b0e17 !important; /* Force background for testing */
   }
   
   ::-webkit-scrollbar {

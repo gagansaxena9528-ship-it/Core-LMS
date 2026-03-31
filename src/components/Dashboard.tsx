@@ -66,7 +66,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user }) => {
     const unsubNotifications = subscribeToCollection('notifications', (data: AppNotification[]) => {
       const sorted = data.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
       setActivities(sorted.slice(0, 10).map(n => ({
-        color: n.type === 'success' ? '#2ecc8a' : n.type === 'warning' ? '#f7924f' : n.type === 'error' ? '#f75f6a' : '#4f8ef7',
+        color: n.type === 'success' ? 'var(--color-success)' : n.type === 'warning' ? 'var(--color-warning)' : n.type === 'error' ? 'var(--color-primary)' : 'var(--color-secondary)',
         msg: n.message,
         time: formatDistanceToNow(new Date(n.date)) + ' ago',
         type: n.title,
@@ -113,20 +113,20 @@ const Dashboard: React.FC<DashboardProps> = ({ user }) => {
       <div className="flex items-center justify-between">
         <div>
           <h2 className="text-2xl font-extrabold font-syne text-white">System Overview</h2>
-          <p className="text-sm text-[#6b7599] mt-1">Real-time analytics and management</p>
+          <p className="text-sm text-muted mt-1">Real-time analytics and management</p>
         </div>
-        <div className="flex items-center gap-3 px-4 py-2 bg-[#131726] border border-[#242b40] rounded-xl shadow-lg">
+        <div className="flex items-center gap-3 px-4 py-2 bg-card border border-border rounded-xl shadow-lg">
           <div className="relative flex h-3 w-3">
-            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#2ecc8a] opacity-75"></span>
-            <span className="relative inline-flex rounded-full h-3 w-3 bg-[#2ecc8a]"></span>
+            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-success opacity-75"></span>
+            <span className="relative inline-flex rounded-full h-3 w-3 bg-success"></span>
           </div>
-          <span className="text-xs font-bold text-[#e8ecf5] uppercase tracking-widest">System Live</span>
+          <span className="text-xs font-bold text-white uppercase tracking-widest">System Live</span>
         </div>
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-6 gap-3 md:gap-4">
         <StatCard 
-          icon={<Users className="text-[#4f8ef7]" />} 
+          icon={<Users className="text-secondary" />} 
           value={students.length} 
           label="Total Students" 
           change="12% this month" 
@@ -135,7 +135,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user }) => {
           onClick={() => navigate('/students')}
         />
         <StatCard 
-          icon={<UserSquare2 className="text-[#7c5fe6]" />} 
+          icon={<UserSquare2 className="text-accent" />} 
           value={teachers.length} 
           label="Active Teachers" 
           change="2 new" 
@@ -144,7 +144,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user }) => {
           onClick={() => navigate('/teachers')}
         />
         <StatCard 
-          icon={<BookOpen className="text-[#2ecc8a]" />} 
+          icon={<BookOpen className="text-success" />} 
           value={courses.length} 
           label="Total Courses" 
           change="3 new" 
@@ -153,14 +153,14 @@ const Dashboard: React.FC<DashboardProps> = ({ user }) => {
           onClick={() => navigate('/courses')}
         />
         <StatCard 
-          icon={<Layers className="text-[#f7924f]" />} 
+          icon={<Layers className="text-warning" />} 
           value={batches.length} 
           label="Active Batches" 
           color="orange"
           onClick={() => navigate('/batches')}
         />
         <StatCard 
-          icon={<IndianRupee className="text-[#2ecc8a]" />} 
+          icon={<IndianRupee className="text-success" />} 
           value={`₹${(currentMonthRevenue / 1000).toFixed(1)}k`} 
           label="Monthly Revenue" 
           change={`${revenueGrowth}%`} 
@@ -169,7 +169,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user }) => {
           onClick={() => navigate('/payments')}
         />
         <StatCard 
-          icon={<ClipboardList className="text-[#f75f6a]" />} 
+          icon={<ClipboardList className="text-primary" />} 
           value={pendingTasksCount} 
           label="Pending Tasks" 
           color="red"
@@ -178,7 +178,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user }) => {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-6">
-        <Card title="Revenue (12 Months)" headerAction={<span className="text-[11px] font-bold text-[#4f8ef7] bg-blue-500/10 px-2 py-1 rounded-full">₹{(totalRevenueAllTime / 100000).toFixed(1)}L Total</span>}>
+        <Card title="Revenue (12 Months)" headerAction={<span className="text-[11px] font-bold text-secondary bg-secondary/10 px-2 py-1 rounded-full">₹{(totalRevenueAllTime / 100000).toFixed(1)}L Total</span>}>
           <div className="h-[250px] md:h-[300px] w-full mt-4">
             <ResponsiveContainer width="100%" height="100%">
               <BarChart 
@@ -190,34 +190,34 @@ const Dashboard: React.FC<DashboardProps> = ({ user }) => {
                   }
                 }}
               >
-                <CartesianGrid strokeDasharray="3 3" stroke="#242b40" vertical={false} />
+                <CartesianGrid strokeDasharray="3 3" stroke="var(--color-border)" vertical={false} />
                 <XAxis 
                   dataKey="month" 
                   axisLine={false} 
                   tickLine={false} 
-                  tick={{ fill: '#6b7599', fontSize: 10 }} 
+                  tick={{ fill: 'var(--color-muted)', fontSize: 10 }} 
                 />
                 <YAxis 
                   axisLine={false} 
                   tickLine={false} 
-                  tick={{ fill: '#6b7599', fontSize: 10 }}
+                  tick={{ fill: 'var(--color-muted)', fontSize: 10 }}
                   tickFormatter={(val) => `₹${val/1000}k`}
                 />
                 <Tooltip 
                   cursor={{ fill: 'rgba(79, 142, 247, 0.05)' }}
                   contentStyle={{ 
-                    backgroundColor: '#131726', 
-                    border: '1px solid #242b40', 
+                    backgroundColor: 'var(--color-card)', 
+                    border: '1px solid var(--color-border)', 
                     borderRadius: '12px',
                     fontSize: '12px',
-                    color: '#e8ecf5'
+                    color: 'var(--color-foreground)'
                   }}
-                  itemStyle={{ color: '#4f8ef7' }}
+                  itemStyle={{ color: 'var(--color-secondary)' }}
                   formatter={(value: number) => [`₹${value.toLocaleString()}`, 'Revenue']}
                 />
                 <Bar dataKey="revenue" radius={[4, 4, 0, 0]}>
                   {revenueData.map((entry, index) => (
-                    <Cell key={`cell-${index}`} fill={index === revenueData.length - 1 ? '#4f8ef7' : '#4f8ef780'} />
+                    <Cell key={`cell-${index}`} fill={index === revenueData.length - 1 ? 'var(--color-secondary)' : 'rgba(79, 142, 247, 0.5)'} />
                   ))}
                 </Bar>
               </BarChart>
@@ -231,17 +231,17 @@ const Dashboard: React.FC<DashboardProps> = ({ user }) => {
               <div key={i} className="flex gap-4 items-start">
                 <div className="w-2 h-2 rounded-full mt-1.5 flex-shrink-0" style={{ backgroundColor: activity.color }} />
                 <div className="flex-1 min-w-0">
-                  <div className="text-[13.5px] font-medium text-[#e8ecf5]">{activity.msg}</div>
-                  <div className="text-[11px] text-[#6b7599] mt-1">{activity.time}</div>
+                  <div className="text-[13.5px] font-medium text-white">{activity.msg}</div>
+                  <div className="text-[11px] text-muted mt-1">{activity.time}</div>
                 </div>
               </div>
             )) : (
-              <div className="text-center py-8 text-[#6b7599] text-sm italic">No recent activity</div>
+              <div className="text-center py-8 text-muted text-sm italic">No recent activity</div>
             )}
           </div>
           <button 
             onClick={() => setIsActivityModalOpen(true)}
-            className="w-full mt-6 py-2.5 text-[12px] font-bold text-[#4f8ef7] bg-blue-500/5 hover:bg-blue-500/10 rounded-xl transition-colors flex items-center justify-center gap-2"
+            className="w-full mt-6 py-2.5 text-[12px] font-bold text-secondary bg-secondary/5 hover:bg-secondary/10 rounded-xl transition-colors flex items-center justify-center gap-2"
           >
             View All Activity <ArrowUpRight size={14} />
           </button>
@@ -256,13 +256,13 @@ const Dashboard: React.FC<DashboardProps> = ({ user }) => {
       >
         <div className="space-y-6">
           <div className="grid grid-cols-2 gap-4">
-            <div className="p-4 bg-[#1a2035] border border-[#242b40] rounded-2xl">
-              <div className="text-[11px] text-[#6b7599] font-bold uppercase mb-1">Total Revenue</div>
+            <div className="p-4 bg-background border border-border rounded-2xl">
+              <div className="text-[11px] text-muted font-bold uppercase mb-1">Total Revenue</div>
               <div className="text-2xl font-bold text-white">₹{selectedMonthData?.revenue.toLocaleString()}</div>
             </div>
-            <div className="p-4 bg-[#1a2035] border border-[#242b40] rounded-2xl">
-              <div className="text-[11px] text-[#6b7599] font-bold uppercase mb-1">Payments</div>
-              <div className="text-2xl font-bold text-[#2ecc8a]">
+            <div className="p-4 bg-background border border-border rounded-2xl">
+              <div className="text-[11px] text-muted font-bold uppercase mb-1">Payments</div>
+              <div className="text-2xl font-bold text-success">
                 {payments.filter(p => {
                   const pDate = parseISO(p.date);
                   return isWithinInterval(pDate, { 
@@ -288,8 +288,8 @@ const Dashboard: React.FC<DashboardProps> = ({ user }) => {
               .map((p, i) => (
                 <div key={i} className="flex items-center justify-between p-3 bg-white/5 rounded-xl">
                   <div className="flex items-center gap-3">
-                    <div className="w-2 h-2 rounded-full bg-blue-500" />
-                    <span className="text-sm text-[#e8ecf5]">Payment ID: {p.id.slice(0, 8)}</span>
+                    <div className="w-2 h-2 rounded-full bg-secondary" />
+                    <span className="text-sm text-white">Payment ID: {p.id.slice(0, 8)}</span>
                   </div>
                   <span className="text-sm font-bold text-white">₹{p.paid.toLocaleString()}</span>
                 </div>
@@ -301,7 +301,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user }) => {
                 end: endOfMonth(selectedMonthData?.date || new Date()) 
               });
             }).length === 0 && (
-              <div className="text-center py-4 text-[#6b7599] text-xs">No payments recorded for this period</div>
+              <div className="text-center py-4 text-muted text-xs">No payments recorded for this period</div>
             )}
           </div>
         </div>
@@ -315,20 +315,20 @@ const Dashboard: React.FC<DashboardProps> = ({ user }) => {
         <div className="space-y-4">
           {submissions.filter(s => s.status === 'Pending').length > 0 ? (
             submissions.filter(s => s.status === 'Pending').map((task, i) => (
-              <div key={i} className="group p-4 bg-[#1a2035] border border-[#242b40] rounded-2xl hover:border-blue-500/30 transition-all cursor-pointer">
+              <div key={i} className="group p-4 bg-background border border-border rounded-2xl hover:border-secondary/30 transition-all cursor-pointer">
                 <div className="flex items-start gap-4">
-                  <div className="p-2 rounded-xl bg-white/5 text-[#6b7599] group-hover:text-blue-500 transition-colors">
+                  <div className="p-2 rounded-xl bg-white/5 text-muted group-hover:text-secondary transition-colors">
                     <ClipboardList size={16} />
                   </div>
                   <div className="flex-1">
                     <div className="flex items-center justify-between mb-1">
-                      <span className="text-sm font-medium text-[#e8ecf5]">Assignment: {task.assignmentId.slice(0, 8)}</span>
-                      <span className="text-[10px] font-bold px-2 py-0.5 rounded-full uppercase bg-red-500/10 text-red-500">
+                      <span className="text-sm font-medium text-white">Assignment: {task.assignmentId.slice(0, 8)}</span>
+                      <span className="text-[10px] font-bold px-2 py-0.5 rounded-full uppercase bg-primary/10 text-primary">
                         Pending
                       </span>
                     </div>
-                    <div className="text-[12px] text-[#e8ecf5] mb-1">Student: {task.studentName}</div>
-                    <div className="flex items-center gap-2 text-[11px] text-[#6b7599]">
+                    <div className="text-[12px] text-white mb-1">Student: {task.studentName}</div>
+                    <div className="flex items-center gap-2 text-[11px] text-muted">
                       <Clock size={12} /> Submitted: {format(parseISO(task.submissionDate), 'PPP')}
                     </div>
                   </div>
@@ -337,11 +337,11 @@ const Dashboard: React.FC<DashboardProps> = ({ user }) => {
             ))
           ) : (
             <div className="text-center py-12">
-              <div className="w-16 h-16 bg-green-500/10 text-green-500 rounded-full flex items-center justify-center mx-auto mb-4">
+              <div className="w-16 h-16 bg-success/10 text-success rounded-full flex items-center justify-center mx-auto mb-4">
                 <CheckCircle2 size={32} />
               </div>
               <h4 className="text-white font-bold">All caught up!</h4>
-              <p className="text-[#6b7599] text-sm mt-1">No pending assignment submissions to check.</p>
+              <p className="text-muted text-sm mt-1">No pending assignment submissions to check.</p>
             </div>
           )}
         </div>
@@ -363,15 +363,15 @@ const Dashboard: React.FC<DashboardProps> = ({ user }) => {
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center justify-between mb-1">
                       <span className="text-[11px] font-bold uppercase tracking-wider" style={{ color: item.color }}>{item.type}</span>
-                      <span className="text-[11px] text-[#6b7599]">{item.time}</span>
+                      <span className="text-[11px] text-muted">{item.time}</span>
                     </div>
-                    <div className="text-[13.5px] font-medium text-[#e8ecf5]">{item.msg}</div>
+                    <div className="text-[13.5px] font-medium text-white">{item.msg}</div>
                   </div>
                 </div>
               ))}
             </div>
           ) : (
-            <div className="text-center py-12 text-[#6b7599]">No activity logs found</div>
+            <div className="text-center py-12 text-muted">No activity logs found</div>
           )}
         </div>
       </Modal>
@@ -381,7 +381,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user }) => {
         headerAction={
           <button 
             onClick={() => navigate('/students')}
-            className="text-[11px] font-bold text-[#4f8ef7] hover:underline"
+            className="text-[11px] font-bold text-secondary hover:underline"
           >
             View All
           </button>
@@ -390,38 +390,38 @@ const Dashboard: React.FC<DashboardProps> = ({ user }) => {
         <div className="overflow-x-auto -mx-6">
           <table className="w-full text-left border-collapse">
             <thead>
-              <tr className="bg-[#1a2035]">
-                <th className="px-6 py-3 text-[10px] font-bold text-[#6b7599] uppercase tracking-wider">Student</th>
-                <th className="px-6 py-3 text-[10px] font-bold text-[#6b7599] uppercase tracking-wider">Course</th>
-                <th className="px-6 py-3 text-[10px] font-bold text-[#6b7599] uppercase tracking-wider">Progress</th>
-                <th className="px-6 py-3 text-[10px] font-bold text-[#6b7599] uppercase tracking-wider">Status</th>
+              <tr className="bg-background">
+                <th className="px-6 py-3 text-[10px] font-bold text-muted uppercase tracking-wider">Student</th>
+                <th className="px-6 py-3 text-[10px] font-bold text-muted uppercase tracking-wider">Course</th>
+                <th className="px-6 py-3 text-[10px] font-bold text-muted uppercase tracking-wider">Progress</th>
+                <th className="px-6 py-3 text-[10px] font-bold text-muted uppercase tracking-wider">Status</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-[#242b40]">
+            <tbody className="divide-y divide-border">
               {students.slice(0, 5).map((s) => (
                 <tr key={s.uid} className="hover:bg-white/[0.02] transition-colors">
                   <td className="px-6 py-4">
                     <div className="flex items-center gap-3">
-                      <div className="w-8 h-8 rounded-full bg-blue-500/10 text-[#4f8ef7] flex items-center justify-center font-bold text-xs">
+                      <div className="w-8 h-8 rounded-full bg-secondary/10 text-secondary flex items-center justify-center font-bold text-xs">
                         {s.av}
                       </div>
                       <div>
                         <div className="text-[13px] font-medium">{s.name}</div>
-                        <div className="text-[11px] text-[#6b7599]">{s.email}</div>
+                        <div className="text-[11px] text-muted">{s.email}</div>
                       </div>
                     </div>
                   </td>
-                  <td className="px-6 py-4 text-[13px] text-[#6b7599]">{s.course || 'No Course'}</td>
+                  <td className="px-6 py-4 text-[13px] text-muted">{s.course || 'No Course'}</td>
                   <td className="px-6 py-4">
                     <div className="flex items-center gap-2">
-                      <div className="w-24 h-1.5 bg-[#1a2035] rounded-full overflow-hidden">
-                        <div className="h-full bg-gradient-to-r from-[#4f8ef7] to-[#7c5fe6]" style={{ width: `${(s as any).progress || 0}%` }} />
+                      <div className="w-24 h-1.5 bg-background rounded-full overflow-hidden">
+                        <div className="h-full bg-gradient-to-r from-secondary to-accent" style={{ width: `${(s as any).progress || 0}%` }} />
                       </div>
-                      <span className="text-[11px] text-[#6b7599]">{(s as any).progress || 0}%</span>
+                      <span className="text-[11px] text-muted">{(s as any).progress || 0}%</span>
                     </div>
                   </td>
                   <td className="px-6 py-4">
-                    <span className="px-2 py-0.5 rounded-full bg-green-500/10 text-[#2ecc8a] text-[10px] font-bold uppercase">
+                    <span className="px-2 py-0.5 rounded-full bg-success/10 text-success text-[10px] font-bold uppercase">
                       {s.status}
                     </span>
                   </td>

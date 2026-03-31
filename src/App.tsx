@@ -19,6 +19,8 @@ import Payments from './components/Payments';
 import Settings from './components/Settings';
 import Profile from './components/Profile';
 import Attendance from './components/Attendance';
+import PerformanceAnalytics from './components/PerformanceAnalytics';
+import Notifications from './components/Notifications';
 import Certificates from './components/Certificates';
 import CertificateVerification from './components/CertificateVerification';
 import CoursePlayer from './components/CoursePlayer';
@@ -41,9 +43,9 @@ const App: React.FC = () => {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-screen bg-[#0b0e17]">
+      <div className="flex items-center justify-center min-h-screen bg-background">
         <div className="flex flex-col items-center gap-4">
-          <div className="w-12 h-12 border-4 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
+          <div className="w-12 h-12 border-4 border-secondary border-t-transparent rounded-full animate-spin"></div>
           <p className="text-white font-medium">CoreLMS Loading...</p>
         </div>
       </div>
@@ -66,23 +68,25 @@ const App: React.FC = () => {
             } />
             
             {/* Admin & Shared Routes */}
-            <Route path="/students" element={<Students />} />
+            <Route path="/students" element={<Students user={user!} />} />
             <Route path="/teachers" element={<Teachers />} />
             <Route path="/courses" element={<Courses user={user!} />} />
-            <Route path="/batches" element={<Batches />} />
+            <Route path="/batches" element={<Batches user={user!} />} />
             <Route path="/content" element={<ContentManagement user={user!} />} />
             <Route path="/exams" element={<Exams user={user!} />} />
             <Route path="/assignments" element={<Assignments user={user!} />} />
             <Route path="/live-classes" element={<LiveClasses user={user!} />} />
             <Route path="/payments" element={<Payments user={user!} />} />
             <Route path="/attendance" element={<Attendance user={user!} />} />
+            <Route path="/analytics" element={<PerformanceAnalytics user={user!} />} />
+            <Route path="/notifications" element={<Notifications user={user!} />} />
             <Route path="/certificates" element={<Certificates user={user!} />} />
             <Route path="/reports" element={<Reports user={user!} />} />
             <Route path="/settings" element={<Settings />} />
             <Route path="/profile" element={<Profile user={user!} />} />
             
             {/* Student Specific */}
-            <Route path="/course-player/:courseId" element={<CoursePlayer />} />
+            <Route path="/course-player/:courseId" element={<CoursePlayer user={user!} />} />
           </Route>
           
           <Route path="*" element={<Navigate to="/" />} />

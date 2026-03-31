@@ -188,6 +188,9 @@ const Exams: React.FC<ExamsProps> = ({ user }) => {
       const matchesCourse = !e.courseId || e.courseId === studentCourseId || e.courseId === user.course;
       return matchesSearch && e.status === 'Active' && matchesCourse;
     }
+    if (user.role === 'teacher') {
+      return matchesSearch && e.teacherId === user.uid;
+    }
     return matchesSearch;
   });
 
@@ -231,8 +234,13 @@ const Exams: React.FC<ExamsProps> = ({ user }) => {
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
+      const dataToSave = {
+        ...formData,
+        teacherId: editingExam ? editingExam.teacherId : user.uid
+      };
+      
       if (editingExam) {
-        await updateDocument('exams', editingExam.id, formData);
+        await updateDocument('exams', editingExam.id, dataToSave);
         
         // Notify students about exam update
         const course = courses.find(c => c.id === formData.courseId);
@@ -241,7 +249,7 @@ const Exams: React.FC<ExamsProps> = ({ user }) => {
         // In a real app, we'd notify enrolled students. For now, notifying admin.
         await sendEmail('gagansaxena9528@gmail.com', `Exam Updated: ${formData.title}`, html);
       } else {
-        await createDoc('exams', formData);
+        await createDoc('exams', dataToSave);
         
         // Notify students about new exam
         const course = courses.find(c => c.id === formData.courseId);

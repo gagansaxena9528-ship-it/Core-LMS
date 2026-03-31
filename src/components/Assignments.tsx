@@ -63,6 +63,7 @@ const Assignments: React.FC<AssignmentsProps> = ({ user }) => {
       status: 'Active',
       courseId: formData.get('courseId') as string,
       batchId: formData.get('batchId') as string,
+      teacherId: user.uid,
     };
     const docRef = await addDoc('assignments', newAssignment);
     
@@ -114,6 +115,9 @@ const Assignments: React.FC<AssignmentsProps> = ({ user }) => {
       const matchesBatch = !a.batchId || a.batchId === student.batchId;
       
       return matchesCourse && matchesBatch;
+    }
+    if (user.role === 'teacher') {
+      return a.teacherId === user.uid;
     }
     return true;
   });

@@ -77,11 +77,14 @@ const defaultSettings: GlobalSettings = {
 };
 
 export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [settings, setSettings] = useState<GlobalSettings | null>(null);
+  const [settings, setSettings] = useState<GlobalSettings>(defaultSettings);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     console.log('--- SettingsContext Initializing ---');
+    // Initial apply of default settings
+    applySettings(defaultSettings);
+
     // We'll store settings in a single document 'global' in 'settings' collection
     const unsub = subscribeToCollection('settings', (docs: any[]) => {
       console.log('--- Settings Received from Firestore ---', docs.length);
@@ -101,7 +104,6 @@ export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         applySettings(merged);
       } else {
         console.log('--- No global settings document found, using defaults ---');
-        // If no settings doc, use defaults
         setSettings(defaultSettings);
         applySettings(defaultSettings);
       }
@@ -128,6 +130,8 @@ export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   }, []);
 
   const applySettings = (s: GlobalSettings) => {
+    if (!s) return;
+    
     // 1. Apply Site Title
     if (s.general.siteTitle) {
       document.title = s.general.siteTitle;
@@ -146,10 +150,26 @@ export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
 
     // 3. Apply Theme Colors & Fonts
     const root = document.documentElement;
-    root.style.setProperty('--primary-color', s.appearance.primaryColor);
-    root.style.setProperty('--secondary-color', s.appearance.secondaryColor);
-    root.style.setProperty('--button-color', s.appearance.buttonColor);
-    root.style.setProperty('--font-family', s.appearance.fontFamily);
+    
+    // Primary Color
+    if (s.appearance.primaryColor) {
+      root.style.setProperty('--color-primary', s.appearance.primaryColor);
+    }
+    
+    // Secondary Color
+    if (s.appearance.secondaryColor) {
+      root.style.setProperty('--color-secondary', s.appearance.secondaryColor);
+    }
+    
+    // Button Color
+    if (s.appearance.buttonColor) {
+      root.style.setProperty('--color-button', s.appearance.buttonColor);
+    }
+    
+    // Font Family
+    if (s.appearance.fontFamily) {
+      root.style.setProperty('--font-sans', `"${s.appearance.fontFamily}", ui-sans-serif, system-ui, sans-serif`);
+    }
 
     // Apply Dark Mode class
     if (s.appearance.darkMode) {
@@ -158,7 +178,7 @@ export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       document.documentElement.classList.remove('dark');
     }
 
-    // 4. Apply Custom CSS
+    // 4. Apply Custom CSS & Dynamic Font Import
     let styleTag = document.getElementById('custom-settings-css');
     if (!styleTag) {
       styleTag = document.createElement('style');
@@ -173,12 +193,17 @@ export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     styleTag.innerHTML = `
       ${fontImport}
       :root {
-        --primary: ${s.appearance.primaryColor};
-        --primary-foreground: 210 40% 98%;
-        --font-sans: "${s.appearance.fontFamily}", sans-serif;
+        --color-primary: ${s.appearance.primaryColor} !important;
+        --color-secondary: ${s.appearance.secondaryColor} !important;
+        --color-button: ${s.appearance.buttonColor} !important;
+        --font-sans: "${s.appearance.fontFamily}", ui-sans-serif, system-ui, sans-serif !important;
       }
       body {
-        font-family: "${s.appearance.fontFamily}", sans-serif !important;
+        font-family: "${s.appearance.fontFamily}", ui-sans-serif, system-ui, sans-serif !important;
+      }
+      /* Ensure buttons use the button color if specified */
+      button.bg-primary, .btn-primary {
+        background-color: ${s.appearance.buttonColor} !important;
       }
       ${s.customCode.customCss}
     `;
@@ -222,12 +247,16 @@ export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   const updateSettings = async (category: keyof GlobalSettings, data: any) => {
     console.log(`--- Updating Settings: ${category} ---`, data);
     try {
-      const currentSettings = settings || defaultSettings;
+      const currentSettings = settings;
       const currentCategoryData = currentSettings[category];
       const updatedCategoryData = { ...currentCategoryData, ...data };
       
       const updatedFullSettings = { ...currentSettings, [category]: updatedCategoryData };
       
+      // Update local state immediately for snappy UI
+      setSettings(updatedFullSettings);
+      applySettings(updatedFullSettings);
+
       // We update the whole 'global' doc with the new data
       await updateDoc('settings', 'global', updatedFullSettings);
       console.log('--- Settings updated successfully ---');

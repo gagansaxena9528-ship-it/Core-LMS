@@ -20,7 +20,11 @@ import { User, Course, Batch } from '../types';
 import { motion, AnimatePresence } from 'framer-motion';
 import * as XLSX from 'xlsx';
 
-const Students: React.FC = () => {
+interface StudentsProps {
+  user?: User;
+}
+
+const Students: React.FC<StudentsProps> = ({ user }) => {
   const [students, setStudents] = useState<User[]>([]);
   const [courses, setCourses] = useState<Course[]>([]);
   const [batches, setBatches] = useState<Batch[]>([]);
@@ -76,7 +80,12 @@ const Students: React.FC = () => {
 
   useEffect(() => {
     const unsubUsers = subscribeToCollection('users', (data) => {
-      setStudents(data.filter(u => u.role === 'student'));
+      const allStudents = data.filter(u => u.role === 'student');
+      if (user?.role === 'teacher') {
+        setStudents(allStudents.filter(s => s.teacherId === user.uid));
+      } else {
+        setStudents(allStudents);
+      }
     });
     const unsubCourses = subscribeToCollection('courses', setCourses);
     const unsubBatches = subscribeToCollection('batches', setBatches);
@@ -86,7 +95,7 @@ const Students: React.FC = () => {
       unsubCourses();
       unsubBatches();
     };
-  }, []);
+  }, [user?.uid, user?.role]);
 
   const filteredStudents = students.filter(s => {
     const matchesSearch = s.name.toLowerCase().includes(search.toLowerCase()) || 
@@ -371,49 +380,51 @@ const Students: React.FC = () => {
         <div>
           <h2 className="text-2xl font-extrabold font-syne text-white">Student Management</h2>
           <div className="flex items-center gap-2 mt-1">
-            <p className="text-sm text-[#6b7599]">{students.length} total students enrolled</p>
-            <span className="text-[#6b7599]">•</span>
+            <p className="text-sm text-muted">{students.length} total students enrolled</p>
+            <span className="text-muted">•</span>
             <div className="flex items-center gap-1.5">
               <div className={`w-2 h-2 rounded-full ${
-                emailStatus === 'ok' ? 'bg-green-500' : 
-                emailStatus === 'error' ? 'bg-red-500' : 
-                'bg-yellow-500 animate-pulse'
+                emailStatus === 'ok' ? 'bg-success' : 
+                emailStatus === 'error' ? 'bg-primary' : 
+                'bg-warning animate-pulse'
               }`} />
-              <span className="text-[11px] font-bold uppercase tracking-wider text-[#6b7599]">
+              <span className="text-[11px] font-bold uppercase tracking-wider text-muted">
                 Email System: {emailStatus === 'ok' ? 'Ready' : emailStatus === 'error' ? 'Error' : 'Checking...'}
               </span>
               {emailStatus === 'error' && (
-                <span className="text-[10px] text-red-500/80 ml-1">({emailError})</span>
+                <span className="text-[10px] text-primary/80 ml-1">({emailError})</span>
               )}
             </div>
           </div>
         </div>
-        <button 
-          onClick={() => setShowModal(true)}
-          className="bg-[#4f8ef7] hover:bg-[#3a7ae8] text-white px-5 py-2.5 rounded-xl font-bold text-sm flex items-center gap-2 transition-colors w-fit"
-        >
-          <Plus size={18} /> Add Student
-        </button>
+        {user?.role !== 'teacher' && (
+          <button 
+            onClick={() => setShowModal(true)}
+            className="bg-secondary hover:bg-secondary/90 text-white px-5 py-2.5 rounded-xl font-bold text-sm flex items-center gap-2 transition-colors w-fit"
+          >
+            <Plus size={18} /> Add Student
+          </button>
+        )}
       </div>
 
       <div className="flex flex-wrap items-center gap-3">
-        <div className="flex items-center gap-2 bg-[#131726] border border-[#242b40] rounded-xl px-4 py-2 flex-1 min-w-[240px]">
-          <Search size={16} className="text-[#6b7599]" />
+        <div className="flex items-center gap-2 bg-background border border-border rounded-xl px-4 py-2 flex-1 min-w-[240px]">
+          <Search size={16} className="text-muted" />
           <input 
             type="text" 
             placeholder="Search by name or email..." 
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="bg-transparent border-none outline-none text-sm w-full placeholder-[#6b7599]"
+            className="bg-transparent border-none outline-none text-sm w-full placeholder-muted"
           />
         </div>
 
-        <div className="flex items-center gap-2 bg-[#131726] border border-[#242b40] rounded-xl px-4 py-2">
-          <Filter size={16} className="text-[#6b7599]" />
+        <div className="flex items-center gap-2 bg-background border border-border rounded-xl px-4 py-2">
+          <Filter size={16} className="text-muted" />
           <select 
             value={filterCourse}
             onChange={(e) => setFilterCourse(e.target.value)}
-            className="bg-transparent border-none outline-none text-sm text-[#e8ecf5] cursor-pointer"
+            className="bg-transparent border-none outline-none text-sm text-foreground cursor-pointer"
           >
             <option value="All">All Courses</option>
             {courses.map(c => <option key={c.id} value={c.title}>{c.title}</option>)}
@@ -421,18 +432,18 @@ const Students: React.FC = () => {
         </div>
 
         <div className="flex gap-2">
-          {selectedStudents.length > 0 && (
+          {selectedStudents.length > 0 && user?.role !== 'teacher' && (
             <>
               <button 
                 onClick={handleBulkAssignCourse}
-                className="flex items-center gap-2 px-4 py-2.5 bg-blue-500/10 border border-blue-500/20 text-[#4f8ef7] rounded-xl hover:bg-blue-500/20 transition-all"
+                className="flex items-center gap-2 px-4 py-2.5 bg-secondary/10 border border-secondary/20 text-secondary rounded-xl hover:bg-secondary/20 transition-all"
               >
                 <Plus size={18} />
                 <span className="text-sm font-bold">Assign Course</span>
               </button>
               <button 
                 onClick={handleBulkDelete}
-                className="flex items-center gap-2 px-4 py-2.5 bg-red-500/10 border border-red-500/20 text-[#f75f6a] rounded-xl hover:bg-red-500/20 transition-all"
+                className="flex items-center gap-2 px-4 py-2.5 bg-primary/10 border border-primary/20 text-primary rounded-xl hover:bg-primary/20 transition-all"
               >
                 <Trash2 size={18} />
                 <span className="text-sm font-bold">Delete ({selectedStudents.length})</span>
@@ -441,20 +452,22 @@ const Students: React.FC = () => {
           )}
           <button 
             onClick={handleExport}
-            className="flex items-center gap-2 px-4 py-2.5 bg-[#131726] border border-[#242b40] rounded-xl text-[#6b7599] hover:text-[#e8ecf5] hover:bg-[#242b40] transition-all"
+            className="flex items-center gap-2 px-4 py-2.5 bg-background border border-border rounded-xl text-muted hover:text-foreground hover:bg-border transition-all"
             title="Export to Excel"
           >
             <Download size={18} />
             <span className="text-sm font-bold hidden md:inline">Export</span>
           </button>
-          <button 
-            onClick={() => document.getElementById('csv-import')?.click()}
-            className="flex items-center gap-2 px-4 py-2.5 bg-[#131726] border border-[#242b40] rounded-xl text-[#6b7599] hover:text-[#e8ecf5] hover:bg-[#242b40] transition-all"
-            title="Import from CSV"
-          >
-            <Upload size={18} />
-            <span className="text-sm font-bold hidden md:inline">Import</span>
-          </button>
+          {user?.role !== 'teacher' && (
+            <button 
+              onClick={() => document.getElementById('csv-import')?.click()}
+              className="flex items-center gap-2 px-4 py-2.5 bg-background border border-border rounded-xl text-muted hover:text-foreground hover:bg-border transition-all"
+              title="Import from CSV"
+            >
+              <Upload size={18} />
+              <span className="text-sm font-bold hidden md:inline">Import</span>
+            </button>
+          )}
           <input 
             id="csv-import"
             type="file"
@@ -469,23 +482,23 @@ const Students: React.FC = () => {
         <div className="overflow-x-auto">
           <table className="w-full text-left border-collapse">
             <thead>
-              <tr className="bg-[#1a2035]">
+              <tr className="bg-card">
                 <th className="px-6 py-4">
                   <input 
                     type="checkbox" 
                     checked={selectedStudents.length === filteredStudents.length && filteredStudents.length > 0}
                     onChange={toggleSelectAll}
-                    className="rounded border-[#242b40] bg-[#131726]"
+                    className="rounded border-border bg-background"
                   />
                 </th>
-                <th className="px-6 py-4 text-[10px] font-bold text-[#6b7599] uppercase tracking-wider">Student</th>
-                <th className="px-6 py-4 text-[10px] font-bold text-[#6b7599] uppercase tracking-wider">Contact</th>
-                <th className="px-6 py-4 text-[10px] font-bold text-[#6b7599] uppercase tracking-wider">Course & Batch</th>
-                <th className="px-6 py-4 text-[10px] font-bold text-[#6b7599] uppercase tracking-wider">Join Date</th>
-                <th className="px-6 py-4 text-[10px] font-bold text-[#6b7599] uppercase tracking-wider text-right">Actions</th>
+                <th className="px-6 py-4 text-[10px] font-bold text-muted uppercase tracking-wider">Student</th>
+                <th className="px-6 py-4 text-[10px] font-bold text-muted uppercase tracking-wider">Contact</th>
+                <th className="px-6 py-4 text-[10px] font-bold text-muted uppercase tracking-wider">Course & Batch</th>
+                <th className="px-6 py-4 text-[10px] font-bold text-muted uppercase tracking-wider">Join Date</th>
+                <th className="px-6 py-4 text-[10px] font-bold text-muted uppercase tracking-wider text-right">Actions</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-[#242b40]">
+            <tbody className="divide-y divide-border">
               {filteredStudents.map((s, i) => (
                 <tr key={s.uid} className="hover:bg-white/[0.01] transition-colors group">
                   <td className="px-6 py-4">
@@ -493,62 +506,66 @@ const Students: React.FC = () => {
                       type="checkbox" 
                       checked={selectedStudents.includes(s.uid)}
                       onChange={() => toggleSelectStudent(s.uid)}
-                      className="rounded border-[#242b40] bg-[#131726]"
+                      className="rounded border-border bg-background"
                     />
                   </td>
                   <td className="px-6 py-4">
                     <div className="flex items-center gap-3">
                       {s.profilePhoto ? (
-                        <img src={s.profilePhoto} alt={s.name} className="w-9 h-9 rounded-full object-cover border border-[#242b40]" referrerPolicy="no-referrer" />
+                        <img src={s.profilePhoto} alt={s.name} className="w-9 h-9 rounded-full object-cover border border-border" referrerPolicy="no-referrer" />
                       ) : (
-                        <div className="w-9 h-9 rounded-full bg-blue-500/10 text-[#4f8ef7] flex items-center justify-center font-bold text-sm">
+                        <div className="w-9 h-9 rounded-full bg-secondary/10 text-secondary flex items-center justify-center font-bold text-sm">
                           {s.av}
                         </div>
                       )}
                       <div>
                         <div className="text-[13.5px] font-semibold">{s.name}</div>
-                        <div className="text-[11px] text-[#6b7599]">{s.email}</div>
+                        <div className="text-[11px] text-muted">{s.email}</div>
                       </div>
                     </div>
                   </td>
-                  <td className="px-6 py-4 text-[13px] text-[#6b7599]">{s.phone || '—'}</td>
+                  <td className="px-6 py-4 text-[13px] text-muted">{s.phone || '—'}</td>
                   <td className="px-6 py-4">
                     <div className="text-[13px] font-medium text-white">{s.course || 'No Course'}</div>
                     <div className="text-[11px] text-muted">{s.batch || 'No Batch'}</div>
                   </td>
-                  <td className="px-6 py-4 text-[13px] text-[#6b7599]">
+                  <td className="px-6 py-4 text-[13px] text-muted">
                     {new Date(s.joined).toLocaleDateString()}
                   </td>
                   <td className="px-6 py-4 text-right">
                     <div className="flex items-center justify-end gap-2 transition-opacity">
                       <button 
                         onClick={() => handleViewProfile(s)}
-                        className="p-2 hover:bg-blue-500/10 text-[#4f8ef7] rounded-lg transition-colors" 
+                        className="p-2 hover:bg-secondary/10 text-secondary rounded-lg transition-colors" 
                         title="View Profile"
                       >
                         <Eye size={16} />
                       </button>
-                      <button 
-                        onClick={() => handleEdit(s)}
-                        className="p-2 hover:bg-purple-500/10 text-[#7c5fe6] rounded-lg transition-colors" 
-                        title="Edit"
-                      >
-                        <Edit2 size={16} />
-                      </button>
-                      <button 
-                        onClick={() => handleResetPassword(s)}
-                        className="p-2 hover:bg-yellow-500/10 text-yellow-500 rounded-lg transition-colors" 
-                        title="Reset Password"
-                      >
-                        <Key size={16} />
-                      </button>
-                      <button 
-                        onClick={() => handleDelete(s.uid)}
-                        className="p-2 hover:bg-red-500/10 text-[#f75f6a] rounded-lg transition-colors" 
-                        title="Delete"
-                      >
-                        <Trash2 size={16} />
-                      </button>
+                      {user?.role !== 'teacher' && (
+                        <>
+                          <button 
+                            onClick={() => handleEdit(s)}
+                            className="p-2 hover:bg-accent/10 text-accent rounded-lg transition-colors" 
+                            title="Edit"
+                          >
+                            <Edit2 size={16} />
+                          </button>
+                          <button 
+                            onClick={() => handleResetPassword(s)}
+                            className="p-2 hover:bg-warning/10 text-warning rounded-lg transition-colors" 
+                            title="Reset Password"
+                          >
+                            <Key size={16} />
+                          </button>
+                          <button 
+                            onClick={() => handleDelete(s.uid)}
+                            className="p-2 hover:bg-primary/10 text-primary rounded-lg transition-colors" 
+                            title="Delete"
+                          >
+                            <Trash2 size={16} />
+                          </button>
+                        </>
+                      )}
                     </div>
                   </td>
                 </tr>
@@ -573,19 +590,19 @@ const Students: React.FC = () => {
               initial={{ opacity: 0, scale: 0.95, y: 20 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.95, y: 20 }}
-              className="relative w-full max-w-[560px] bg-[#131726] border border-[#242b40] rounded-2xl shadow-2xl p-8 overflow-y-auto max-h-[90vh]"
+              className="relative w-full max-w-[560px] bg-background border border-border rounded-2xl shadow-2xl p-8 overflow-y-auto max-h-[90vh]"
             >
               <div className="flex items-center justify-between mb-6">
                 <h3 className="text-xl font-extrabold font-syne">
                   {editingStudent ? 'Edit Student' : 'Add New Student'}
                 </h3>
-                <button onClick={() => setShowModal(false)} className="p-2 hover:bg-red-500/10 text-[#6b7599] hover:text-red-500 rounded-full transition-colors">
+                <button onClick={() => setShowModal(false)} className="p-2 hover:bg-primary/10 text-muted hover:text-primary rounded-full transition-colors">
                   <X size={20} />
                 </button>
               </div>
 
               {error && (
-                <div className="mb-4 p-3 bg-red-500/10 border border-red-500/20 text-red-500 text-xs rounded-xl">
+                <div className="mb-4 p-3 bg-primary/10 border border-primary/20 text-primary text-xs rounded-xl">
                   {error}
                 </div>
               )}
@@ -593,22 +610,22 @@ const Students: React.FC = () => {
               <form onSubmit={handleSave} className="space-y-5">
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
-                    <label className="text-[11px] font-bold text-[#6b7599] uppercase tracking-wider">First Name</label>
+                    <label className="text-[11px] font-bold text-muted uppercase tracking-wider">First Name</label>
                     <input 
                       required
                       type="text" 
-                      className="w-full bg-[#1a2035] border border-[#242b40] rounded-xl px-4 py-2.5 text-sm outline-none focus:border-[#4f8ef7] transition-colors"
+                      className="w-full bg-card border border-border rounded-xl px-4 py-2.5 text-sm outline-none focus:border-secondary transition-colors"
                       placeholder="e.g. Rahul"
                       value={formData.firstName}
                       onChange={(e) => setFormData({...formData, firstName: e.target.value})}
                     />
                   </div>
                   <div className="space-y-2">
-                    <label className="text-[11px] font-bold text-[#6b7599] uppercase tracking-wider">Last Name</label>
+                    <label className="text-[11px] font-bold text-muted uppercase tracking-wider">Last Name</label>
                     <input 
                       required
                       type="text" 
-                      className="w-full bg-[#1a2035] border border-[#242b40] rounded-xl px-4 py-2.5 text-sm outline-none focus:border-[#4f8ef7] transition-colors"
+                      className="w-full bg-card border border-border rounded-xl px-4 py-2.5 text-sm outline-none focus:border-secondary transition-colors"
                       placeholder="e.g. Kumar"
                       value={formData.lastName}
                       onChange={(e) => setFormData({...formData, lastName: e.target.value})}
@@ -618,21 +635,21 @@ const Students: React.FC = () => {
 
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
-                    <label className="text-[11px] font-bold text-[#6b7599] uppercase tracking-wider">Email Address</label>
+                    <label className="text-[11px] font-bold text-muted uppercase tracking-wider">Email Address</label>
                     <input 
                       required
                       type="email" 
-                      className="w-full bg-[#1a2035] border border-[#242b40] rounded-xl px-4 py-2.5 text-sm outline-none focus:border-[#4f8ef7] transition-colors"
+                      className="w-full bg-card border border-border rounded-xl px-4 py-2.5 text-sm outline-none focus:border-secondary transition-colors"
                       placeholder="student@example.com"
                       value={formData.email}
                       onChange={(e) => setFormData({...formData, email: e.target.value})}
                     />
                   </div>
                   <div className="space-y-2">
-                    <label className="text-[11px] font-bold text-[#6b7599] uppercase tracking-wider">Mobile Number</label>
+                    <label className="text-[11px] font-bold text-muted uppercase tracking-wider">Mobile Number</label>
                     <input 
                       type="tel" 
-                      className="w-full bg-[#1a2035] border border-[#242b40] rounded-xl px-4 py-2.5 text-sm outline-none focus:border-[#4f8ef7] transition-colors"
+                      className="w-full bg-card border border-border rounded-xl px-4 py-2.5 text-sm outline-none focus:border-secondary transition-colors"
                       placeholder="10-digit mobile"
                       value={formData.phone}
                       onChange={(e) => setFormData({...formData, phone: e.target.value})}
@@ -642,22 +659,22 @@ const Students: React.FC = () => {
 
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
-                    <label className="text-[11px] font-bold text-[#6b7599] uppercase tracking-wider">Profile Photo URL</label>
+                    <label className="text-[11px] font-bold text-muted uppercase tracking-wider">Profile Photo URL</label>
                     <input 
                       type="url" 
-                      className="w-full bg-[#1a2035] border border-[#242b40] rounded-xl px-4 py-2.5 text-sm outline-none focus:border-[#4f8ef7] transition-colors"
+                      className="w-full bg-card border border-border rounded-xl px-4 py-2.5 text-sm outline-none focus:border-secondary transition-colors"
                       placeholder="https://example.com/photo.jpg"
                       value={formData.profilePhoto}
                       onChange={(e) => setFormData({...formData, profilePhoto: e.target.value})}
                     />
                   </div>
                   <div className="space-y-2">
-                    <label className="text-[11px] font-bold text-[#6b7599] uppercase tracking-wider">Password</label>
+                    <label className="text-[11px] font-bold text-muted uppercase tracking-wider">Password</label>
                     <div className="flex gap-2">
                       <input 
                         required={!editingStudent}
                         type="text" 
-                        className="w-full bg-[#1a2035] border border-[#242b40] rounded-xl px-4 py-2.5 text-sm outline-none focus:border-[#4f8ef7] transition-colors"
+                        className="w-full bg-card border border-border rounded-xl px-4 py-2.5 text-sm outline-none focus:border-secondary transition-colors"
                         placeholder={editingStudent ? "Leave blank to keep current" : "Auto-gen or manual"}
                         value={formData.password}
                         onChange={(e) => setFormData({...formData, password: e.target.value})}
@@ -665,7 +682,7 @@ const Students: React.FC = () => {
                       <button 
                         type="button"
                         onClick={() => setFormData({...formData, password: Math.random().toString(36).substring(7).toUpperCase()})}
-                        className="px-3 bg-[#1a2035] border border-[#242b40] rounded-xl text-[10px] font-bold text-[#4f8ef7] hover:bg-[#242b40]"
+                        className="px-3 bg-card border border-border rounded-xl text-[10px] font-bold text-secondary hover:bg-border"
                       >
                         AUTO
                       </button>
@@ -675,20 +692,20 @@ const Students: React.FC = () => {
 
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
-                    <label className="text-[11px] font-bold text-[#6b7599] uppercase tracking-wider">Father's Name</label>
+                    <label className="text-[11px] font-bold text-muted uppercase tracking-wider">Father's Name</label>
                     <input 
                       type="text" 
-                      className="w-full bg-[#1a2035] border border-[#242b40] rounded-xl px-4 py-2.5 text-sm outline-none focus:border-[#4f8ef7] transition-colors"
+                      className="w-full bg-card border border-border rounded-xl px-4 py-2.5 text-sm outline-none focus:border-secondary transition-colors"
                       placeholder="Father's Name"
                       value={formData.fatherName}
                       onChange={(e) => setFormData({...formData, fatherName: e.target.value})}
                     />
                   </div>
                   <div className="space-y-2">
-                    <label className="text-[11px] font-bold text-[#6b7599] uppercase tracking-wider">Mother's Name</label>
+                    <label className="text-[11px] font-bold text-muted uppercase tracking-wider">Mother's Name</label>
                     <input 
                       type="text" 
-                      className="w-full bg-[#1a2035] border border-[#242b40] rounded-xl px-4 py-2.5 text-sm outline-none focus:border-[#4f8ef7] transition-colors"
+                      className="w-full bg-card border border-border rounded-xl px-4 py-2.5 text-sm outline-none focus:border-secondary transition-colors"
                       placeholder="Mother's Name"
                       value={formData.motherName}
                       onChange={(e) => setFormData({...formData, motherName: e.target.value})}
@@ -698,19 +715,19 @@ const Students: React.FC = () => {
 
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
-                    <label className="text-[11px] font-bold text-[#6b7599] uppercase tracking-wider">Date of Birth</label>
+                    <label className="text-[11px] font-bold text-muted uppercase tracking-wider">Date of Birth</label>
                     <input 
                       type="date" 
-                      className="w-full bg-[#1a2035] border border-[#242b40] rounded-xl px-4 py-2.5 text-sm outline-none focus:border-[#4f8ef7] transition-colors"
+                      className="w-full bg-card border border-border rounded-xl px-4 py-2.5 text-sm outline-none focus:border-secondary transition-colors"
                       value={formData.dob}
                       onChange={(e) => setFormData({...formData, dob: e.target.value})}
                     />
                   </div>
                   <div className="space-y-2">
-                    <label className="text-[11px] font-bold text-[#6b7599] uppercase tracking-wider">Total Fee (₹)</label>
+                    <label className="text-[11px] font-bold text-muted uppercase tracking-wider">Total Fee (₹)</label>
                     <input 
                       type="number" 
-                      className="w-full bg-[#1a2035] border border-[#242b40] rounded-xl px-4 py-2.5 text-sm outline-none focus:border-[#4f8ef7] transition-colors"
+                      className="w-full bg-card border border-border rounded-xl px-4 py-2.5 text-sm outline-none focus:border-secondary transition-colors"
                       placeholder="Total Course Fee"
                       value={formData.fee}
                       onChange={(e) => setFormData({...formData, fee: e.target.value})}
@@ -719,10 +736,10 @@ const Students: React.FC = () => {
                 </div>
 
                 <div className="space-y-2">
-                  <label className="text-[11px] font-bold text-[#6b7599] uppercase tracking-wider">Address</label>
+                  <label className="text-[11px] font-bold text-muted uppercase tracking-wider">Address</label>
                   <textarea 
                     rows={2}
-                    className="w-full bg-[#1a2035] border border-[#242b40] rounded-xl px-4 py-2.5 text-sm outline-none focus:border-[#4f8ef7] transition-colors resize-none"
+                    className="w-full bg-card border border-border rounded-xl px-4 py-2.5 text-sm outline-none focus:border-secondary transition-colors resize-none"
                     placeholder="Full Address"
                     value={formData.address}
                     onChange={(e) => setFormData({...formData, address: e.target.value})}
@@ -731,9 +748,9 @@ const Students: React.FC = () => {
 
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
-                    <label className="text-[11px] font-bold text-[#6b7599] uppercase tracking-wider">Select Course</label>
+                    <label className="text-[11px] font-bold text-muted uppercase tracking-wider">Select Course</label>
                     <select 
-                      className="w-full bg-[#1a2035] border border-[#242b40] rounded-xl px-4 py-2.5 text-sm outline-none focus:border-[#4f8ef7] transition-colors"
+                      className="w-full bg-card border border-border rounded-xl px-4 py-2.5 text-sm outline-none focus:border-secondary transition-colors"
                       value={formData.course}
                       onChange={(e) => setFormData({...formData, course: e.target.value})}
                     >
@@ -742,9 +759,9 @@ const Students: React.FC = () => {
                     </select>
                   </div>
                   <div className="space-y-2">
-                    <label className="text-[11px] font-bold text-[#6b7599] uppercase tracking-wider">Select Batch</label>
+                    <label className="text-[11px] font-bold text-muted uppercase tracking-wider">Select Batch</label>
                     <select 
-                      className="w-full bg-[#1a2035] border border-[#242b40] rounded-xl px-4 py-2.5 text-sm outline-none focus:border-[#4f8ef7] transition-colors"
+                      className="w-full bg-card border border-border rounded-xl px-4 py-2.5 text-sm outline-none focus:border-secondary transition-colors"
                       value={formData.batch}
                       onChange={(e) => setFormData({...formData, batch: e.target.value})}
                     >
@@ -758,7 +775,7 @@ const Students: React.FC = () => {
                   <button 
                     type="submit"
                     disabled={loading}
-                    className="flex-1 bg-[#4f8ef7] hover:bg-[#3a7ae8] text-white py-3 rounded-xl font-bold text-sm transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
+                    className="flex-1 bg-secondary hover:bg-secondary/90 text-white py-3 rounded-xl font-bold text-sm transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
                   >
                     {loading ? (
                       <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
@@ -769,7 +786,7 @@ const Students: React.FC = () => {
                   <button 
                     type="button"
                     onClick={() => setShowModal(false)}
-                    className="px-6 bg-[#1a2035] border border-[#242b40] text-[#e8ecf5] rounded-xl font-bold text-sm hover:bg-[#242b40] transition-colors"
+                    className="px-6 bg-card border border-border text-foreground rounded-xl font-bold text-sm hover:bg-border transition-colors"
                   >
                     Cancel
                   </button>
@@ -795,23 +812,23 @@ const Students: React.FC = () => {
               initial={{ opacity: 0, scale: 0.95, y: 20 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.95, y: 20 }}
-              className="relative w-full max-w-[720px] bg-[#131726] border border-[#242b40] rounded-2xl shadow-2xl p-8 overflow-y-auto max-h-[90vh]"
+              className="relative w-full max-w-[720px] bg-background border border-border rounded-2xl shadow-2xl p-8 overflow-y-auto max-h-[90vh]"
             >
               <div className="flex items-center justify-between mb-8">
                 <div className="flex items-center gap-4">
                   {viewingStudent.profilePhoto ? (
-                    <img src={viewingStudent.profilePhoto} alt={viewingStudent.name} className="w-16 h-16 rounded-2xl object-cover border-2 border-[#242b40]" referrerPolicy="no-referrer" />
+                    <img src={viewingStudent.profilePhoto} alt={viewingStudent.name} className="w-16 h-16 rounded-2xl object-cover border-2 border-border" referrerPolicy="no-referrer" />
                   ) : (
-                    <div className="w-16 h-16 rounded-2xl bg-blue-500/10 text-[#4f8ef7] flex items-center justify-center font-bold text-2xl">
+                    <div className="w-16 h-16 rounded-2xl bg-secondary/10 text-secondary flex items-center justify-center font-bold text-2xl">
                       {viewingStudent.av}
                     </div>
                   )}
                   <div>
                     <h3 className="text-2xl font-extrabold font-syne">{viewingStudent.name}</h3>
-                    <p className="text-[#6b7599] text-sm">{viewingStudent.email}</p>
+                    <p className="text-muted text-sm">{viewingStudent.email}</p>
                   </div>
                 </div>
-                <button onClick={() => setShowProfileModal(false)} className="p-2 hover:bg-red-500/10 text-[#6b7599] hover:text-red-500 rounded-full transition-colors">
+                <button onClick={() => setShowProfileModal(false)} className="p-2 hover:bg-primary/10 text-muted hover:text-primary rounded-full transition-colors">
                   <X size={24} />
                 </button>
               </div>
@@ -819,49 +836,49 @@ const Students: React.FC = () => {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                 <div className="space-y-6">
                   <div>
-                    <h4 className="text-[10px] font-bold text-[#6b7599] uppercase tracking-widest mb-3">Personal Information</h4>
+                    <h4 className="text-[10px] font-bold text-muted uppercase tracking-widest mb-3">Personal Information</h4>
                     <div className="space-y-3">
                       <div className="flex justify-between text-sm">
-                        <span className="text-[#6b7599]">Phone:</span>
+                        <span className="text-muted">Phone:</span>
                         <span className="text-white font-medium">{viewingStudent.phone || '—'}</span>
                       </div>
                       <div className="flex justify-between text-sm">
-                        <span className="text-[#6b7599]">Father's Name:</span>
+                        <span className="text-muted">Father's Name:</span>
                         <span className="text-white font-medium">{(viewingStudent as any).fatherName || '—'}</span>
                       </div>
                       <div className="flex justify-between text-sm">
-                        <span className="text-[#6b7599]">Mother's Name:</span>
+                        <span className="text-muted">Mother's Name:</span>
                         <span className="text-white font-medium">{(viewingStudent as any).motherName || '—'}</span>
                       </div>
                       <div className="flex justify-between text-sm">
-                        <span className="text-[#6b7599]">DOB:</span>
+                        <span className="text-muted">DOB:</span>
                         <span className="text-white font-medium">{(viewingStudent as any).dob || '—'}</span>
                       </div>
                       <div className="flex justify-between text-sm">
-                        <span className="text-[#6b7599]">Address:</span>
+                        <span className="text-muted">Address:</span>
                         <span className="text-white font-medium text-right max-w-[200px]">{(viewingStudent as any).address || '—'}</span>
                       </div>
                     </div>
                   </div>
 
                   <div>
-                    <h4 className="text-[10px] font-bold text-[#6b7599] uppercase tracking-widest mb-3">Course & Batch Info</h4>
+                    <h4 className="text-[10px] font-bold text-muted uppercase tracking-widest mb-3">Course & Batch Info</h4>
                     <div className="space-y-3">
                       <div className="flex justify-between text-sm">
-                        <span className="text-[#6b7599]">Course:</span>
-                        <span className="text-[#4f8ef7] font-bold">{viewingStudent.course || '—'}</span>
+                        <span className="text-muted">Course:</span>
+                        <span className="text-secondary font-bold">{viewingStudent.course || '—'}</span>
                       </div>
                       <div className="flex justify-between text-sm">
-                        <span className="text-[#6b7599]">Batch:</span>
+                        <span className="text-muted">Batch:</span>
                         <span className="text-white font-medium">{viewingStudent.batch || '—'}</span>
                       </div>
                       <div className="flex justify-between text-sm">
-                        <span className="text-[#6b7599]">Join Date:</span>
+                        <span className="text-muted">Join Date:</span>
                         <span className="text-white font-medium">{new Date(viewingStudent.joined).toLocaleDateString()}</span>
                       </div>
                       <div className="flex justify-between text-sm">
-                        <span className="text-[#6b7599]">Status:</span>
-                        <span className="px-2 py-0.5 rounded-full bg-green-500/10 text-[#2ecc8a] text-[10px] font-bold uppercase">
+                        <span className="text-muted">Status:</span>
+                        <span className="px-2 py-0.5 rounded-full bg-success/10 text-success text-[10px] font-bold uppercase">
                           {viewingStudent.status}
                         </span>
                       </div>
@@ -871,24 +888,24 @@ const Students: React.FC = () => {
 
                 <div className="space-y-6">
                   <div>
-                    <h4 className="text-[10px] font-bold text-[#6b7599] uppercase tracking-widest mb-3">Academic Progress</h4>
+                    <h4 className="text-[10px] font-bold text-muted uppercase tracking-widest mb-3">Academic Progress</h4>
                     <div className="space-y-4">
                       <div className="space-y-2">
                         <div className="flex justify-between text-xs">
-                          <span className="text-[#6b7599]">Course Progress</span>
+                          <span className="text-muted">Course Progress</span>
                           <span className="text-white">{(viewingStudent as any).progress || 0}%</span>
                         </div>
-                        <div className="w-full h-2 bg-[#1a2035] rounded-full overflow-hidden">
-                          <div className="h-full bg-gradient-to-r from-[#4f8ef7] to-[#7c5fe6]" style={{ width: `${(viewingStudent as any).progress || 0}%` }} />
+                        <div className="w-full h-2 bg-card rounded-full overflow-hidden">
+                          <div className="h-full bg-gradient-to-r from-secondary to-accent" style={{ width: `${(viewingStudent as any).progress || 0}%` }} />
                         </div>
                       </div>
                       <div className="grid grid-cols-2 gap-4">
-                        <div className="p-3 bg-[#1a2035] rounded-xl border border-[#242b40]">
-                          <div className="text-[10px] font-bold text-[#6b7599] uppercase mb-1">Attendance</div>
+                        <div className="p-3 bg-card rounded-xl border border-border">
+                          <div className="text-[10px] font-bold text-muted uppercase mb-1">Attendance</div>
                           <div className="text-lg font-bold text-white">{(viewingStudent as any).attendanceRate || 0}%</div>
                         </div>
-                        <div className="p-3 bg-[#1a2035] rounded-xl border border-[#242b40]">
-                          <div className="text-[10px] font-bold text-[#6b7599] uppercase mb-1">Lessons</div>
+                        <div className="p-3 bg-card rounded-xl border border-border">
+                          <div className="text-[10px] font-bold text-muted uppercase mb-1">Lessons</div>
                           <div className="text-lg font-bold text-white">{(viewingStudent as any).completedLessons || 0}</div>
                         </div>
                       </div>
@@ -896,32 +913,32 @@ const Students: React.FC = () => {
                   </div>
 
                   <div>
-                    <h4 className="text-[10px] font-bold text-[#6b7599] uppercase tracking-widest mb-3">Fee Summary</h4>
-                    <div className="p-4 bg-[#1a2035] rounded-xl border border-[#242b40] space-y-3">
+                    <h4 className="text-[10px] font-bold text-muted uppercase tracking-widest mb-3">Fee Summary</h4>
+                    <div className="p-4 bg-card rounded-xl border border-border space-y-3">
                       <div className="flex justify-between text-sm">
-                        <span className="text-[#6b7599]">Total Fee:</span>
+                        <span className="text-muted">Total Fee:</span>
                         <span className="text-white font-bold">₹{(viewingStudent as any).fee || 0}</span>
                       </div>
                       <div className="flex justify-between text-sm">
-                        <span className="text-[#6b7599]">Paid Amount:</span>
-                        <span className="text-green-500 font-bold">₹{(viewingStudent as any).paid || 0}</span>
+                        <span className="text-muted">Paid Amount:</span>
+                        <span className="text-success font-bold">₹{(viewingStudent as any).paid || 0}</span>
                       </div>
-                      <div className="flex justify-between text-sm pt-2 border-t border-[#242b40]">
-                        <span className="text-[#6b7599]">Pending:</span>
-                        <span className="text-red-500 font-bold">₹{(viewingStudent as any).pendingAmount || 0}</span>
+                      <div className="flex justify-between text-sm pt-2 border-t border-border">
+                        <span className="text-muted">Pending:</span>
+                        <span className="text-primary font-bold">₹{(viewingStudent as any).pendingAmount || 0}</span>
                       </div>
                     </div>
                   </div>
 
                   <div>
-                    <h4 className="text-[10px] font-bold text-[#6b7599] uppercase tracking-widest mb-3">Activity Tracking</h4>
+                    <h4 className="text-[10px] font-bold text-muted uppercase tracking-widest mb-3">Activity Tracking</h4>
                     <div className="space-y-2">
                       <div className="flex justify-between text-xs">
-                        <span className="text-[#6b7599]">Last Login:</span>
+                        <span className="text-muted">Last Login:</span>
                         <span className="text-white">{(viewingStudent as any).lastLogin ? new Date((viewingStudent as any).lastLogin).toLocaleString() : 'Never'}</span>
                       </div>
                       <div className="flex justify-between text-xs">
-                        <span className="text-[#6b7599]">Time Spent:</span>
+                        <span className="text-muted">Time Spent:</span>
                         <span className="text-white">{(viewingStudent as any).timeSpent || 0} minutes</span>
                       </div>
                     </div>
@@ -929,16 +946,16 @@ const Students: React.FC = () => {
                 </div>
               </div>
 
-              <div className="mt-8 pt-6 border-t border-[#242b40] flex justify-end gap-3">
+              <div className="mt-8 pt-6 border-t border-border flex justify-end gap-3">
                 <button 
                   onClick={() => { setShowProfileModal(false); handleEdit(viewingStudent); }}
-                  className="px-6 py-2.5 bg-[#4f8ef7] hover:bg-[#3a7ae8] text-white rounded-xl font-bold text-sm transition-colors"
+                  className="px-6 py-2.5 bg-secondary hover:bg-secondary/90 text-white rounded-xl font-bold text-sm transition-colors"
                 >
                   Edit Profile
                 </button>
                 <button 
                   onClick={() => setShowProfileModal(false)}
-                  className="px-6 py-2.5 bg-[#1a2035] border border-[#242b40] text-[#e8ecf5] rounded-xl font-bold text-sm hover:bg-[#242b40] transition-colors"
+                  className="px-6 py-2.5 bg-card border border-border text-foreground rounded-xl font-bold text-sm hover:bg-border transition-colors"
                 >
                   Close
                 </button>

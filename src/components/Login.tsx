@@ -56,18 +56,18 @@ const Login: React.FC = () => {
   const siteName = settings?.general?.siteName || 'CoreLMS';
 
   return (
-    <div className="min-h-screen bg-[#0b0e17] flex items-center justify-center p-0 sm:p-4 relative overflow-hidden font-inter">
+    <div className="min-h-screen bg-background flex items-center justify-center p-0 sm:p-4 relative overflow-hidden font-sans">
       {/* Background Glows */}
-      <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-blue-500/5 blur-[120px] rounded-full" />
-      <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-purple-500/5 blur-[120px] rounded-full" />
+      <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-secondary/5 blur-[120px] rounded-full" />
+      <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-accent/5 blur-[120px] rounded-full" />
 
       <motion.div 
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        className="w-full max-w-[1000px] min-h-[600px] bg-[#131726] border border-[#242b40] rounded-none sm:rounded-[32px] shadow-2xl overflow-hidden flex flex-col lg:flex-row relative z-10"
+        className="w-full max-w-[1000px] min-h-[600px] bg-card border border-border rounded-none sm:rounded-[32px] shadow-2xl overflow-hidden flex flex-col lg:flex-row relative z-10"
       >
         {/* Left Side - Welcome Panel */}
-        <div className="lg:w-[45%] bg-gradient-to-br from-[#4f8ef7] to-[#7c5fe6] p-8 sm:p-12 lg:pr-20 flex flex-col justify-between relative overflow-hidden">
+        <div className="lg:w-[45%] bg-gradient-to-br from-secondary to-accent p-8 sm:p-12 lg:pr-20 flex flex-col justify-between relative overflow-hidden">
           {/* Decorative Elements */}
           <div className="absolute top-0 right-0 w-64 h-64 bg-white/10 blur-3xl rounded-full -mr-32 -mt-32" />
           <div className="absolute bottom-0 left-0 w-48 h-48 bg-black/10 blur-2xl rounded-full -ml-24 -mb-24" />
@@ -96,15 +96,15 @@ const Login: React.FC = () => {
 
           <div className="relative z-10 mt-12 lg:mt-0">
             <div className="flex items-center gap-4 text-white/40 text-[9px] uppercase tracking-[0.25em] font-bold">
-              <span>CREATOR HERE</span>
+              <span>CoreLMS</span>
               <div className="w-px h-3 bg-white/10" />
-              <span>DESIGNER HERE</span>
+              <span>Platform</span>
             </div>
           </div>
 
           {/* Wavy Separator (Desktop Only) - Improved Curve */}
           <svg 
-            className="absolute right-[-1px] top-0 h-full w-24 fill-[#131726] hidden lg:block" 
+            className="absolute right-[-1px] top-0 h-full w-24 fill-card hidden lg:block" 
             viewBox="0 0 100 100" 
             preserveAspectRatio="none"
           >
@@ -113,13 +113,13 @@ const Login: React.FC = () => {
         </div>
 
         {/* Right Side - Form Panel */}
-        <div className="flex-1 p-8 sm:p-12 xl:p-20 flex flex-col justify-center bg-[#131726]">
+        <div className="flex-1 p-8 sm:p-12 xl:p-20 flex flex-col justify-center bg-card">
           <div className="max-w-[380px] mx-auto w-full">
             <div className="mb-12">
               <h3 className="text-3xl xl:text-4xl font-extrabold text-white mb-3 font-syne tracking-tight">
                 {isRegistering ? 'Create account' : 'Sign in'}
               </h3>
-              <p className="text-[#6b7599] text-sm xl:text-base">
+              <p className="text-muted text-sm xl:text-base">
                 {isRegistering ? 'Enter your details to get started' : 'Enter your credentials to access your dashboard'}
               </p>
             </div>
@@ -156,14 +156,14 @@ const Login: React.FC = () => {
                     exit={{ opacity: 0, y: -10 }}
                     className="space-y-2"
                   >
-                    <label className="text-[11px] font-bold text-[#6b7599] uppercase tracking-wider ml-1">Full Name</label>
+                    <label className="text-[11px] font-bold text-muted uppercase tracking-wider ml-1">Full Name</label>
                     <div className="relative group">
-                      <UserCircle className="absolute left-4 top-1/2 -translate-y-1/2 text-[#6b7599] group-focus-within:text-[#4f8ef7] transition-colors" size={20} />
+                      <UserCircle className="absolute left-4 top-1/2 -translate-y-1/2 text-muted group-focus-within:text-secondary transition-colors" size={20} />
                       <input
                         type="text"
                         value={name}
                         onChange={(e) => setName(e.target.value)}
-                        className="w-full bg-[#1a2035] border border-[#242b40] rounded-2xl py-3.5 pl-12 pr-4 text-white text-sm focus:outline-none focus:border-[#4f8ef7] transition-all focus:ring-4 focus:ring-[#4f8ef7]/10"
+                        className="w-full bg-card border border-border rounded-2xl py-3.5 pl-12 pr-4 text-white text-sm focus:outline-none focus:border-secondary transition-all focus:ring-4 focus:ring-secondary/10"
                         placeholder="Enter your name"
                       />
                     </div>
@@ -172,14 +172,14 @@ const Login: React.FC = () => {
               </AnimatePresence>
 
               <div className="space-y-2">
-                <label className="text-[11px] font-bold text-[#6b7599] uppercase tracking-wider ml-1">E-mail Address</label>
+                <label className="text-[11px] font-bold text-muted uppercase tracking-wider ml-1">E-mail Address</label>
                 <div className="relative group">
-                  <Mail className="absolute left-4 top-1/2 -translate-y-1/2 text-[#6b7599] group-focus-within:text-[#4f8ef7] transition-colors" size={20} />
+                  <Mail className="absolute left-4 top-1/2 -translate-y-1/2 text-muted group-focus-within:text-secondary transition-colors" size={20} />
                   <input
                     type="email"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
-                    className="w-full bg-[#1a2035] border border-[#242b40] rounded-2xl py-3.5 pl-12 pr-4 text-white text-sm focus:outline-none focus:border-[#4f8ef7] transition-all focus:ring-4 focus:ring-[#4f8ef7]/10"
+                    className="w-full bg-card border border-border rounded-2xl py-3.5 pl-12 pr-4 text-white text-sm focus:outline-none focus:border-secondary transition-all focus:ring-4 focus:ring-secondary/10"
                     placeholder="Enter your mail"
                   />
                 </div>
@@ -187,18 +187,18 @@ const Login: React.FC = () => {
 
               <div className="space-y-2">
                 <div className="flex items-center justify-between ml-1">
-                  <label className="text-[11px] font-bold text-[#6b7599] uppercase tracking-wider">Password</label>
+                  <label className="text-[11px] font-bold text-muted uppercase tracking-wider">Password</label>
                   {!isRegistering && (
-                    <button type="button" className="text-[10px] font-bold text-[#4f8ef7] hover:underline uppercase tracking-wider">Forgot?</button>
+                    <button type="button" className="text-[10px] font-bold text-secondary hover:underline uppercase tracking-wider">Forgot?</button>
                   )}
                 </div>
                 <div className="relative group">
-                  <Lock className="absolute left-4 top-1/2 -translate-y-1/2 text-[#6b7599] group-focus-within:text-[#4f8ef7] transition-colors" size={20} />
+                  <Lock className="absolute left-4 top-1/2 -translate-y-1/2 text-muted group-focus-within:text-secondary transition-colors" size={20} />
                   <input
                     type="password"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
-                    className="w-full bg-[#1a2035] border border-[#242b40] rounded-2xl py-3.5 pl-12 pr-4 text-white text-sm focus:outline-none focus:border-[#4f8ef7] transition-all focus:ring-4 focus:ring-[#4f8ef7]/10"
+                    className="w-full bg-card border border-border rounded-2xl py-3.5 pl-12 pr-4 text-white text-sm focus:outline-none focus:border-secondary transition-all focus:ring-4 focus:ring-secondary/10"
                     placeholder="Enter your password"
                   />
                 </div>
@@ -208,7 +208,7 @@ const Login: React.FC = () => {
                 <button
                   type="submit"
                   disabled={loading}
-                  className="flex-1 py-4 bg-[#4f8ef7] hover:bg-[#3a7ae8] text-white rounded-2xl font-bold text-sm flex items-center justify-center gap-2 shadow-lg shadow-blue-500/20 transition-all active:scale-[0.98] disabled:opacity-50"
+                  className="flex-1 py-4 bg-secondary hover:bg-secondary/90 text-white rounded-2xl font-bold text-sm flex items-center justify-center gap-2 shadow-lg shadow-secondary/20 transition-all active:scale-[0.98] disabled:opacity-50"
                 >
                   {loading ? (
                     <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
@@ -227,21 +227,21 @@ const Login: React.FC = () => {
                     setError(null);
                     setSuccess(null);
                   }}
-                  className="flex-1 py-4 bg-transparent border border-[#242b40] text-white rounded-2xl font-bold text-sm hover:bg-[#1a2035] transition-all active:scale-[0.98]"
+                  className="flex-1 py-4 bg-transparent border border-border text-white rounded-2xl font-bold text-sm hover:bg-card transition-all active:scale-[0.98]"
                 >
                   {isRegistering ? 'Sign In' : 'Sign Up'}
                 </button>
               </div>
             </form>
 
-            <div className="mt-12 p-5 bg-[#1a2035]/50 border border-[#242b40] rounded-2xl">
+            <div className="mt-12 p-5 bg-card/50 border border-border rounded-2xl">
               <div className="flex items-start gap-4">
-                <div className="w-8 h-8 rounded-lg bg-blue-500/10 flex items-center justify-center flex-shrink-0">
-                  <LogIn size={16} className="text-[#4f8ef7]" />
+                <div className="w-8 h-8 rounded-lg bg-secondary/10 flex items-center justify-center flex-shrink-0">
+                  <LogIn size={16} className="text-secondary" />
                 </div>
                 <div>
-                  <h4 className="text-[11px] font-bold text-[#e8ecf5] uppercase tracking-wider mb-1">System Access</h4>
-                  <p className="text-[11px] text-[#6b7599] leading-relaxed">
+                  <h4 className="text-[11px] font-bold text-white uppercase tracking-wider mb-1">System Access</h4>
+                  <p className="text-[11px] text-muted leading-relaxed">
                     Admin can create student and teacher accounts from the dashboard. Use your assigned credentials to login.
                   </p>
                 </div>

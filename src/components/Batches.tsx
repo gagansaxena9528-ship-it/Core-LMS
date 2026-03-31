@@ -9,32 +9,36 @@ import {
   X,
   Search,
   BookOpen,
-  User,
-  Edit2,
-  Trash2,
-  Video,
-  FileText,
-  Megaphone,
-  BarChart3,
-  CheckCircle2,
-  AlertCircle,
-  ExternalLink,
-  PlusCircle,
-  ChevronRight,
-  Settings,
-  UserPlus,
-  UserMinus,
-  Zap,
-  Send,
-  Bell
+  User as UserIcon, 
+  Edit2, 
+  Trash2, 
+  Video, 
+  FileText, 
+  Megaphone, 
+  BarChart3, 
+  CheckCircle2, 
+  AlertCircle, 
+  ExternalLink, 
+  PlusCircle, 
+  ChevronRight, 
+  Settings, 
+  UserPlus, 
+  UserMinus, 
+  Zap, 
+  Send, 
+  Bell 
 } from 'lucide-react';
 import { subscribeToCollection, createDoc, updateDocument, deleteDocument } from '../services/firestore';
-import { sendEmail, getNewRecordTemplate, getUpdateNotificationTemplate } from '../services/emailService';
-import { Batch, Course, Teacher, Student, BatchAnnouncement, ScheduledClass, Attendance } from '../types';
+import { sendEmail, getNewRecordTemplate, getUpdateNotificationTemplate, getAttendanceEmailTemplate } from '../services/emailService';
+import { Batch, Course, Teacher, Student, BatchAnnouncement, ScheduledClass, Attendance, Result, Lesson, User } from '../types';
 import { motion, AnimatePresence } from 'framer-motion';
 import { cn } from '../lib/utils';
 
-const Batches: React.FC = () => {
+interface BatchesProps {
+  user?: User;
+}
+
+const Batches: React.FC<BatchesProps> = ({ user }) => {
   const [batches, setBatches] = useState<Batch[]>([]);
   const [courses, setCourses] = useState<Course[]>([]);
   const [teachers, setTeachers] = useState<Teacher[]>([]);
@@ -42,6 +46,8 @@ const Batches: React.FC = () => {
   const [announcements, setAnnouncements] = useState<BatchAnnouncement[]>([]);
   const [scheduledClasses, setScheduledClasses] = useState<ScheduledClass[]>([]);
   const [attendance, setAttendance] = useState<Attendance[]>([]);
+  const [results, setResults] = useState<Result[]>([]);
+  const [lessons, setLessons] = useState<Lesson[]>([]);
   
   const [showModal, setShowModal] = useState(false);
   const [showManageModal, setShowManageModal] = useState(false);
@@ -51,6 +57,10 @@ const Batches: React.FC = () => {
 
   const [editingBatch, setEditingBatch] = useState<Batch | null>(null);
   const [selectedBatch, setSelectedBatch] = useState<Batch | null>(null);
+
+  // Attendance State
+  const [attendanceDate, setAttendanceDate] = useState(new Date().toISOString().split('T')[0]);
+  const [attendanceMap, setAttendanceMap] = useState<Record<string, 'Present' | 'Absent'>>({});
 
   const [formData, setFormData] = useState({
     name: '',
@@ -84,7 +94,13 @@ const Batches: React.FC = () => {
   });
 
   useEffect(() => {
-    const unsubBatches = subscribeToCollection('batches', setBatches);
+    const unsubBatches = subscribeToCollection('batches', (data) => {
+      if (user?.role === 'teacher') {
+        setBatches(data.filter(b => b.teacherId === user.uid || b.assistantTeacherId === user.uid));
+      } else {
+        setBatches(data);
+      }
+    });
     const unsubCourses = subscribeToCollection('courses', setCourses);
     const unsubTeachers = subscribeToCollection('users', (data) => {
       setTeachers(data.filter(u => u.role === 'teacher') as Teacher[]);
@@ -95,6 +111,8 @@ const Batches: React.FC = () => {
     const unsubAnnouncements = subscribeToCollection('batch_announcements', setAnnouncements);
     const unsubClasses = subscribeToCollection('scheduled_classes', setScheduledClasses);
     const unsubAttendance = subscribeToCollection('attendance', setAttendance);
+    const unsubResults = subscribeToCollection('results', setResults);
+    const unsubLessons = subscribeToCollection('lessons', setLessons);
 
     return () => {
       unsubBatches();
@@ -104,8 +122,97 @@ const Batches: React.FC = () => {
       unsubAnnouncements();
       unsubClasses();
       unsubAttendance();
+      unsubResults();
+      unsubLessons();
     };
-  }, []);
+  }, [user?.uid, user?.role]);
+
+  // Update attendance map when date or batch changes
+  useEffect(() => {
+    if (selectedBatch && attendanceDate) {
+      const dayAttendance = attendance.filter(a => a.batchId === selectedBatch.id && a.date === attendanceDate);
+      const map: Record<string, 'Present' | 'Absent'> = {};
+      dayAttendance.forEach(a => {
+        map[a.studentId] = a.status;
+      });
+      setAttendanceMap(map);
+    }
+  }, [selectedBatch, attendanceDate, attendance]);
+
+  const handleMarkAttendance = async (studentId: string, status: 'Present' | 'Absent') => {
+    if (!selectedBatch) return;
+    
+    try {
+      const existing = attendance.find(a => a.batchId === selectedBatch.id && a.studentId === studentId && a.date === attendanceDate);
+      const student = students.find(s => s.uid === studentId);
+      
+      if (existing) {
+        if (existing.status === status) {
+          await deleteDocument('attendance', existing.id);
+        } else {
+          await updateDocument('attendance', existing.id, { status });
+          if (student) {
+            const html = getAttendanceEmailTemplate(student.name, attendanceDate, status, selectedBatch.name);
+            await sendEmail(student.email, `Attendance Update: ${status}`, html);
+          }
+        }
+      } else {
+        const newId = Math.random().toString(36).substring(2, 15);
+        await createDoc('attendance', {
+          id: newId,
+          studentId,
+          batchId: selectedBatch.id,
+          courseId: selectedBatch.courseId,
+          date: attendanceDate,
+          status,
+          createdAt: new Date().toISOString()
+        }, newId);
+
+        if (student) {
+          const html = getAttendanceEmailTemplate(student.name, attendanceDate, status, selectedBatch.name);
+          await sendEmail(student.email, `Attendance Marked: ${status}`, html);
+        }
+      }
+    } catch (error) {
+      console.error('Error marking attendance:', error);
+    }
+  };
+
+  const handleMarkAll = async (status: 'Present' | 'Absent') => {
+    if (!selectedBatch) return;
+    
+    const batchStudents = students.filter(s => selectedBatch.studentIds?.includes(s.uid));
+    
+    for (const student of batchStudents) {
+      const existing = attendance.find(a => a.batchId === selectedBatch.id && a.studentId === student.uid && a.date === attendanceDate);
+      
+      if (!existing) {
+        const newId = Math.random().toString(36).substring(2, 15);
+        await createDoc('attendance', {
+          id: newId,
+          studentId: student.uid,
+          batchId: selectedBatch.id,
+          courseId: selectedBatch.courseId,
+          date: attendanceDate,
+          status,
+          createdAt: new Date().toISOString()
+        }, newId);
+        
+        const html = getAttendanceEmailTemplate(student.name, attendanceDate, status, selectedBatch.name);
+        await sendEmail(student.email, `Attendance Marked: ${status}`, html);
+      } else if (existing.status !== status) {
+        await updateDocument('attendance', existing.id, { status });
+        
+        const html = getAttendanceEmailTemplate(student.name, attendanceDate, status, selectedBatch.name);
+        await sendEmail(student.email, `Attendance Update: ${status}`, html);
+      }
+    }
+  };
+
+  const handleSaveAttendanceReport = async () => {
+    // In a real app, this might trigger a summary or send notifications
+    alert('Attendance report for ' + attendanceDate + ' has been saved and students notified.');
+  };
 
   const handleEdit = (batch: Batch) => {
     setEditingBatch(batch);
@@ -271,16 +378,18 @@ const Batches: React.FC = () => {
           <h2 className="text-2xl font-extrabold font-syne text-white">Batch Management</h2>
           <p className="text-sm text-[#6b7599] mt-1">Organize students into scheduled learning groups</p>
         </div>
-        <button 
-          onClick={() => {
-            resetFormData();
-            setEditingBatch(null);
-            setShowModal(true);
-          }}
-          className="bg-[#f75f6a] hover:bg-[#e04e59] text-white px-5 py-2.5 rounded-xl font-bold text-sm flex items-center gap-2 transition-colors w-fit"
-        >
-          <Plus size={18} /> Create New Batch
-        </button>
+        {user?.role !== 'teacher' && (
+          <button 
+            onClick={() => {
+              resetFormData();
+              setEditingBatch(null);
+              setShowModal(true);
+            }}
+            className="bg-[#f75f6a] hover:bg-[#e04e59] text-white px-5 py-2.5 rounded-xl font-bold text-sm flex items-center gap-2 transition-colors w-fit"
+          >
+            <Plus size={18} /> Create New Batch
+          </button>
+        )}
       </div>
 
       <div className="flex flex-col sm:flex-row gap-4">
@@ -289,7 +398,7 @@ const Batches: React.FC = () => {
           <input 
             type="text" 
             placeholder="Search batches by name..." 
-            className="w-full bg-[#131726] border border-[#242b40] rounded-xl pl-12 pr-4 py-3 text-sm outline-none focus:border-[#f75f6a] transition-colors text-white"
+            className="w-full bg-card border border-border rounded-xl pl-12 pr-4 py-3 text-sm outline-none focus:border-accent transition-colors text-foreground"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
           />
@@ -303,55 +412,59 @@ const Batches: React.FC = () => {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
           >
-            <Card className="p-6 hover:border-[#f75f6a]/30 transition-all group relative overflow-hidden">
+            <Card className="p-6 hover:border-accent/30 transition-all group relative overflow-hidden">
               <div className="absolute top-0 right-0 p-4">
                 <div className="flex gap-2">
-                  <button onClick={() => handleEdit(batch)} className="p-1.5 bg-[#1a2035] text-[#6b7599] hover:text-[#f75f6a] rounded-lg transition-colors">
-                    <Edit2 size={14} />
-                  </button>
-                  <button onClick={() => handleDelete(batch.id)} className="p-1.5 bg-[#1a2035] text-[#6b7599] hover:text-red-500 rounded-lg transition-colors">
-                    <Trash2 size={14} />
-                  </button>
+                  {user?.role !== 'teacher' && (
+                    <>
+                      <button onClick={() => handleEdit(batch)} className="p-1.5 bg-secondary text-muted-foreground hover:text-accent rounded-lg transition-colors">
+                        <Edit2 size={14} />
+                      </button>
+                      <button onClick={() => handleDelete(batch.id)} className="p-1.5 bg-secondary text-muted-foreground hover:text-destructive rounded-lg transition-colors">
+                        <Trash2 size={14} />
+                      </button>
+                    </>
+                  )}
                 </div>
               </div>
 
               <div className="flex items-start justify-between mb-4">
-                <div className="w-12 h-12 rounded-xl bg-blue-500/10 text-[#4f8ef7] flex items-center justify-center">
+                <div className="w-12 h-12 rounded-xl bg-primary/10 text-primary flex items-center justify-center">
                   <Users size={24} />
                 </div>
                 <span className={cn(
                   "px-2.5 py-1 rounded-full text-[10px] font-bold uppercase",
-                  batch.status === 'Active' ? "bg-green-500/10 text-[#2ecc8a]" : 
-                  batch.status === 'Upcoming' ? "bg-blue-500/10 text-[#4f8ef7]" : "bg-red-500/10 text-[#f75f6a]"
+                  batch.status === 'Active' ? "bg-success/10 text-success" : 
+                  batch.status === 'Upcoming' ? "bg-primary/10 text-primary" : "bg-destructive/10 text-accent"
                 )}>
                   {batch.status}
                 </span>
               </div>
 
-              <h3 className="text-lg font-bold text-white mb-1">{batch.name}</h3>
-              <div className="flex items-center gap-2 text-[12px] text-[#6b7599] mb-4">
+              <h3 className="text-lg font-bold text-foreground mb-1">{batch.name}</h3>
+              <div className="flex items-center gap-2 text-[12px] text-muted-foreground mb-4">
                 <BookOpen size={14} /> {courses.find(c => c.id === batch.courseId)?.title || 'Course'}
               </div>
 
-              <div className="space-y-3 pt-4 border-t border-[#242b40]">
+              <div className="space-y-3 pt-4 border-t border-border">
                 <div className="flex items-center justify-between text-[13px]">
-                  <span className="text-[#6b7599] flex items-center gap-1.5"><User size={14} /> Instructor</span>
-                  <span className="text-[#e8ecf5] font-medium">{teachers.find(t => t.uid === batch.teacherId)?.name || 'Teacher'}</span>
+                  <span className="text-muted-foreground flex items-center gap-1.5"><UserIcon size={14} /> Instructor</span>
+                  <span className="text-foreground font-medium">{teachers.find(t => t.uid === batch.teacherId)?.name || 'Teacher'}</span>
                 </div>
                 <div className="flex items-center justify-between text-[13px]">
-                  <span className="text-[#6b7599] flex items-center gap-1.5"><Clock size={14} /> Timing</span>
-                  <span className="text-[#e8ecf5] font-medium truncate max-w-[140px]">{batch.timeSlot}</span>
+                  <span className="text-muted-foreground flex items-center gap-1.5"><Clock size={14} /> Timing</span>
+                  <span className="text-foreground font-medium truncate max-w-[140px]">{batch.timeSlot}</span>
                 </div>
                 <div className="flex items-center justify-between text-[13px]">
-                  <span className="text-[#6b7599] flex items-center gap-1.5"><Users size={14} /> Students</span>
-                  <span className="text-[#e8ecf5] font-medium">{batch.studentsCount || 0} / {batch.maxStudents || 30}</span>
+                  <span className="text-muted-foreground flex items-center gap-1.5"><Users size={14} /> Students</span>
+                  <span className="text-foreground font-medium">{batch.studentsCount || 0} / {batch.maxStudents || 30}</span>
                 </div>
               </div>
 
               <div className="mt-6">
                 <button 
                   onClick={() => handleOpenDetails(batch)}
-                  className="w-full bg-[#1a2035] hover:bg-[#242b40] text-white py-2.5 rounded-xl text-sm font-bold transition-colors flex items-center justify-center gap-2"
+                  className="w-full bg-secondary hover:bg-border text-foreground py-2.5 rounded-xl text-sm font-bold transition-colors flex items-center justify-center gap-2"
                 >
                   Manage Batch <ChevronRight size={16} />
                 </button>
@@ -751,11 +864,64 @@ const Batches: React.FC = () => {
 
                 {manageTab === 'Attendance' && (
                   <div className="space-y-6">
-                    <div className="flex items-center justify-between">
-                      <h4 className="text-sm font-bold text-white uppercase tracking-wider">Attendance Tracking</h4>
-                      <div className="flex gap-2">
-                        <input type="date" className="bg-[#1a2035] border border-[#242b40] rounded-lg px-3 py-1.5 text-xs text-white outline-none" defaultValue={new Date().toISOString().split('T')[0]} />
-                        <button className="bg-[#f75f6a] text-white px-4 py-1.5 rounded-lg text-xs font-bold">Save Report</button>
+                    <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                      <div>
+                        <h4 className="text-sm font-bold text-white uppercase tracking-wider">Attendance Tracking</h4>
+                        <p className="text-[10px] text-[#6b7599] mt-1">Mark attendance for {attendanceDate}</p>
+                      </div>
+                      <div className="flex flex-wrap gap-2">
+                        <input 
+                          type="date" 
+                          className="bg-[#1a2035] border border-[#242b40] rounded-lg px-3 py-1.5 text-xs text-white outline-none focus:border-[#f75f6a]" 
+                          value={attendanceDate}
+                          onChange={(e) => setAttendanceDate(e.target.value)}
+                        />
+                        <div className="flex gap-1">
+                          <button 
+                            onClick={() => handleMarkAll('Present')}
+                            className="bg-green-500/10 hover:bg-green-500/20 text-green-500 px-3 py-1.5 rounded-lg text-[10px] font-bold border border-green-500/20 transition-all"
+                          >
+                            Mark All Present
+                          </button>
+                          <button 
+                            onClick={() => handleMarkAll('Absent')}
+                            className="bg-red-500/10 hover:bg-red-500/20 text-red-500 px-3 py-1.5 rounded-lg text-[10px] font-bold border border-red-500/20 transition-all"
+                          >
+                            Mark All Absent
+                          </button>
+                        </div>
+                        <button 
+                          onClick={handleSaveAttendanceReport}
+                          className="bg-[#f75f6a] text-white px-4 py-1.5 rounded-lg text-xs font-bold hover:bg-[#e04e59] transition-colors"
+                        >
+                          Save Report
+                        </button>
+                      </div>
+                    </div>
+
+                    {/* Attendance Summary Cards */}
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                      <div className="bg-[#1a2035] border border-[#242b40] rounded-xl p-4">
+                        <p className="text-[10px] font-bold text-[#6b7599] uppercase tracking-widest mb-1">Total</p>
+                        <p className="text-xl font-black text-white">{students.filter(s => selectedBatch.studentIds?.includes(s.uid)).length}</p>
+                      </div>
+                      <div className="bg-[#1a2035] border border-[#242b40] rounded-xl p-4">
+                        <p className="text-[10px] font-bold text-[#6b7599] uppercase tracking-widest mb-1">Present</p>
+                        <p className="text-xl font-black text-[#2ecc8a]">
+                          {students.filter(s => selectedBatch.studentIds?.includes(s.uid)).filter(s => attendanceMap[s.uid] === 'Present').length}
+                        </p>
+                      </div>
+                      <div className="bg-[#1a2035] border border-[#242b40] rounded-xl p-4">
+                        <p className="text-[10px] font-bold text-[#6b7599] uppercase tracking-widest mb-1">Absent</p>
+                        <p className="text-xl font-black text-red-500">
+                          {students.filter(s => selectedBatch.studentIds?.includes(s.uid)).filter(s => attendanceMap[s.uid] === 'Absent').length}
+                        </p>
+                      </div>
+                      <div className="bg-[#1a2035] border border-[#242b40] rounded-xl p-4">
+                        <p className="text-[10px] font-bold text-[#6b7599] uppercase tracking-widest mb-1">Pending</p>
+                        <p className="text-xl font-black text-[#4f8ef7]">
+                          {students.filter(s => selectedBatch.studentIds?.includes(s.uid)).filter(s => !attendanceMap[s.uid]).length}
+                        </p>
                       </div>
                     </div>
 
@@ -764,37 +930,74 @@ const Batches: React.FC = () => {
                         <thead>
                           <tr className="bg-[#131726] border-b border-[#242b40]">
                             <th className="px-6 py-4 text-[10px] font-bold text-[#6b7599] uppercase tracking-widest">Student</th>
-                            <th className="px-6 py-4 text-[10px] font-bold text-[#6b7599] uppercase tracking-widest">Status</th>
-                            <th className="px-6 py-4 text-[10px] font-bold text-[#6b7599] uppercase tracking-widest">Avg. Attendance</th>
+                            <th className="px-6 py-4 text-[10px] font-bold text-[#6b7599] uppercase tracking-widest">Mark Status</th>
+                            <th className="px-6 py-4 text-[10px] font-bold text-[#6b7599] uppercase tracking-widest">Overall Attendance</th>
                           </tr>
                         </thead>
                         <tbody className="divide-y divide-[#242b40]">
-                          {students.filter(s => selectedBatch.studentIds?.includes(s.uid)).map(student => (
-                            <tr key={student.uid} className="hover:bg-[#242b40]/30 transition-colors">
-                              <td className="px-6 py-4">
-                                <div className="flex items-center gap-3">
-                                  <div className="w-8 h-8 rounded-full bg-[#242b40] flex items-center justify-center text-[10px] text-[#f75f6a] font-bold">
-                                    {student.name.charAt(0)}
+                          {students.filter(s => selectedBatch.studentIds?.includes(s.uid)).map(student => {
+                            const studentAttendance = attendance.filter(a => a.studentId === student.uid && a.batchId === selectedBatch.id);
+                            const presentCount = studentAttendance.filter(a => a.status === 'Present').length;
+                            const totalCount = studentAttendance.length;
+                            const avgAttendance = totalCount > 0 ? Math.round((presentCount / totalCount) * 100) : 0;
+                            const currentStatus = attendanceMap[student.uid];
+
+                            return (
+                              <tr key={student.uid} className="hover:bg-[#242b40]/30 transition-colors">
+                                <td className="px-6 py-4">
+                                  <div className="flex items-center gap-3">
+                                    <div className="w-8 h-8 rounded-full bg-[#242b40] flex items-center justify-center text-[10px] text-[#f75f6a] font-bold overflow-hidden">
+                                      {student.av ? <img src={student.av} alt={student.name} className="w-full h-full object-cover" /> : student.name.charAt(0)}
+                                    </div>
+                                    <div>
+                                      <p className="text-xs font-bold text-white">{student.name}</p>
+                                      <p className="text-[10px] text-[#6b7599]">{student.email}</p>
+                                    </div>
                                   </div>
-                                  <span className="text-xs font-bold text-white">{student.name}</span>
-                                </div>
-                              </td>
-                              <td className="px-6 py-4">
-                                <div className="flex gap-2">
-                                  <button className="px-3 py-1 bg-green-500/10 text-green-500 rounded-md text-[10px] font-bold border border-green-500/20">Present</button>
-                                  <button className="px-3 py-1 bg-red-500/10 text-red-500 rounded-md text-[10px] font-bold border border-red-500/20 opacity-50">Absent</button>
-                                </div>
-                              </td>
-                              <td className="px-6 py-4">
-                                <div className="flex items-center gap-2">
-                                  <div className="flex-1 h-1.5 bg-[#242b40] rounded-full overflow-hidden">
-                                    <div className="h-full bg-[#4f8ef7]" style={{ width: '85%' }}></div>
+                                </td>
+                                <td className="px-6 py-4">
+                                  <div className="flex gap-2">
+                                    <button 
+                                      onClick={() => handleMarkAttendance(student.uid, 'Present')}
+                                      className={cn(
+                                        "px-3 py-1 rounded-md text-[10px] font-bold border transition-all",
+                                        currentStatus === 'Present' 
+                                          ? "bg-green-500 text-white border-green-500 shadow-lg shadow-green-500/20" 
+                                          : "bg-green-500/10 text-green-500 border-green-500/20 hover:bg-green-500/20"
+                                      )}
+                                    >
+                                      Present
+                                    </button>
+                                    <button 
+                                      onClick={() => handleMarkAttendance(student.uid, 'Absent')}
+                                      className={cn(
+                                        "px-3 py-1 rounded-md text-[10px] font-bold border transition-all",
+                                        currentStatus === 'Absent' 
+                                          ? "bg-red-500 text-white border-red-500 shadow-lg shadow-red-500/20" 
+                                          : "bg-red-500/10 text-red-500 border-red-500/20 hover:bg-red-500/20"
+                                      )}
+                                    >
+                                      Absent
+                                    </button>
                                   </div>
-                                  <span className="text-[10px] font-bold text-white">85%</span>
-                                </div>
-                              </td>
-                            </tr>
-                          ))}
+                                </td>
+                                <td className="px-6 py-4">
+                                  <div className="flex items-center gap-2">
+                                    <div className="flex-1 h-1.5 bg-[#242b40] rounded-full overflow-hidden">
+                                      <div 
+                                        className={cn(
+                                          "h-full transition-all duration-500",
+                                          avgAttendance > 80 ? "bg-green-500" : avgAttendance > 60 ? "bg-yellow-500" : "bg-red-500"
+                                        )} 
+                                        style={{ width: `${avgAttendance}%` }} 
+                                      />
+                                    </div>
+                                    <span className="text-[10px] font-bold text-white">{avgAttendance}%</span>
+                                  </div>
+                                </td>
+                              </tr>
+                            );
+                          })}
                         </tbody>
                       </table>
                     </div>
@@ -852,23 +1055,75 @@ const Batches: React.FC = () => {
                     <div className="grid grid-cols-3 gap-6">
                       <div className="bg-[#1a2035] border border-[#242b40] rounded-2xl p-6">
                         <p className="text-[10px] font-bold text-[#6b7599] uppercase tracking-widest mb-2">Avg. Attendance</p>
-                        <h5 className="text-2xl font-black text-white">88.4%</h5>
+                        <h5 className="text-2xl font-black text-white">
+                          {(() => {
+                            const batchAttendance = attendance.filter(a => a.batchId === selectedBatch.id);
+                            if (batchAttendance.length === 0) return '0%';
+                            const present = batchAttendance.filter(a => a.status === 'Present').length;
+                            return Math.round((present / batchAttendance.length) * 100) + '%';
+                          })()}
+                        </h5>
                         <div className="mt-4 h-1.5 bg-[#242b40] rounded-full overflow-hidden">
-                          <div className="h-full bg-green-500" style={{ width: '88.4%' }}></div>
+                          <div 
+                            className="h-full bg-green-500" 
+                            style={{ 
+                              width: (() => {
+                                const batchAttendance = attendance.filter(a => a.batchId === selectedBatch.id);
+                                if (batchAttendance.length === 0) return '0%';
+                                const present = batchAttendance.filter(a => a.status === 'Present').length;
+                                return (present / batchAttendance.length) * 100 + '%';
+                              })()
+                            }} 
+                          />
                         </div>
                       </div>
                       <div className="bg-[#1a2035] border border-[#242b40] rounded-2xl p-6">
                         <p className="text-[10px] font-bold text-[#6b7599] uppercase tracking-widest mb-2">Course Progress</p>
-                        <h5 className="text-2xl font-black text-white">45.0%</h5>
+                        <h5 className="text-2xl font-black text-white">
+                          {(() => {
+                            const courseLessons = lessons.filter(l => l.courseId === selectedBatch.courseId);
+                            if (courseLessons.length === 0) return '0%';
+                            // Mock progress based on completed classes
+                            const completedClasses = scheduledClasses.filter(c => c.batchId === selectedBatch.id && c.status === 'Completed').length;
+                            const progress = Math.min(100, Math.round((completedClasses / courseLessons.length) * 100));
+                            return progress + '%';
+                          })()}
+                        </h5>
                         <div className="mt-4 h-1.5 bg-[#242b40] rounded-full overflow-hidden">
-                          <div className="h-full bg-[#4f8ef7]" style={{ width: '45%' }}></div>
+                          <div 
+                            className="h-full bg-[#4f8ef7]" 
+                            style={{ 
+                              width: (() => {
+                                const courseLessons = lessons.filter(l => l.courseId === selectedBatch.courseId);
+                                if (courseLessons.length === 0) return '0%';
+                                const completedClasses = scheduledClasses.filter(c => c.batchId === selectedBatch.id && c.status === 'Completed').length;
+                                return Math.min(100, (completedClasses / courseLessons.length) * 100) + '%';
+                              })()
+                            }} 
+                          />
                         </div>
                       </div>
                       <div className="bg-[#1a2035] border border-[#242b40] rounded-2xl p-6">
                         <p className="text-[10px] font-bold text-[#6b7599] uppercase tracking-widest mb-2">Avg. Quiz Score</p>
-                        <h5 className="text-2xl font-black text-white">72/100</h5>
+                        <h5 className="text-2xl font-black text-white">
+                          {(() => {
+                            const batchResults = results.filter(r => selectedBatch.studentIds?.includes(r.studentId));
+                            if (batchResults.length === 0) return '0/100';
+                            const avg = Math.round(batchResults.reduce((acc, r) => acc + r.percentage, 0) / batchResults.length);
+                            return avg + '/100';
+                          })()}
+                        </h5>
                         <div className="mt-4 h-1.5 bg-[#242b40] rounded-full overflow-hidden">
-                          <div className="h-full bg-yellow-500" style={{ width: '72%' }}></div>
+                          <div 
+                            className="h-full bg-yellow-500" 
+                            style={{ 
+                              width: (() => {
+                                const batchResults = results.filter(r => selectedBatch.studentIds?.includes(r.studentId));
+                                if (batchResults.length === 0) return '0%';
+                                return Math.round(batchResults.reduce((acc, r) => acc + r.percentage, 0) / batchResults.length) + '%';
+                              })()
+                            }} 
+                          />
                         </div>
                       </div>
                     </div>
@@ -876,25 +1131,39 @@ const Batches: React.FC = () => {
                     <div className="bg-[#1a2035] border border-[#242b40] rounded-2xl p-8">
                       <h4 className="text-sm font-bold text-white uppercase tracking-wider mb-6">Student Performance Matrix</h4>
                       <div className="space-y-6">
-                        {students.filter(s => selectedBatch.studentIds?.includes(s.uid)).slice(0, 5).map(student => (
-                          <div key={student.uid} className="space-y-2">
-                            <div className="flex justify-between items-end">
-                              <span className="text-xs font-bold text-white">{student.name}</span>
-                              <span className="text-[10px] text-[#6b7599]">Overall: 82%</span>
+                        {students.filter(s => selectedBatch.studentIds?.includes(s.uid)).map(student => {
+                          const studentResults = results.filter(r => r.studentId === student.uid);
+                          const overallScore = studentResults.length > 0 
+                            ? Math.round(studentResults.reduce((acc, r) => acc + r.percentage, 0) / studentResults.length)
+                            : 0;
+                          
+                          return (
+                            <div key={student.uid} className="space-y-2">
+                              <div className="flex justify-between items-end">
+                                <span className="text-xs font-bold text-white">{student.name}</span>
+                                <span className="text-[10px] text-[#6b7599]">Overall Score: {overallScore}%</span>
+                              </div>
+                              <div className="flex gap-1">
+                                {[1,2,3,4,5,6,7,8,9,10,11,12].map(i => {
+                                  // Mocking a performance trend
+                                  const isActive = i <= (overallScore / 8);
+                                  return (
+                                    <div 
+                                      key={i} 
+                                      className={cn(
+                                        "flex-1 h-3 rounded-sm transition-all duration-500",
+                                        isActive ? "bg-[#4f8ef7]" : "bg-[#242b40]"
+                                      )}
+                                    />
+                                  );
+                                })}
+                              </div>
                             </div>
-                            <div className="flex gap-1">
-                              {[1,2,3,4,5,6,7,8,9,10,11,12].map(i => (
-                                <div 
-                                  key={i} 
-                                  className={cn(
-                                    "flex-1 h-3 rounded-sm",
-                                    i < 8 ? "bg-[#4f8ef7]" : i < 10 ? "bg-[#4f8ef7]/30" : "bg-[#242b40]"
-                                  )}
-                                />
-                              ))}
-                            </div>
-                          </div>
-                        ))}
+                          );
+                        })}
+                        {selectedBatch.studentIds?.length === 0 && (
+                          <p className="text-center text-[#6b7599] text-sm py-4">No students to analyze</p>
+                        )}
                       </div>
                     </div>
                   </div>

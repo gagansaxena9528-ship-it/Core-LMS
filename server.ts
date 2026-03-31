@@ -571,6 +571,69 @@ async function startServer() {
     }
   });
 
+  // Backup & Restore Routes
+  app.get('/api/admin/backup', authenticate, async (req: any, res) => {
+    if (req.user.role !== 'admin') return res.status(403).json({ error: 'Forbidden' });
+    try {
+      const users = db.prepare('SELECT * FROM users').all();
+      const collections = db.prepare('SELECT * FROM collections').all();
+      const settings = db.prepare('SELECT * FROM settings').all();
+      
+      const backupData = {
+        users,
+        collections,
+        settings,
+        timestamp: new Date().toISOString(),
+        version: '1.0'
+      };
+      
+      res.setHeader('Content-Type', 'application/json');
+      res.setHeader('Content-Disposition', `attachment; filename=backup-${new Date().toISOString().split('T')[0]}.json`);
+      res.send(JSON.stringify(backupData, null, 2));
+    } catch (err: any) {
+      res.status(500).json({ error: err.message });
+    }
+  });
+
+  app.post('/api/admin/restore', authenticate, async (req: any, res) => {
+    if (req.user.role !== 'admin') return res.status(403).json({ error: 'Forbidden' });
+    try {
+      const { users, collections, settings } = req.body;
+      
+      db.transaction(() => {
+        // Clear existing data
+        db.prepare('DELETE FROM users').run();
+        db.prepare('DELETE FROM collections').run();
+        db.prepare('DELETE FROM settings').run();
+        
+        // Restore users
+        const insertUser = db.prepare(`
+          INSERT INTO users (uid, name, email, password, role, phone, status, joined, av, color) 
+          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        `);
+        for (const u of users) {
+          insertUser.run(u.uid, u.name, u.email, u.password, u.role, u.phone, u.status, u.joined, u.av, u.color);
+        }
+        
+        // Restore collections
+        const insertCol = db.prepare('INSERT INTO collections (id, colPath, data, createdAt, updatedAt) VALUES (?, ?, ?, ?, ?)');
+        for (const c of collections) {
+          insertCol.run(c.id, c.colPath, c.data, c.createdAt, c.updatedAt);
+        }
+        
+        // Restore settings
+        const insertSetting = db.prepare('INSERT INTO settings (key, value) VALUES (?, ?)');
+        for (const s of settings) {
+          insertSetting.run(s.key, s.value);
+        }
+      })();
+      
+      res.json({ success: true });
+    } catch (err: any) {
+      res.status(500).json({ error: err.message });
+    }
+  });
+
   // Vite middleware for development
   if (process.env.NODE_ENV !== 'production') {
     console.log(`NODE_ENV is ${process.env.NODE_ENV}. Starting Vite in development mode...`);

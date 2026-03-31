@@ -103,6 +103,12 @@ const ContentManagement: React.FC<{ user: User }> = ({ user }) => {
     const matchesModule = selectedModuleId === 'all' || (item as any).moduleId === selectedModuleId;
     const matchesType = selectedType === 'all' || item.contentType.toLowerCase() === selectedType.toLowerCase();
     const matchesSearch = item.title.toLowerCase().includes(search.toLowerCase());
+    
+    if (user.role === 'teacher') {
+      const teacherCourseIds = courses.filter(c => c.teacherId === user.uid).map(c => c.id);
+      return matchesCourse && matchesModule && matchesType && matchesSearch && teacherCourseIds.includes(item.courseId);
+    }
+    
     return matchesCourse && matchesModule && matchesType && matchesSearch;
   });
 
@@ -173,7 +179,8 @@ const ContentManagement: React.FC<{ user: User }> = ({ user }) => {
           thumbnail: modalType === 'video' ? formData.thumbnail : undefined,
           fileUrl: modalType === 'pdf' ? formData.fileUrl : undefined,
           allowDownload: modalType === 'pdf' ? formData.allowDownload : undefined,
-          createdAt: editingItem ? editingItem.createdAt : new Date().toISOString()
+          createdAt: editingItem ? editingItem.createdAt : new Date().toISOString(),
+          teacherId: user.uid // Added teacherId
         };
 
         if (editingItem) {
@@ -189,7 +196,8 @@ const ContentManagement: React.FC<{ user: User }> = ({ user }) => {
           autoResult: formData.autoResult,
           type: 'mcq', // Default
           questions: editingItem?.questions || [],
-          createdAt: editingItem ? editingItem.createdAt : new Date().toISOString()
+          createdAt: editingItem ? editingItem.createdAt : new Date().toISOString(),
+          teacherId: user.uid // Added teacherId
         };
 
         if (editingItem) {
@@ -203,7 +211,8 @@ const ContentManagement: React.FC<{ user: User }> = ({ user }) => {
           dueDate: formData.dueDate,
           totalMarks: formData.totalMarks,
           fileUrl: formData.fileUrl,
-          createdAt: editingItem ? editingItem.createdAt : new Date().toISOString()
+          createdAt: editingItem ? editingItem.createdAt : new Date().toISOString(),
+          teacherId: user.uid // Added teacherId
         };
 
         if (editingItem) {

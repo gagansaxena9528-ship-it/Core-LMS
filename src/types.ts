@@ -116,6 +116,7 @@ export interface Lesson {
     avgWatchTime?: number;
     downloads?: number;
   };
+  teacherId?: string;
 }
 
 export interface Exam {
@@ -136,6 +137,7 @@ export interface Exam {
   startDate?: string;
   endDate?: string;
   negativeMarking?: number;
+  teacherId?: string;
   createdAt?: string;
 }
 
@@ -274,6 +276,7 @@ export interface Assignment {
   dueDate: string;
   totalMarks: number;
   fileUrl?: string;
+  teacherId?: string;
   status: 'Active' | 'Draft' | 'Completed';
 }
 
@@ -330,6 +333,16 @@ export interface CertificateTemplate {
   title: string;
   isDefault: boolean;
   createdAt: string;
+}
+
+export interface Review {
+  id: string;
+  courseId: string;
+  studentId: string;
+  studentName: string;
+  rating: number;
+  comment: string;
+  date: string;
 }
 
 export interface Notification {
