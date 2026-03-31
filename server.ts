@@ -111,6 +111,11 @@ async function startServer() {
       attendanceRate REAL,
       salary REAL,
       documents TEXT,
+      bio TEXT,
+      rating REAL,
+      coursesCount INTEGER,
+      batchesCount INTEGER,
+      studentsCount INTEGER,
       createdAt DATETIME DEFAULT CURRENT_TIMESTAMP
     );
 
@@ -153,7 +158,12 @@ async function startServer() {
     { name: 'classesTaken', type: 'INTEGER' },
     { name: 'attendanceRate', type: 'REAL' },
     { name: 'salary', type: 'REAL' },
-    { name: 'documents', type: 'TEXT' }
+    { name: 'documents', type: 'TEXT' },
+    { name: 'bio', type: 'TEXT' },
+    { name: 'rating', type: 'REAL' },
+    { name: 'coursesCount', type: 'INTEGER' },
+    { name: 'batchesCount', type: 'INTEGER' },
+    { name: 'studentsCount', type: 'INTEGER' }
   ];
 
   for (const col of columnsToAdd) {
@@ -477,9 +487,15 @@ async function startServer() {
       const { colPath } = req.params;
       if (colPath === 'users') {
         const users = db.prepare('SELECT * FROM users').all();
-        // Remove passwords for security
+        // Remove passwords for security and parse JSON fields
         return res.json(users.map((u: any) => {
           const { password, ...rest } = u;
+          if (rest.skills) {
+            try { rest.skills = JSON.parse(rest.skills); } catch (e) {}
+          }
+          if (rest.documents) {
+            try { rest.documents = JSON.parse(rest.documents); } catch (e) {}
+          }
           return rest;
         }));
       }
@@ -501,20 +517,32 @@ async function startServer() {
         const { email, password, name, role, ...rest } = data;
         const hashedPassword = password ? await bcrypt.hash(password, 10) : null;
         
-        const fields = ['uid', 'email', 'password', 'name', 'role', 'status', 'joined', 'av', 'color', ...Object.keys(rest)];
+        const baseFields = {
+          uid: id,
+          email,
+          password: hashedPassword,
+          name,
+          role,
+          status: rest.status || 'Active',
+          joined: rest.joined || new Date().toISOString(),
+          av: name.charAt(0).toUpperCase(),
+          color: rest.color || '#4f8ef7'
+        };
+
+        // Merge rest into baseFields, stringifying objects/arrays
+        const finalData: Record<string, any> = { ...baseFields };
+        for (const [key, value] of Object.entries(rest)) {
+          if (['status', 'joined', 'color'].includes(key)) continue; // Already handled
+          if (typeof value === 'object' && value !== null) {
+            finalData[key] = JSON.stringify(value);
+          } else {
+            finalData[key] = value;
+          }
+        }
+
+        const fields = Object.keys(finalData);
         const placeholders = fields.map(() => '?').join(', ');
-        const values = [
-          id, 
-          email, 
-          hashedPassword, 
-          name, 
-          role, 
-          rest.status || 'Active', 
-          rest.joined || new Date().toISOString(), 
-          name.charAt(0).toUpperCase(), 
-          rest.color || '#4f8ef7',
-          ...Object.values(rest)
-        ];
+        const values = Object.values(finalData);
 
         const query = `INSERT INTO users (${fields.join(', ')}) VALUES (${placeholders})`;
         db.prepare(query).run(...values);
@@ -540,7 +568,10 @@ async function startServer() {
 
       if (colPath === 'users') {
         const fields = Object.keys(data).filter(k => k !== 'uid' && k !== 'password');
-        const values = fields.map(f => data[f]);
+        const values = fields.map(f => {
+          const val = data[f];
+          return (typeof val === 'object' && val !== null) ? JSON.stringify(val) : val;
+        });
         const query = `UPDATE users SET ${fields.map(f => `${f} = ?`).join(', ')} WHERE uid = ?`;
         db.prepare(query).run(...values, id);
         return res.json({ success: true });
