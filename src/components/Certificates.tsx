@@ -22,7 +22,8 @@ import {
   MessageSquare,
   ChevronRight,
   MoreVertical,
-  Filter
+  Filter,
+  Move
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { clsx } from 'clsx';
@@ -32,13 +33,14 @@ import { format } from 'date-fns';
 import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas';
 import { QRCodeSVG } from 'qrcode.react';
+import CertificateBuilder from './CertificateBuilder';
 
 interface CertificatesProps {
   user: UserType;
 }
 
 const Certificates: React.FC<CertificatesProps> = ({ user }) => {
-  const [activeTab, setActiveTab] = useState<'certificates' | 'templates' | 'verification'>('certificates');
+  const [activeTab, setActiveTab] = useState<'certificates' | 'templates' | 'verification' | 'settings'>('certificates');
   const [certificates, setCertificates] = useState<Certificate[]>([]);
   const [templates, setTemplates] = useState<CertificateTemplate[]>([]);
   const [students, setStudents] = useState<Student[]>([]);
@@ -47,6 +49,8 @@ const Certificates: React.FC<CertificatesProps> = ({ user }) => {
   
   const [showGenerateModal, setShowGenerateModal] = useState(false);
   const [showTemplateModal, setShowTemplateModal] = useState(false);
+  const [showBuilder, setShowBuilder] = useState(false);
+  const [editingTemplateForBuilder, setEditingTemplateForBuilder] = useState<CertificateTemplate | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedTemplate, setSelectedTemplate] = useState<CertificateTemplate | null>(null);
   
@@ -165,7 +169,87 @@ const Certificates: React.FC<CertificatesProps> = ({ user }) => {
     const template = templates.find(t => t.id === cert.templateId) || templates.find(t => t.isDefault);
     if (!template) return;
 
-    // Create a temporary element for PDF generation
+    if (template.canvasData) {
+      // If template has canvas data, we'll use a hidden Konva stage to render it
+      const container = document.createElement('div');
+      container.style.position = 'absolute';
+      container.style.top = '-9999px';
+      document.body.appendChild(container);
+
+      // We need to dynamically import Konva and render it
+      // For simplicity in this environment, we'll use a simplified HTML/CSS approach 
+      // that mimics the canvas data for the PDF generation
+      const elements = JSON.parse(template.canvasData);
+      
+      const element = document.createElement('div');
+      element.style.width = '800px';
+      element.style.height = '600px';
+      element.style.position = 'relative';
+      element.style.background = 'white';
+      element.style.overflow = 'hidden';
+
+      if (template.backgroundUrl) {
+        element.style.backgroundImage = `url(${template.backgroundUrl})`;
+        element.style.backgroundSize = 'cover';
+      }
+
+      elements.forEach((el: any) => {
+        const div = document.createElement('div');
+        div.style.position = 'absolute';
+        div.style.left = `${el.x}px`;
+        div.style.top = `${el.y}px`;
+        div.style.transform = `rotate(${el.rotation || 0}deg)`;
+        div.style.opacity = `${el.opacity || 1}`;
+
+        if (el.type === 'text') {
+          div.style.fontSize = `${el.fontSize}px`;
+          div.style.fontFamily = el.fontFamily || 'serif';
+          div.style.color = el.fill;
+          div.style.whiteSpace = 'pre-wrap';
+          
+          // Replace placeholders
+          let text = el.text;
+          text = text.replace('{{studentName}}', cert.studentName);
+          text = text.replace('{{courseName}}', cert.courseName);
+          text = text.replace('{{date}}', format(new Date(cert.issueDate), 'MMMM dd, yyyy'));
+          text = text.replace('{{certificateId}}', cert.certificateId);
+          text = text.replace('{{grade}}', cert.grade || 'A');
+          text = text.replace('{{score}}', cert.score?.toString() || '0');
+          text = text.replace('{{instituteName}}', template.instituteName);
+          
+          div.innerText = text;
+        } else if (el.type === 'rect') {
+          div.style.width = `${el.width}px`;
+          div.style.height = `${el.height}px`;
+          div.style.backgroundColor = el.fill;
+        } else if (el.type === 'circle') {
+          div.style.width = `${el.radius * 2}px`;
+          div.style.height = `${el.radius * 2}px`;
+          div.style.borderRadius = '50%';
+          div.style.backgroundColor = el.fill;
+        }
+        element.appendChild(div);
+      });
+
+      container.appendChild(element);
+
+      try {
+        const canvas = await html2canvas(element, { useCORS: true, logging: false });
+        const imgData = canvas.toDataURL('image/png');
+        const pdf = new jsPDF('l', 'mm', 'a4');
+        const pdfWidth = pdf.internal.pageSize.getWidth();
+        const pdfHeight = pdf.internal.pageSize.getHeight();
+        pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight);
+        pdf.save(`${cert.studentName}-${cert.courseName}-Certificate.pdf`);
+      } catch (error) {
+        console.error('PDF generation failed:', error);
+      } finally {
+        document.body.removeChild(container);
+      }
+      return;
+    }
+
+    // Fallback to legacy HTML template
     const element = document.createElement('div');
     element.style.width = '800px';
     element.style.padding = '40px';
@@ -421,6 +505,16 @@ const Certificates: React.FC<CertificatesProps> = ({ user }) => {
               </div>
               <div className="flex items-center justify-between pt-4 border-t border-border">
                 <div className="flex items-center gap-2">
+                  <button 
+                    onClick={() => {
+                      setEditingTemplateForBuilder(template);
+                      setShowBuilder(true);
+                    }}
+                    className="p-2 text-secondary hover:bg-secondary/10 rounded-lg transition-all"
+                    title="Edit Design"
+                  >
+                    <Move className="w-4 h-4" />
+                  </button>
                   <button 
                     onClick={() => {
                       setTemplateData(template);
@@ -862,6 +956,21 @@ const Certificates: React.FC<CertificatesProps> = ({ user }) => {
             </div>
           </div>
         </div>
+      )}
+      {/* Certificate Builder Modal */}
+      {showBuilder && editingTemplateForBuilder && (
+        <CertificateBuilder
+          template={editingTemplateForBuilder}
+          onSave={async (canvasData) => {
+            await updateDoc('certificateTemplates', editingTemplateForBuilder.id, { canvasData });
+            setShowBuilder(false);
+            setEditingTemplateForBuilder(null);
+          }}
+          onClose={() => {
+            setShowBuilder(false);
+            setEditingTemplateForBuilder(null);
+          }}
+        />
       )}
     </div>
   );

@@ -15,7 +15,7 @@ import {
   Send
 } from 'lucide-react';
 import { subscribeToCollection, getDocument, createDoc, updateDocument } from '../services/firestore';
-import { Module, Course, Review, User } from '../types';
+import { Module, Course, Lesson, Review, User } from '../types';
 import { clsx, type ClassValue } from 'clsx';
 import { twMerge } from 'tailwind-merge';
 
@@ -32,7 +32,8 @@ const CoursePlayer: React.FC<CoursePlayerProps> = ({ user }) => {
   const navigate = useNavigate();
   const [course, setCourse] = useState<Course | null>(null);
   const [modules, setModules] = useState<Module[]>([]);
-  const [activeModule, setActiveModule] = useState<Module | null>(null);
+  const [lessons, setLessons] = useState<Lesson[]>([]);
+  const [activeLesson, setActiveLesson] = useState<Lesson | null>(null);
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [activeTab, setActiveTab] = useState<'notes' | 'resources' | 'discussion' | 'reviews'>('notes');
   const [reviews, setReviews] = useState<Review[]>([]);
@@ -48,10 +49,15 @@ const CoursePlayer: React.FC<CoursePlayerProps> = ({ user }) => {
     };
 
     const unsubModules = subscribeToCollection('modules', (data) => {
-      const courseModules = data.filter(m => m.courseId === courseId);
+      const courseModules = data.filter(m => m.courseId === courseId).sort((a, b) => a.order - b.order);
       setModules(courseModules);
-      if (courseModules.length > 0 && !activeModule) {
-        setActiveModule(courseModules[0]);
+    });
+
+    const unsubLessons = subscribeToCollection('lessons', (data) => {
+      const courseLessons = data.filter(l => l.courseId === courseId).sort((a, b) => a.order - b.order);
+      setLessons(courseLessons);
+      if (courseLessons.length > 0 && !activeLesson) {
+        setActiveLesson(courseLessons[0]);
       }
     });
 
@@ -62,6 +68,7 @@ const CoursePlayer: React.FC<CoursePlayerProps> = ({ user }) => {
     fetchCourse();
     return () => {
       unsubModules();
+      unsubLessons();
       unsubReviews();
     };
   }, [courseId]);
@@ -74,7 +81,7 @@ const CoursePlayer: React.FC<CoursePlayerProps> = ({ user }) => {
     try {
       const reviewData: Omit<Review, 'id'> = {
         courseId,
-        studentId: user.id,
+        studentId: user.uid,
         studentName: user.name || 'Student',
         rating: newReview.rating,
         comment: newReview.comment,
@@ -111,9 +118,9 @@ const CoursePlayer: React.FC<CoursePlayerProps> = ({ user }) => {
         <div className="max-w-5xl mx-auto w-full space-y-6">
           {/* Video Player */}
           <div className="aspect-video bg-black rounded-2xl overflow-hidden relative group border border-border">
-            {activeModule?.videoUrl ? (
+            {activeLesson?.videoUrl ? (
               <iframe 
-                src={activeModule.videoUrl} 
+                src={activeLesson.videoUrl} 
                 className="w-full h-full border-none"
                 allow="autoplay; fullscreen; picture-in-picture"
                 allowFullScreen
@@ -131,16 +138,28 @@ const CoursePlayer: React.FC<CoursePlayerProps> = ({ user }) => {
           {/* Lesson Info */}
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <div>
-              <h1 className="text-2xl font-extrabold font-syne text-foreground">{activeModule?.title || 'Welcome to the Course'}</h1>
+              <h1 className="text-2xl font-extrabold font-syne text-foreground">{activeLesson?.title || 'Welcome to the Course'}</h1>
               <p className="text-sm text-muted-foreground mt-1">
-                {course.title} · Lesson {modules.indexOf(activeModule!) + 1} of {modules.length}
+                {course.title} · Lesson {lessons.indexOf(activeLesson!) + 1} of {lessons.length}
               </p>
             </div>
             <div className="flex items-center gap-3">
-              <button className="p-2.5 bg-card border border-border rounded-xl text-muted-foreground hover:text-foreground transition-all">
+              <button 
+                onClick={() => {
+                  const currentIndex = lessons.indexOf(activeLesson!);
+                  if (currentIndex > 0) setActiveLesson(lessons[currentIndex - 1]);
+                }}
+                className="p-2.5 bg-card border border-border rounded-xl text-muted-foreground hover:text-foreground transition-all"
+              >
                 <ChevronLeft size={20} />
               </button>
-              <button className="bg-secondary hover:bg-secondary/90 text-secondary-foreground px-5 py-2.5 rounded-xl font-bold text-sm flex items-center gap-2 transition-colors">
+              <button 
+                onClick={() => {
+                  const currentIndex = lessons.indexOf(activeLesson!);
+                  if (currentIndex < lessons.length - 1) setActiveLesson(lessons[currentIndex + 1]);
+                }}
+                className="bg-secondary hover:bg-secondary/90 text-secondary-foreground px-5 py-2.5 rounded-xl font-bold text-sm flex items-center gap-2 transition-colors"
+              >
                 Next Lesson <ChevronRight size={18} />
               </button>
             </div>
@@ -190,12 +209,12 @@ const CoursePlayer: React.FC<CoursePlayerProps> = ({ user }) => {
             {activeTab === 'notes' && (
               <div className="bg-card border border-border rounded-2xl p-8">
                 <p className="text-foreground leading-relaxed text-[15px]">
-                  {activeModule?.description || 'No description available for this lesson.'}
+                  {activeLesson?.description || 'No description available for this lesson.'}
                 </p>
                 <div className="mt-8 pt-8 border-t border-border">
                   <h3 className="font-syne font-bold text-foreground mb-4">Key Points</h3>
                   <ul className="space-y-3">
-                    {(activeModule?.keyPoints || ['Introduction to the topic', 'Core concepts and definitions', 'Practical implementation guide']).map((point, i) => (
+                    {((activeLesson as any)?.keyPoints || ['Introduction to the topic', 'Core concepts and definitions', 'Practical implementation guide']).map((point: string, i: number) => (
                       <li key={i} className="flex items-start gap-3 text-[14px] text-muted-foreground">
                         <div className="mt-1 w-1.5 h-1.5 rounded-full bg-secondary flex-shrink-0" />
                         {point}
@@ -291,35 +310,44 @@ const CoursePlayer: React.FC<CoursePlayerProps> = ({ user }) => {
         </div>
         <div className="flex-1 overflow-y-auto">
           {modules.map((m, i) => (
-            <button
-              key={m.id}
-              onClick={() => setActiveModule(m)}
-              className={cn(
-                "w-full text-left p-4 border-b border-border transition-colors flex gap-4 group",
-                activeModule?.id === m.id ? "bg-secondary/5" : "hover:bg-foreground/5"
-              )}
-            >
-              <div className={cn(
-                "w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 transition-colors",
-                activeModule?.id === m.id ? "bg-secondary text-secondary-foreground" : "bg-card text-muted-foreground group-hover:text-foreground"
-              )}>
-                {activeModule?.id === m.id ? <Play size={14} fill="currentColor" /> : <span className="text-xs font-bold">{i + 1}</span>}
+            <div key={m.id} className="border-b border-border">
+              <div className="p-4 bg-muted/5 flex items-center justify-between">
+                <h4 className="text-[11px] font-bold uppercase tracking-widest text-muted-foreground">{m.title}</h4>
               </div>
-              <div className="flex-1 min-w-0">
-                <div className={cn(
-                  "text-[13.5px] font-medium truncate",
-                  activeModule?.id === m.id ? "text-secondary" : "text-foreground"
-                )}>
-                  {m.title}
-                </div>
-                <div className="flex items-center gap-2 mt-1 text-[11px] text-muted-foreground">
-                  <Clock size={10} /> 24:35 mins
-                </div>
+              <div className="divide-y divide-border/50">
+                {lessons.filter(l => l.moduleId === m.id).map((l, j) => (
+                  <button
+                    key={l.id}
+                    onClick={() => setActiveLesson(l)}
+                    className={cn(
+                      "w-full text-left p-4 transition-colors flex gap-4 group",
+                      activeLesson?.id === l.id ? "bg-secondary/5" : "hover:bg-foreground/5"
+                    )}
+                  >
+                    <div className={cn(
+                      "w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 transition-colors",
+                      activeLesson?.id === l.id ? "bg-secondary text-secondary-foreground" : "bg-card text-muted-foreground group-hover:text-foreground"
+                    )}>
+                      {activeLesson?.id === l.id ? <Play size={14} fill="currentColor" /> : <span className="text-xs font-bold">{j + 1}</span>}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className={cn(
+                        "text-[13.5px] font-medium truncate",
+                        activeLesson?.id === l.id ? "text-secondary" : "text-foreground"
+                      )}>
+                        {l.title}
+                      </div>
+                      <div className="flex items-center gap-2 mt-1 text-[11px] text-muted-foreground">
+                        <Clock size={10} /> {l.duration || '10:00'} mins
+                      </div>
+                    </div>
+                    <div className="text-success">
+                      <CheckCircle2 size={16} />
+                    </div>
+                  </button>
+                ))}
               </div>
-              <div className="text-success">
-                <CheckCircle2 size={16} />
-              </div>
-            </button>
+            </div>
           ))}
         </div>
       </div>

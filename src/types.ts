@@ -337,6 +337,7 @@ export interface CertificateTemplate {
   title: string;
   isDefault: boolean;
   createdAt: string;
+  canvasData?: string; // JSON string of Konva stage for drag-and-drop editor
 }
 
 export interface Review {
