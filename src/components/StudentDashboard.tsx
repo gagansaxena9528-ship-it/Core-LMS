@@ -87,8 +87,12 @@ const StudentDashboard: React.FC<StudentDashboardProps> = ({ user }) => {
 
     // Fetch teachers info
     const unsubTeachers = subscribeToCollection('users', (data) => {
-      const studentTeacherId = (user as any).teacherId;
-      const studentTeacherIds = (user as any).teacherIds || [];
+      // Find the current student's data in the collection to get the most up-to-date teacher assignments
+      const currentStudent = data.find(u => u.uid === user.uid);
+      if (!currentStudent) return;
+
+      const studentTeacherId = (currentStudent as any).teacherId;
+      const studentTeacherIds = (currentStudent as any).teacherIds || [];
       
       const teachers = data.filter(u => 
         u.role === 'teacher' && 

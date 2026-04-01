@@ -23,9 +23,15 @@ const MyTeachers: React.FC<MyTeachersProps> = ({ user }) => {
 
   useEffect(() => {
     const unsub = subscribeToCollection('users', (data) => {
-      const student = user as any;
-      const teacherId = student.teacherId;
-      const teacherIds = student.teacherIds || [];
+      // Find the current student's data in the collection to get the most up-to-date teacher assignments
+      const currentStudent = data.find(u => u.uid === user.uid);
+      if (!currentStudent) {
+        setLoading(false);
+        return;
+      }
+
+      const teacherId = currentStudent.teacherId;
+      const teacherIds = currentStudent.teacherIds || [];
       
       const assignedTeachers = data.filter(u => 
         u.role === 'teacher' && 
@@ -37,7 +43,7 @@ const MyTeachers: React.FC<MyTeachersProps> = ({ user }) => {
     });
 
     return () => unsub();
-  }, [user]);
+  }, [user.uid]);
 
   if (loading) {
     return (

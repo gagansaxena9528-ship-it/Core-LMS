@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { Card } from './ui/Card';
 import { 
   FileText, 
@@ -37,25 +37,60 @@ const Assignments: React.FC<AssignmentsProps> = ({ user }) => {
   const [selectedAssignment, setSelectedAssignment] = useState<Assignment | null>(null);
   const [editingAssignment, setEditingAssignment] = useState<Assignment | null>(null);
   const [loading, setLoading] = useState(false);
+  const [pageLoading, setPageLoading] = useState(true);
   const [students, setStudents] = useState<Student[]>([]);
   const [courses, setCourses] = useState<any[]>([]);
   const [batches, setBatches] = useState<any[]>([]);
 
   useEffect(() => {
-    const unsubAssignments = subscribeToCollection('assignments', setAssignments);
-    const unsubSubmissions = subscribeToCollection('submissions', setSubmissions);
+    let assignmentsLoaded = false;
+    let submissionsLoaded = false;
+    let studentsLoaded = false;
+    let coursesLoaded = false;
+    let batchesLoaded = false;
+
+    const checkAllLoaded = () => {
+      if (assignmentsLoaded && submissionsLoaded && studentsLoaded && coursesLoaded && batchesLoaded) {
+        setPageLoading(false);
+      }
+    };
+
+    const unsubAssignments = subscribeToCollection('assignments', (data) => {
+      setAssignments(data);
+      assignmentsLoaded = true;
+      checkAllLoaded();
+    });
+    const unsubSubmissions = subscribeToCollection('submissions', (data) => {
+      setSubmissions(data);
+      submissionsLoaded = true;
+      checkAllLoaded();
+    });
     const unsubStudents = subscribeToCollection('users', (data) => {
       setStudents(data.filter(u => u.role === 'student') as Student[]);
+      studentsLoaded = true;
+      checkAllLoaded();
     });
-    const unsubCourses = subscribeToCollection('courses', setCourses);
-    const unsubBatches = subscribeToCollection('batches', setBatches);
+    const unsubCourses = subscribeToCollection('courses', (data) => {
+      setCourses(data);
+      coursesLoaded = true;
+      checkAllLoaded();
+    });
+    const unsubBatches = subscribeToCollection('batches', (data) => {
+      setBatches(data);
+      batchesLoaded = true;
+      checkAllLoaded();
+    });
     
+    // Safety timeout to prevent infinite loading
+    const timeout = setTimeout(() => setPageLoading(false), 5000);
+
     return () => {
       unsubAssignments();
       unsubSubmissions();
       unsubStudents();
       unsubCourses();
       unsubBatches();
+      clearTimeout(timeout);
     };
   }, []);
 
@@ -63,10 +98,11 @@ const Assignments: React.FC<AssignmentsProps> = ({ user }) => {
     e.preventDefault();
     setLoading(true);
     const formData = new FormData(e.currentTarget);
+    const dueDate = formData.get('dueDate') as string;
     const newAssignment: Partial<Assignment> = {
       title: formData.get('title') as string,
       description: formData.get('description') as string,
-      dueDate: formData.get('dueDate') as string,
+      dueDate: dueDate,
       totalMarks: parseInt(formData.get('totalMarks') as string),
       status: 'Active',
       courseId: formData.get('courseId') as string,
@@ -81,7 +117,8 @@ const Assignments: React.FC<AssignmentsProps> = ({ user }) => {
       (!newAssignment.batchId || s.batchId === newAssignment.batchId)
     );
     for (const student of batchStudents) {
-      const details = `A new assignment "${newAssignment.title}" has been posted. Due Date: ${new Date(newAssignment.dueDate!).toLocaleDateString()}. Description: ${newAssignment.description}`;
+      const formattedDate = dueDate ? new Date(dueDate).toLocaleDateString() : 'No due date';
+      const details = `A new assignment "${newAssignment.title}" has been posted. Due Date: ${formattedDate}. Description: ${newAssignment.description}`;
       const html = getNewRecordTemplate('New Assignment', student.name, details);
       await sendEmail(student.email, `New Assignment: ${newAssignment.title}`, html);
     }
@@ -129,11 +166,12 @@ const Assignments: React.FC<AssignmentsProps> = ({ user }) => {
     if (!selectedAssignment) return;
     setLoading(true);
     const formData = new FormData(e.currentTarget);
+    const submissionDate = new Date().toISOString();
     const newSubmission: Partial<AssignmentSubmission> = {
       assignmentId: selectedAssignment.id,
       studentId: user.uid,
       studentName: user.name,
-      submissionDate: new Date().toISOString(),
+      submissionDate: submissionDate,
       googleDriveLink: formData.get('googleDriveLink') as string,
       customLink: formData.get('customLink') as string,
       fileUrl: 'https://example.com/submission.pdf', // Mock for now, in real app we'd handle file upload
@@ -142,7 +180,7 @@ const Assignments: React.FC<AssignmentsProps> = ({ user }) => {
     await addDoc('submissions', newSubmission);
 
     // Notify teacher/admin about submission
-    const details = `Student ${user.name} has submitted the assignment: "${selectedAssignment.title}". Submission Date: ${new Date(newSubmission.submissionDate!).toLocaleString()}`;
+    const details = `Student ${user.name} has submitted the assignment: "${selectedAssignment.title}". Submission Date: ${new Date(submissionDate).toLocaleString()}`;
     const html = getUpdateNotificationTemplate('Administrator', 'Assignment Submission', 'received', details);
     // In a real app, we'd find the specific teacher's email. For now, notifying the configured admin email.
     await sendEmail('gagansaxena9528@gmail.com', `New Submission: ${selectedAssignment.title}`, html);
@@ -151,13 +189,14 @@ const Assignments: React.FC<AssignmentsProps> = ({ user }) => {
     setShowSubmitModal(false);
   };
 
-  const filteredAssignments = assignments.filter(a => {
+  const currentStudent = useMemo(() => students.find(s => s.uid === user.uid), [students, user.uid]);
+
+  const filteredAssignments = useMemo(() => assignments.filter(a => {
     if (user.role === 'student') {
-      const student = students.find(s => s.uid === user.uid);
-      if (!student) return false;
+      if (!currentStudent) return false;
       
-      const matchesCourse = !a.courseId || a.courseId === student.courseId;
-      const matchesBatch = !a.batchId || a.batchId === student.batchId;
+      const matchesCourse = !a.courseId || a.courseId === currentStudent.courseId;
+      const matchesBatch = !a.batchId || a.batchId === currentStudent.batchId;
       
       return matchesCourse && matchesBatch;
     }
@@ -165,15 +204,15 @@ const Assignments: React.FC<AssignmentsProps> = ({ user }) => {
       return a.teacherId === user.uid;
     }
     return true;
-  });
+  }), [assignments, user.role, user.uid, currentStudent]);
 
-  const filteredSubmissions = submissions.filter(s => {
+  const filteredSubmissions = useMemo(() => submissions.filter(s => {
     if (user.role === 'admin' || user.role === 'teacher') return true;
     if (user.role === 'student') {
       return s.studentId === user.uid || s.isVisibleToBatch;
     }
     return false;
-  });
+  }), [submissions, user.role, user.uid]);
 
   const handleToggleVisibility = async (submission: AssignmentSubmission) => {
     try {
@@ -185,7 +224,7 @@ const Assignments: React.FC<AssignmentsProps> = ({ user }) => {
     }
   };
 
-  const mySubmissions = submissions.filter(s => s.studentId === user.uid);
+  const mySubmissions = useMemo(() => submissions.filter(s => s.studentId === user.uid), [submissions, user.uid]);
   const completedCount = mySubmissions.length;
   const pendingCount = filteredAssignments.length - completedCount;
   const completionRate = filteredAssignments.length > 0 
@@ -193,6 +232,14 @@ const Assignments: React.FC<AssignmentsProps> = ({ user }) => {
     : 0;
 
   const isAdminOrTeacher = user.role === 'admin' || user.role === 'teacher';
+
+  if (pageLoading) {
+    return (
+      <div className="flex items-center justify-center h-[400px]">
+        <div className="w-8 h-8 border-4 border-secondary border-t-transparent rounded-full animate-spin"></div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -234,6 +281,7 @@ const Assignments: React.FC<AssignmentsProps> = ({ user }) => {
             ) : (
               filteredAssignments.map((assignment) => {
                 const mySubmission = submissions.find(s => s.assignmentId === assignment.id && s.studentId === user.uid);
+                const dueDate = assignment.dueDate ? new Date(assignment.dueDate).toLocaleDateString() : 'No due date';
                 return (
                   <div key={assignment.id} className="bg-card border border-border rounded-2xl p-6 hover:border-secondary/50 transition-all group">
                     <div className="flex items-start justify-between gap-4">
@@ -245,7 +293,7 @@ const Assignments: React.FC<AssignmentsProps> = ({ user }) => {
                           <h3 className="text-[16px] font-bold text-foreground group-hover:text-secondary transition-colors">{assignment.title}</h3>
                           <div className="flex items-center gap-4 mt-2">
                             <div className="flex items-center gap-1.5 text-[11px] text-muted">
-                              <Calendar size={12} /> Due: {new Date(assignment.dueDate).toLocaleDateString()}
+                              <Calendar size={12} /> Due: {dueDate}
                             </div>
                             <div className="flex items-center gap-1.5 text-[11px] text-muted">
                               <Clock size={12} /> {assignment.totalMarks} Marks
@@ -335,61 +383,64 @@ const Assignments: React.FC<AssignmentsProps> = ({ user }) => {
 
           <Card title={isAdminOrTeacher ? "Recent Submissions" : "Batch Submissions"}>
             <div className="space-y-4 mt-2">
-              {filteredSubmissions.slice(0, 10).map((s) => (
-                <div key={s.id} className="flex items-center gap-3 p-3 bg-muted/10 rounded-xl border border-border">
-                  <div className="w-8 h-8 rounded-full bg-secondary/10 text-secondary flex items-center justify-center font-bold text-[10px]">
-                    {s.studentName.charAt(0)}
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <div className="text-[12px] font-medium text-foreground truncate">{s.studentName}</div>
-                    <div className="text-[10px] text-muted mt-0.5">
-                      {s.isVisibleToBatch && <span className="text-success font-bold mr-2">Public</span>}
-                      Submitted {new Date(s.submissionDate).toLocaleDateString()}
+              {filteredSubmissions.slice(0, 10).map((s) => {
+                const submissionDate = s.submissionDate ? new Date(s.submissionDate).toLocaleDateString() : 'Unknown date';
+                return (
+                  <div key={s.id} className="flex items-center gap-3 p-3 bg-muted/10 rounded-xl border border-border">
+                    <div className="w-8 h-8 rounded-full bg-secondary/10 text-secondary flex items-center justify-center font-bold text-[10px]">
+                      {s.studentName?.charAt(0) || 'S'}
                     </div>
-                    {(s.googleDriveLink || s.customLink) && (
-                      <div className="flex items-center gap-2 mt-1">
-                        {s.googleDriveLink && (
-                          <a 
-                            href={s.googleDriveLink} 
-                            target="_blank" 
-                            rel="noopener noreferrer"
-                            className="text-[10px] text-secondary hover:underline flex items-center gap-1"
-                          >
-                            <LinkIcon size={10} /> Drive
-                          </a>
-                        )}
-                        {s.customLink && (
-                          <a 
-                            href={s.customLink} 
-                            target="_blank" 
-                            rel="noopener noreferrer"
-                            className="text-[10px] text-secondary hover:underline flex items-center gap-1"
-                          >
-                            <ExternalLink size={10} /> Link
-                          </a>
-                        )}
+                    <div className="flex-1 min-w-0">
+                      <div className="text-[12px] font-medium text-foreground truncate">{s.studentName}</div>
+                      <div className="text-[10px] text-muted mt-0.5">
+                        {s.isVisibleToBatch && <span className="text-success font-bold mr-2">Public</span>}
+                        Submitted {submissionDate}
                       </div>
-                    )}
-                  </div>
-                  <div className="flex items-center gap-1">
-                    {isAdminOrTeacher && (
-                      <button 
-                        onClick={() => handleToggleVisibility(s)}
-                        className={cn(
-                          "p-1.5 rounded-lg transition-colors",
-                          s.isVisibleToBatch ? "text-success bg-success/10" : "text-muted hover:text-foreground hover:bg-muted/20"
-                        )}
-                        title={s.isVisibleToBatch ? "Make Private" : "Make Public to Batch"}
-                      >
-                        <Eye size={14} />
+                      {(s.googleDriveLink || s.customLink) && (
+                        <div className="flex items-center gap-2 mt-1">
+                          {s.googleDriveLink && (
+                            <a 
+                              href={s.googleDriveLink} 
+                              target="_blank" 
+                              rel="noopener noreferrer"
+                              className="text-[10px] text-secondary hover:underline flex items-center gap-1"
+                            >
+                              <LinkIcon size={10} /> Drive
+                            </a>
+                          )}
+                          {s.customLink && (
+                            <a 
+                              href={s.customLink} 
+                              target="_blank" 
+                              rel="noopener noreferrer"
+                              className="text-[10px] text-secondary hover:underline flex items-center gap-1"
+                            >
+                              <ExternalLink size={10} /> Link
+                            </a>
+                          )}
+                        </div>
+                      )}
+                    </div>
+                    <div className="flex items-center gap-1">
+                      {isAdminOrTeacher && (
+                        <button 
+                          onClick={() => handleToggleVisibility(s)}
+                          className={cn(
+                            "p-1.5 rounded-lg transition-colors",
+                            s.isVisibleToBatch ? "text-success bg-success/10" : "text-muted hover:text-foreground hover:bg-muted/20"
+                          )}
+                          title={s.isVisibleToBatch ? "Make Private" : "Make Public to Batch"}
+                        >
+                          <Eye size={14} />
+                        </button>
+                      )}
+                      <button className="p-1.5 hover:bg-secondary/10 rounded-lg text-secondary">
+                        <Download size={14} />
                       </button>
-                    )}
-                    <button className="p-1.5 hover:bg-secondary/10 rounded-lg text-secondary">
-                      <Download size={14} />
-                    </button>
+                    </div>
                   </div>
-                </div>
-              ))}
+                );
+              })}
               {filteredSubmissions.length === 0 && (
                 <p className="text-center py-4 text-xs text-muted">No submissions yet</p>
               )}
