@@ -289,7 +289,9 @@ export interface AssignmentSubmission {
   studentId: string;
   studentName: string;
   submissionDate: string;
-  fileUrl: string;
+  fileUrl?: string;
+  googleDriveLink?: string;
+  customLink?: string;
   marks?: number;
   feedback?: string;
   status: 'Submitted' | 'Checked' | 'Pending';

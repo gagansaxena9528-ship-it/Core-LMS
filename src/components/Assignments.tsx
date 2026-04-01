@@ -12,9 +12,13 @@ import {
   MoreVertical,
   Search,
   Filter,
-  Eye
+  Eye,
+  Edit2,
+  Trash2,
+  Link as LinkIcon,
+  ExternalLink
 } from 'lucide-react';
-import { subscribeToCollection, addDoc, updateDoc } from '../services/firestore';
+import { subscribeToCollection, addDoc, updateDoc, deleteDoc } from '../services/firestore';
 import { sendEmail, getNewRecordTemplate, getUpdateNotificationTemplate } from '../services/emailService';
 import { Assignment, AssignmentSubmission, User, Student } from '../types';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -28,8 +32,10 @@ const Assignments: React.FC<AssignmentsProps> = ({ user }) => {
   const [assignments, setAssignments] = useState<Assignment[]>([]);
   const [submissions, setSubmissions] = useState<AssignmentSubmission[]>([]);
   const [showAddModal, setShowAddModal] = useState(false);
+  const [showEditModal, setShowEditModal] = useState(false);
   const [showSubmitModal, setShowSubmitModal] = useState(false);
   const [selectedAssignment, setSelectedAssignment] = useState<Assignment | null>(null);
+  const [editingAssignment, setEditingAssignment] = useState<Assignment | null>(null);
   const [loading, setLoading] = useState(false);
   const [students, setStudents] = useState<Student[]>([]);
   const [courses, setCourses] = useState<any[]>([]);
@@ -84,16 +90,53 @@ const Assignments: React.FC<AssignmentsProps> = ({ user }) => {
     setShowAddModal(false);
   };
 
+  const handleEditAssignment = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    if (!editingAssignment) return;
+    setLoading(true);
+    const formData = new FormData(e.currentTarget);
+    const updatedAssignment: Partial<Assignment> = {
+      title: formData.get('title') as string,
+      description: formData.get('description') as string,
+      dueDate: formData.get('dueDate') as string,
+      totalMarks: parseInt(formData.get('totalMarks') as string),
+      courseId: formData.get('courseId') as string,
+      batchId: formData.get('batchId') as string,
+    };
+    
+    try {
+      await updateDoc('assignments', editingAssignment.id, updatedAssignment);
+      setLoading(false);
+      setShowEditModal(false);
+      setEditingAssignment(null);
+    } catch (err) {
+      console.error('Failed to update assignment:', err);
+      setLoading(false);
+    }
+  };
+
+  const handleDeleteAssignment = async (id: string) => {
+    if (!window.confirm('Are you sure you want to delete this assignment?')) return;
+    try {
+      await deleteDoc('assignments', id);
+    } catch (err) {
+      console.error('Failed to delete assignment:', err);
+    }
+  };
+
   const handleSubmitAssignment = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     if (!selectedAssignment) return;
     setLoading(true);
+    const formData = new FormData(e.currentTarget);
     const newSubmission: Partial<AssignmentSubmission> = {
       assignmentId: selectedAssignment.id,
       studentId: user.uid,
       studentName: user.name,
       submissionDate: new Date().toISOString(),
-      fileUrl: 'https://example.com/submission.pdf', // Mock
+      googleDriveLink: formData.get('googleDriveLink') as string,
+      customLink: formData.get('customLink') as string,
+      fileUrl: 'https://example.com/submission.pdf', // Mock for now, in real app we'd handle file upload
       status: 'Submitted',
     };
     await addDoc('submissions', newSubmission);
@@ -228,9 +271,25 @@ const Assignments: React.FC<AssignmentsProps> = ({ user }) => {
                             </button>
                           )
                         ) : (
-                          <button className="p-2 hover:bg-secondary/10 rounded-lg text-muted">
-                            <MoreVertical size={18} />
-                          </button>
+                          <div className="flex items-center gap-2">
+                            <button 
+                              onClick={() => {
+                                setEditingAssignment(assignment);
+                                setShowEditModal(true);
+                              }}
+                              className="p-2 hover:bg-secondary/10 rounded-lg text-muted hover:text-secondary transition-colors"
+                              title="Edit Assignment"
+                            >
+                              <Edit2 size={18} />
+                            </button>
+                            <button 
+                              onClick={() => handleDeleteAssignment(assignment.id)}
+                              className="p-2 hover:bg-destructive/10 rounded-lg text-muted hover:text-destructive transition-colors"
+                              title="Delete Assignment"
+                            >
+                              <Trash2 size={18} />
+                            </button>
+                          </div>
                         )}
                       </div>
                     </div>
@@ -287,6 +346,30 @@ const Assignments: React.FC<AssignmentsProps> = ({ user }) => {
                       {s.isVisibleToBatch && <span className="text-success font-bold mr-2">Public</span>}
                       Submitted {new Date(s.submissionDate).toLocaleDateString()}
                     </div>
+                    {(s.googleDriveLink || s.customLink) && (
+                      <div className="flex items-center gap-2 mt-1">
+                        {s.googleDriveLink && (
+                          <a 
+                            href={s.googleDriveLink} 
+                            target="_blank" 
+                            rel="noopener noreferrer"
+                            className="text-[10px] text-secondary hover:underline flex items-center gap-1"
+                          >
+                            <LinkIcon size={10} /> Drive
+                          </a>
+                        )}
+                        {s.customLink && (
+                          <a 
+                            href={s.customLink} 
+                            target="_blank" 
+                            rel="noopener noreferrer"
+                            className="text-[10px] text-secondary hover:underline flex items-center gap-1"
+                          >
+                            <ExternalLink size={10} /> Link
+                          </a>
+                        )}
+                      </div>
+                    )}
                   </div>
                   <div className="flex items-center gap-1">
                     {isAdminOrTeacher && (
@@ -420,6 +503,120 @@ const Assignments: React.FC<AssignmentsProps> = ({ user }) => {
         )}
       </AnimatePresence>
 
+      {/* Edit Assignment Modal */}
+      <AnimatePresence>
+        {showEditModal && editingAssignment && (
+          <div className="fixed inset-0 flex items-center justify-center z-[100] p-4">
+              <motion.div 
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                onClick={() => {
+                  setShowEditModal(false);
+                  setEditingAssignment(null);
+                }}
+                className="absolute inset-0 bg-background/70 backdrop-blur-sm"
+              />
+              <motion.div 
+                initial={{ scale: 0.9, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                exit={{ scale: 0.9, opacity: 0 }}
+                className="relative w-full max-w-lg bg-card border border-border rounded-2xl shadow-2xl overflow-hidden"
+              >
+                <div className="p-6 border-b border-border">
+                  <h3 className="text-xl font-bold text-foreground font-syne">Edit Assignment</h3>
+                </div>
+                <form onSubmit={handleEditAssignment} className="p-6 space-y-4">
+                  <div className="space-y-1.5">
+                    <label className="text-[11px] font-bold text-muted uppercase tracking-wider">Title</label>
+                    <input 
+                      name="title"
+                      required
+                      defaultValue={editingAssignment.title}
+                      className="w-full bg-muted/10 border border-border rounded-xl px-4 py-2.5 text-sm outline-none focus:border-secondary transition-colors text-foreground"
+                    />
+                  </div>
+                  <div className="space-y-1.5">
+                    <label className="text-[11px] font-bold text-muted uppercase tracking-wider">Description</label>
+                    <textarea 
+                      name="description"
+                      required
+                      rows={4}
+                      defaultValue={editingAssignment.description}
+                      className="w-full bg-muted/10 border border-border rounded-xl px-4 py-2.5 text-sm outline-none focus:border-secondary transition-colors resize-none text-foreground"
+                    />
+                  </div>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-1.5">
+                      <label className="text-[11px] font-bold text-muted uppercase tracking-wider">Course</label>
+                      <select 
+                        name="courseId"
+                        defaultValue={editingAssignment.courseId}
+                        className="w-full bg-muted/10 border border-border rounded-xl px-4 py-2.5 text-sm outline-none focus:border-secondary transition-colors text-foreground"
+                      >
+                        <option value="" className="bg-card">All Courses</option>
+                        {courses.map(c => <option key={c.id} value={c.id} className="bg-card">{c.title}</option>)}
+                      </select>
+                    </div>
+                    <div className="space-y-1.5">
+                      <label className="text-[11px] font-bold text-muted uppercase tracking-wider">Batch</label>
+                      <select 
+                        name="batchId"
+                        defaultValue={editingAssignment.batchId}
+                        className="w-full bg-muted/10 border border-border rounded-xl px-4 py-2.5 text-sm outline-none focus:border-secondary transition-colors text-foreground"
+                      >
+                        <option value="" className="bg-card">All Batches</option>
+                        {batches.map(b => <option key={b.id} value={b.id} className="bg-card">{b.name}</option>)}
+                      </select>
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-1.5">
+                      <label className="text-[11px] font-bold text-muted uppercase tracking-wider">Due Date</label>
+                      <input 
+                        name="dueDate"
+                        type="date"
+                        required
+                        defaultValue={editingAssignment.dueDate}
+                        className="w-full bg-muted/10 border border-border rounded-xl px-4 py-2.5 text-sm outline-none focus:border-secondary transition-colors text-foreground"
+                      />
+                    </div>
+                    <div className="space-y-1.5">
+                      <label className="text-[11px] font-bold text-muted uppercase tracking-wider">Total Marks</label>
+                      <input 
+                        name="totalMarks"
+                        type="number"
+                        required
+                        defaultValue={editingAssignment.totalMarks}
+                        className="w-full bg-muted/10 border border-border rounded-xl px-4 py-2.5 text-sm outline-none focus:border-secondary transition-colors text-foreground"
+                      />
+                    </div>
+                  </div>
+                  <div className="flex gap-3 pt-4">
+                    <button 
+                      type="button"
+                      onClick={() => {
+                        setShowEditModal(false);
+                        setEditingAssignment(null);
+                      }}
+                      className="flex-1 px-4 py-2.5 rounded-xl border border-border text-sm font-bold hover:bg-muted/10 transition-colors text-foreground"
+                    >
+                      Cancel
+                    </button>
+                    <button 
+                      type="submit"
+                      disabled={loading}
+                      className="flex-1 px-4 py-2.5 rounded-xl bg-secondary text-white text-sm font-bold hover:bg-secondary/90 transition-colors disabled:opacity-50"
+                    >
+                      {loading ? 'Updating...' : 'Update Assignment'}
+                    </button>
+                  </div>
+              </form>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
       {/* Submit Assignment Modal */}
       <AnimatePresence>
         {showSubmitModal && (
@@ -441,13 +638,42 @@ const Assignments: React.FC<AssignmentsProps> = ({ user }) => {
                   <h3 className="text-xl font-bold text-foreground font-syne">Submit Assignment</h3>
                   <p className="text-xs text-muted mt-1">{selectedAssignment?.title}</p>
                 </div>
-                <form onSubmit={handleSubmitAssignment} className="p-6 space-y-6">
-                  <div className="border-2 border-dashed border-border rounded-2xl p-8 text-center hover:border-secondary transition-colors cursor-pointer group">
-                    <Upload size={32} className="mx-auto text-muted/20 group-hover:text-secondary mb-3" />
-                    <p className="text-[13px] font-medium text-foreground">Click to upload or drag & drop</p>
-                    <p className="text-[11px] text-muted mt-1">PDF, DOCX or ZIP (Max 10MB)</p>
+                <form onSubmit={handleSubmitAssignment} className="p-6 space-y-4">
+                  <div className="space-y-1.5">
+                    <label className="text-[11px] font-bold text-muted uppercase tracking-wider">File Upload</label>
+                    <div className="border-2 border-dashed border-border rounded-2xl p-6 text-center hover:border-secondary transition-colors cursor-pointer group">
+                      <Upload size={24} className="mx-auto text-muted/20 group-hover:text-secondary mb-2" />
+                      <p className="text-[12px] font-medium text-foreground">Click to upload or drag & drop</p>
+                      <p className="text-[10px] text-muted mt-1">PDF, DOCX or ZIP (Max 10MB)</p>
+                      <input type="file" className="hidden" />
+                    </div>
                   </div>
-                  <div className="flex gap-3">
+
+                  <div className="space-y-1.5">
+                    <label className="text-[11px] font-bold text-muted uppercase tracking-wider">Google Drive Link</label>
+                    <div className="relative">
+                      <LinkIcon size={14} className="absolute left-4 top-1/2 -translate-y-1/2 text-muted" />
+                      <input 
+                        name="googleDriveLink"
+                        className="w-full bg-muted/10 border border-border rounded-xl pl-10 pr-4 py-2.5 text-sm outline-none focus:border-secondary transition-colors text-foreground"
+                        placeholder="Paste Google Drive link here..."
+                      />
+                    </div>
+                  </div>
+
+                  <div className="space-y-1.5">
+                    <label className="text-[11px] font-bold text-muted uppercase tracking-wider">Custom Link</label>
+                    <div className="relative">
+                      <ExternalLink size={14} className="absolute left-4 top-1/2 -translate-y-1/2 text-muted" />
+                      <input 
+                        name="customLink"
+                        className="w-full bg-muted/10 border border-border rounded-xl pl-10 pr-4 py-2.5 text-sm outline-none focus:border-secondary transition-colors text-foreground"
+                        placeholder="Paste any other link here..."
+                      />
+                    </div>
+                  </div>
+
+                  <div className="flex gap-3 pt-2">
                     <button 
                       type="button"
                       onClick={() => setShowSubmitModal(false)}
