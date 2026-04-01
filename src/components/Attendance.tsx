@@ -63,10 +63,15 @@ const AttendanceComponent: React.FC<AttendanceProps> = ({ user }) => {
   }, [user.uid, user.role]);
 
   useEffect(() => {
-    if (batches.length > 0 && !selectedBatchId) {
+    if (user.role === 'student') {
+      const student = user as any;
+      if (student.batchId) {
+        setSelectedBatchId(student.batchId);
+      }
+    } else if (batches.length > 0 && !selectedBatchId) {
       setSelectedBatchId(batches[0].id);
     }
-  }, [batches]);
+  }, [batches, user.role, (user as any).batchId]);
 
   const filteredStudents = students.filter(s => {
     if (user.role === 'student') return s.uid === user.uid;
@@ -98,7 +103,7 @@ const AttendanceComponent: React.FC<AttendanceProps> = ({ user }) => {
           await updateDoc('attendance', existingRecord.id, { status });
           
           // Notify student about attendance update
-          const student = students.find(s => s.id === studentId);
+          const student = students.find(s => s.uid === studentId);
           const batch = batches.find(b => b.id === selectedBatchId);
           if (student && batch) {
             const html = getAttendanceEmailTemplate(student.name, selectedDate, status, batch.name);
@@ -116,7 +121,7 @@ const AttendanceComponent: React.FC<AttendanceProps> = ({ user }) => {
         });
 
         // Notify student about attendance marked
-        const student = students.find(s => s.id === studentId);
+        const student = students.find(s => s.uid === studentId);
         if (student && batch) {
           const html = getAttendanceEmailTemplate(student.name, selectedDate, status, batch.name);
           await sendEmail(student.email, `Attendance Marked: ${status}`, html);
@@ -132,7 +137,7 @@ const AttendanceComponent: React.FC<AttendanceProps> = ({ user }) => {
     try {
       for (const student of filteredStudents) {
         const existingRecord = attendanceRecords.find(r => 
-          r.studentId === student.id && 
+          r.studentId === student.uid && 
           r.batchId === selectedBatchId && 
           r.date === selectedDate
         );
@@ -140,7 +145,7 @@ const AttendanceComponent: React.FC<AttendanceProps> = ({ user }) => {
         if (!existingRecord) {
           const batch = batches.find(b => b.id === selectedBatchId);
           await addDoc('attendance', {
-            studentId: student.id,
+            studentId: student.uid,
             batchId: selectedBatchId,
             courseId: batch?.courseId || '',
             date: selectedDate,
@@ -174,9 +179,9 @@ const AttendanceComponent: React.FC<AttendanceProps> = ({ user }) => {
 
   const stats = {
     total: filteredStudents.length,
-    present: filteredStudents.filter(s => getAttendanceStatus(s.id) === 'Present').length,
-    absent: filteredStudents.filter(s => getAttendanceStatus(s.id) === 'Absent').length,
-    pending: filteredStudents.filter(s => getAttendanceStatus(s.id) === null).length
+    present: filteredStudents.filter(s => getAttendanceStatus(s.uid) === 'Present').length,
+    absent: filteredStudents.filter(s => getAttendanceStatus(s.uid) === 'Absent').length,
+    pending: filteredStudents.filter(s => getAttendanceStatus(s.uid) === null).length
   };
 
   return (
@@ -336,9 +341,9 @@ const AttendanceComponent: React.FC<AttendanceProps> = ({ user }) => {
               </thead>
               <tbody className="divide-y divide-border">
                 {filteredStudents.map((student) => {
-                  const status = getAttendanceStatus(student.id);
+                  const status = getAttendanceStatus(student.uid);
                   return (
-                    <tr key={student.id} className="hover:bg-muted/10 transition-colors group">
+                    <tr key={student.uid} className="hover:bg-muted/10 transition-colors group">
                       <td className="px-6 py-4">
                         <div className="flex items-center gap-3">
                           <div className="w-10 h-10 rounded-full bg-muted/20 overflow-hidden border border-border">
@@ -370,19 +375,23 @@ const AttendanceComponent: React.FC<AttendanceProps> = ({ user }) => {
                       <td className="px-6 py-4 text-right">
                         <div className="flex items-center justify-end gap-2">
                           <button 
-                            onClick={() => handleMarkAttendance(student.id, 'Present')}
+                            disabled={user.role === 'student' || loading}
+                            onClick={() => handleMarkAttendance(student.uid, 'Present')}
                             className={cn(
                               "w-10 h-10 rounded-xl flex items-center justify-center transition-all",
-                              status === 'Present' ? "bg-success text-white shadow-lg shadow-success/20" : "bg-muted/10 text-muted hover:text-success hover:bg-success/10"
+                              status === 'Present' ? "bg-success text-white shadow-lg shadow-success/20" : "bg-muted/10 text-muted hover:text-success hover:bg-success/10",
+                              user.role === 'student' && "cursor-default"
                             )}
                           >
                             <CheckCircle2 size={18} />
                           </button>
                           <button 
-                            onClick={() => handleMarkAttendance(student.id, 'Absent')}
+                            disabled={user.role === 'student' || loading}
+                            onClick={() => handleMarkAttendance(student.uid, 'Absent')}
                             className={cn(
                               "w-10 h-10 rounded-xl flex items-center justify-center transition-all",
-                              status === 'Absent' ? "bg-destructive text-white shadow-lg shadow-destructive/20" : "bg-muted/10 text-muted hover:text-destructive hover:bg-destructive/10"
+                              status === 'Absent' ? "bg-destructive text-white shadow-lg shadow-destructive/20" : "bg-muted/10 text-muted hover:text-destructive hover:bg-destructive/10",
+                              user.role === 'student' && "cursor-default"
                             )}
                           >
                             <XCircle size={18} />

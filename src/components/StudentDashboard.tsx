@@ -9,7 +9,8 @@ import {
   Calendar,
   Clock,
   FileText,
-  Video
+  Video,
+  Bell
 } from 'lucide-react';
 import { subscribeToCollection, subscribeToQuery } from '../services/firestore';
 import { Course, User, LiveClass, Assignment, Exam, Attendance, Certificate, Teacher } from '../types';
@@ -28,6 +29,7 @@ const StudentDashboard: React.FC<StudentDashboardProps> = ({ user }) => {
   const [attendance, setAttendance] = useState<Attendance[]>([]);
   const [certificates, setCertificates] = useState<Certificate[]>([]);
   const [assignedTeachers, setAssignedTeachers] = useState<Teacher[]>([]);
+  const [notifications, setNotifications] = useState<any[]>([]);
 
   useEffect(() => {
     // Fetch enrolled courses
@@ -38,6 +40,17 @@ const StudentDashboard: React.FC<StudentDashboardProps> = ({ user }) => {
       } else {
         setCourses([]);
       }
+    });
+
+    // Fetch notifications
+    const unsubNotifs = subscribeToCollection('notifications', (data) => {
+      const student = user as any;
+      setNotifications(data.filter(n => 
+        n.type === 'All' || 
+        (n.type === 'Course' && n.targetId === student.courseId) || 
+        (n.type === 'Batch' && n.targetId === student.batchId) ||
+        (n.type === 'Individual' && n.targetId === user.uid)
+      ).slice(0, 3));
     });
 
     // Fetch live classes for user's batch
@@ -93,6 +106,7 @@ const StudentDashboard: React.FC<StudentDashboardProps> = ({ user }) => {
       unsubAttendance();
       unsubCertificates();
       unsubTeachers();
+      unsubNotifs();
     };
   }, [user]);
 
@@ -142,23 +156,33 @@ const StudentDashboard: React.FC<StudentDashboardProps> = ({ user }) => {
       </div>
 
       {assignedTeachers.length > 0 && (
-        <div className="flex flex-wrap gap-4 mb-8">
-          {assignedTeachers.map(teacher => (
-            <div key={teacher.uid} className="bg-card border border-border p-4 rounded-2xl flex items-center gap-4 min-w-[240px]">
-              <div className="w-12 h-12 rounded-xl bg-secondary/10 flex items-center justify-center text-secondary font-bold text-lg overflow-hidden">
-                {teacher.profilePhoto ? (
-                  <img src={teacher.profilePhoto} alt={teacher.name} className="w-full h-full object-cover" />
-                ) : (
-                  teacher.name ? teacher.name[0] : 'T'
-                )}
+        <div className="mb-8">
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="text-[11px] font-bold text-muted uppercase tracking-widest">My Assigned Teachers</h3>
+            <button 
+              onClick={() => navigate('/my-teachers')}
+              className="text-[11px] font-bold text-secondary hover:underline uppercase tracking-widest"
+            >
+              View All
+            </button>
+          </div>
+          <div className="flex flex-wrap gap-4">
+            {assignedTeachers.map(teacher => (
+              <div key={teacher.uid} className="bg-card border border-border p-4 rounded-2xl flex items-center gap-4 min-w-[240px] flex-1 sm:flex-none">
+                <div className="w-12 h-12 rounded-xl bg-secondary/10 flex items-center justify-center text-secondary font-bold text-lg overflow-hidden border border-secondary/20">
+                  {teacher.profilePhoto || teacher.av ? (
+                    <img src={teacher.profilePhoto || teacher.av} alt={teacher.name} className="w-full h-full object-cover" />
+                  ) : (
+                    teacher.name ? teacher.name[0] : 'T'
+                  )}
+                </div>
+                <div>
+                  <div className="text-sm font-bold text-foreground">{teacher.name}</div>
+                  <div className="text-[11px] text-secondary">{teacher.email}</div>
+                </div>
               </div>
-              <div>
-                <div className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">Assigned Teacher</div>
-                <div className="text-sm font-bold text-foreground">{teacher.name}</div>
-                <div className="text-[11px] text-secondary">{teacher.email}</div>
-              </div>
-            </div>
-          ))}
+            ))}
+          </div>
         </div>
       )}
 
@@ -220,6 +244,31 @@ const StudentDashboard: React.FC<StudentDashboardProps> = ({ user }) => {
             )}
           </div>
         </Card>
+
+        {notifications.length > 0 && (
+          <Card title="Recent Notifications">
+            <div className="space-y-4">
+              {notifications.map((notif) => (
+                <div key={notif.id} className="flex items-start gap-4 py-3 border-b border-border last:border-0">
+                  <div className="w-10 h-10 rounded-xl bg-secondary/10 flex items-center justify-center text-secondary shrink-0">
+                    <Bell size={18} />
+                  </div>
+                  <div className="min-w-0">
+                    <div className="text-[13.5px] font-semibold text-foreground truncate">{notif.title}</div>
+                    <div className="text-[11px] text-muted-foreground line-clamp-1 mt-0.5">{notif.message}</div>
+                    <div className="text-[10px] text-muted mt-1 uppercase font-bold tracking-wider">{notif.createdAt}</div>
+                  </div>
+                </div>
+              ))}
+              <button 
+                onClick={() => navigate('/notifications')}
+                className="w-full py-2 text-xs font-bold text-secondary hover:bg-secondary/5 rounded-lg transition-colors mt-2"
+              >
+                View All Notifications
+              </button>
+            </div>
+          </Card>
+        )}
       </div>
     </div>
   );

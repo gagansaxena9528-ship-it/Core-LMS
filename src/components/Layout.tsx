@@ -100,6 +100,7 @@ const Layout: React.FC<LayoutProps> = ({ user }) => {
         { id: '/', icon: <LayoutDashboard size={18} />, label: 'Dashboard' },
         { id: '/courses', icon: <BookOpen size={18} />, label: 'My Courses' },
         { id: '/live-classes', icon: <Video size={18} />, label: 'Live Classes' },
+        { id: '/my-teachers', icon: <UserSquare2 size={18} />, label: 'My Teachers' },
       ]},
       { label: 'Academics', items: [
         { id: '/exams', icon: <FileText size={18} />, label: 'Exams' },

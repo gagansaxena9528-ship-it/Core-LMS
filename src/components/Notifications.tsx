@@ -63,6 +63,14 @@ const Notifications: React.FC<NotificationsProps> = ({ user }) => {
       // Filter notifications relevant to the teacher (sent by them or global)
       if (user.role === 'teacher') {
         setNotifications(data.filter(n => n.senderId === user.uid || n.type === 'All'));
+      } else if (user.role === 'student') {
+        const student = user as any;
+        setNotifications(data.filter(n => 
+          n.type === 'All' || 
+          (n.type === 'Course' && n.targetId === student.courseId) || 
+          (n.type === 'Batch' && n.targetId === student.batchId) ||
+          (n.type === 'Individual' && n.targetId === user.uid)
+        ));
       } else {
         setNotifications(data);
       }
@@ -320,7 +328,7 @@ const Notifications: React.FC<NotificationsProps> = ({ user }) => {
                     >
                       <option value="">Choose {formData.type}...</option>
                       {formData.type === 'Course' && courses.map(c => (
-                        <option key={c.id} value={c.id}>{c.name}</option>
+                        <option key={c.id} value={c.id}>{c.title}</option>
                       ))}
                       {formData.type === 'Batch' && batches.map(b => (
                         <option key={b.id} value={b.id}>{b.name}</option>

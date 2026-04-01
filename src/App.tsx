@@ -25,6 +25,7 @@ import Certificates from './components/Certificates';
 import CertificateVerification from './components/CertificateVerification';
 import CoursePlayer from './components/CoursePlayer';
 import Reports from './components/Reports';
+import MyTeachers from './components/MyTeachers';
 
 import { SettingsProvider } from './SettingsContext';
 
@@ -77,7 +78,7 @@ const App: React.FC = () => {
             <Route path="/assignments" element={<Assignments user={user!} />} />
             <Route path="/live-classes" element={<LiveClasses user={user!} />} />
             <Route path="/payments" element={user?.role !== 'teacher' ? <Payments user={user!} /> : <Navigate to="/" />} />
-            <Route path="/attendance" element={user?.role !== 'student' ? <Attendance user={user!} /> : <Navigate to="/" />} />
+            <Route path="/attendance" element={<Attendance user={user!} />} />
             <Route path="/analytics" element={user?.role !== 'student' ? <PerformanceAnalytics user={user!} /> : <Navigate to="/" />} />
             <Route path="/notifications" element={<Notifications user={user!} />} />
             <Route path="/certificates" element={<Certificates user={user!} />} />
@@ -86,6 +87,7 @@ const App: React.FC = () => {
             <Route path="/profile" element={<Profile user={user!} />} />
             
             {/* Student Specific */}
+            <Route path="/my-teachers" element={<MyTeachers user={user!} />} />
             <Route path="/course-player/:courseId" element={<CoursePlayer user={user!} />} />
           </Route>
           
