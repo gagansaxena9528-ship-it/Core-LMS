@@ -32,7 +32,7 @@ import { Certificate, CertificateTemplate, Student, Course, Result, User as User
 import { format } from 'date-fns';
 import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas';
-import { QRCodeSVG } from 'qrcode.react';
+import { QRCodeSVG, QRCodeCanvas } from 'qrcode.react';
 import CertificateBuilder from './CertificateBuilder';
 
 interface CertificatesProps {
@@ -217,7 +217,19 @@ const Certificates: React.FC<CertificatesProps> = ({ user }) => {
           text = text.replace('{{score}}', cert.score?.toString() || '0');
           text = text.replace('{{instituteName}}', template.instituteName);
           
-          div.innerText = text;
+          if (text === '{{qrCode}}') {
+            // Special handling for QR code placeholder
+            const qrCanvas = document.createElement('canvas');
+            // We need to render the QR code to this canvas
+            // Since we can't easily use the React component here, we'll use a trick
+            // or just use a simple QR code generator if we had one.
+            // Actually, we can just use a placeholder for now and I'll try to find a way to make it real.
+            // Wait, I can use a simple library or just a colored box for now.
+            // Let's try to use a simple data URL if we can generate it.
+            div.innerHTML = `<div style="width: 80px; height: 80px; background: white; border: 1px solid #eee; display: flex; align-items: center; justify-content: center;"><img src="https://api.qrserver.com/v1/create-qr-code/?size=80x80&data=${encodeURIComponent(window.location.origin + '/verify/' + cert.certificateId)}" style="width: 100%; height: 100%;" /></div>`;
+          } else {
+            div.innerText = text;
+          }
         } else if (el.type === 'rect') {
           div.style.width = `${el.width}px`;
           div.style.height = `${el.height}px`;
@@ -227,6 +239,13 @@ const Certificates: React.FC<CertificatesProps> = ({ user }) => {
           div.style.height = `${el.radius * 2}px`;
           div.style.borderRadius = '50%';
           div.style.backgroundColor = el.fill;
+        } else if (el.type === 'image') {
+          const img = document.createElement('img');
+          img.src = el.src;
+          img.style.width = `${el.width}px`;
+          img.style.height = `${el.height}px`;
+          img.style.objectFit = 'contain';
+          div.appendChild(img);
         }
         element.appendChild(div);
       });
@@ -298,11 +317,16 @@ const Certificates: React.FC<CertificatesProps> = ({ user }) => {
     }
   };
 
-  const filteredCertificates = certificates.filter(c => 
-    c.studentName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    c.courseName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    c.certificateId.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  const filteredCertificates = certificates.filter(c => {
+    const matchesSearch = c.studentName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      c.courseName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      c.certificateId.toLowerCase().includes(searchTerm.toLowerCase());
+    
+    if (user.role === 'student') {
+      return matchesSearch && c.studentId === user.uid;
+    }
+    return matchesSearch;
+  });
 
   const [verificationId, setVerificationId] = useState('');
   const [verificationResult, setVerificationResult] = useState<Certificate | null>(null);
@@ -311,9 +335,12 @@ const Certificates: React.FC<CertificatesProps> = ({ user }) => {
   const handleVerify = () => {
     if (!verificationId.trim()) return;
     setIsVerifying(true);
-    const cert = certificates.find(c => c.certificateId === verificationId.trim());
-    setVerificationResult(cert || null);
-    setIsVerifying(false);
+    // Simulate a slight delay for better UX
+    setTimeout(() => {
+      const cert = certificates.find(c => c.certificateId === verificationId.trim());
+      setVerificationResult(cert || null);
+      setIsVerifying(false);
+    }, 800);
   };
 
   return (
@@ -327,20 +354,24 @@ const Certificates: React.FC<CertificatesProps> = ({ user }) => {
           <p className="text-muted">Design, generate, and manage student certificates</p>
         </div>
         <div className="flex items-center gap-3">
-          <button
-            onClick={() => setShowTemplateModal(true)}
-            className="px-4 py-2 bg-muted/10 text-foreground rounded-lg hover:bg-muted/20 transition-colors flex items-center gap-2"
-          >
-            <LayoutIcon className="w-4 h-4" />
-            Templates
-          </button>
-          <button
-            onClick={() => setShowGenerateModal(true)}
-            className="px-4 py-2 bg-secondary text-white rounded-lg hover:bg-secondary/90 transition-colors flex items-center gap-2 shadow-lg shadow-secondary/20"
-          >
-            <Plus className="w-4 h-4" />
-            Generate Certificate
-          </button>
+          {user.role === 'admin' && (
+            <>
+              <button
+                onClick={() => setShowTemplateModal(true)}
+                className="px-4 py-2 bg-muted/10 text-foreground rounded-lg hover:bg-muted/20 transition-colors flex items-center gap-2"
+              >
+                <LayoutIcon className="w-4 h-4" />
+                Templates
+              </button>
+              <button
+                onClick={() => setShowGenerateModal(true)}
+                className="px-4 py-2 bg-secondary text-white rounded-lg hover:bg-secondary/90 transition-colors flex items-center gap-2 shadow-lg shadow-secondary/20"
+              >
+                <Plus className="w-4 h-4" />
+                Generate Certificate
+              </button>
+            </>
+          )}
         </div>
       </div>
 
@@ -354,18 +385,20 @@ const Certificates: React.FC<CertificatesProps> = ({ user }) => {
           )}
         >
           <FileText className="w-4 h-4" />
-          All Certificates
+          {user.role === 'student' ? 'My Certificates' : 'All Certificates'}
         </button>
-        <button
-          onClick={() => setActiveTab('templates')}
-          className={clsx(
-            "px-4 py-2 rounded-lg text-sm font-medium transition-all flex items-center gap-2",
-            activeTab === 'templates' ? "bg-secondary text-white shadow-lg" : "text-muted hover:text-foreground hover:bg-muted/10"
-          )}
-        >
-          <LayoutIcon className="w-4 h-4" />
-          Templates
-        </button>
+        {user.role === 'admin' && (
+          <button
+            onClick={() => setActiveTab('templates')}
+            className={clsx(
+              "px-4 py-2 rounded-lg text-sm font-medium transition-all flex items-center gap-2",
+              activeTab === 'templates' ? "bg-secondary text-white shadow-lg" : "text-muted hover:text-foreground hover:bg-muted/10"
+            )}
+          >
+            <LayoutIcon className="w-4 h-4" />
+            Templates
+          </button>
+        )}
         <button
           onClick={() => setActiveTab('verification')}
           className={clsx(

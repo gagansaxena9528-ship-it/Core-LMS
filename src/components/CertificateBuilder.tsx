@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Stage, Layer, Text, Rect, Circle, Image as KonvaImage, Transformer } from 'react-konva';
+import { Stage, Layer, Text, Rect, Circle, Image as KonvaImage, Transformer, Group } from 'react-konva';
 import useImage from 'use-image';
 import { 
   Type, 
@@ -138,6 +138,37 @@ const CertificateBuilder: React.FC<CertificateBuilderProps> = ({ template, onSav
     setSelectedId(newElement.id);
   };
 
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const addImage = (url: string) => {
+    const newElement: Element = {
+      id: `image-${Date.now()}`,
+      type: 'image',
+      x: 100,
+      y: 100,
+      width: 100,
+      height: 100,
+      src: url,
+      rotation: 0,
+      opacity: 1
+    };
+    setElements([...elements, newElement]);
+    setSelectedId(newElement.id);
+  };
+
+  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        if (event.target?.result) {
+          addImage(event.target.result as string);
+        }
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
   const handleDragEnd = (e: any) => {
     const id = e.target.id();
     const newElements = elements.map(el => {
@@ -259,12 +290,21 @@ const CertificateBuilder: React.FC<CertificateBuilderProps> = ({ template, onSav
                 <span className="text-[10px] font-bold uppercase">Circle</span>
               </button>
               <button 
-                className="flex flex-col items-center justify-center gap-2 p-4 bg-muted/5 border border-border rounded-xl hover:border-secondary/50 hover:text-secondary transition-all opacity-50 cursor-not-allowed"
-                disabled
+                onClick={() => {
+                  fileInputRef.current?.click();
+                }}
+                className="flex flex-col items-center justify-center gap-2 p-4 bg-muted/5 border border-border rounded-xl hover:border-secondary/50 hover:text-secondary transition-all"
               >
                 <ImageIcon size={20} />
-                <span className="text-[10px] font-bold uppercase">Image</span>
+                <span className="text-[10px] font-bold uppercase">Upload Logo</span>
               </button>
+              <input 
+                type="file" 
+                ref={fileInputRef} 
+                onChange={handleFileUpload} 
+                className="hidden" 
+                accept="image/*"
+              />
             </div>
 
             <div className="pt-4 space-y-4">
@@ -278,6 +318,7 @@ const CertificateBuilder: React.FC<CertificateBuilderProps> = ({ template, onSav
                   { label: 'Grade', value: '{{grade}}' },
                   { label: 'Score', value: '{{score}}' },
                   { label: 'Institute Name', value: '{{instituteName}}' },
+                  { label: 'QR Code', value: '{{qrCode}}' },
                 ].map((ph) => (
                   <button
                     key={ph.value}
@@ -332,6 +373,38 @@ const CertificateBuilder: React.FC<CertificateBuilderProps> = ({ template, onSav
                 )}
                 {elements.map((el) => {
                   if (el.type === 'text') {
+                    const isQRCode = el.text === '{{qrCode}}';
+                    if (isQRCode) {
+                      return (
+                        <Group
+                          key={el.id}
+                          x={el.x}
+                          y={el.y}
+                          draggable
+                          onDragEnd={handleDragEnd}
+                          onClick={() => setSelectedId(el.id)}
+                          onTap={() => setSelectedId(el.id)}
+                          onTransformEnd={handleTransformEnd}
+                        >
+                          <Rect
+                            width={80}
+                            height={80}
+                            fill="#eee"
+                            stroke="#ccc"
+                            strokeWidth={1}
+                          />
+                          <Text
+                            text="QR CODE"
+                            fontSize={10}
+                            width={80}
+                            height={80}
+                            align="center"
+                            verticalAlign="middle"
+                            fill="#666"
+                          />
+                        </Group>
+                      );
+                    }
                     return (
                       <Text
                         key={el.id}
@@ -367,6 +440,15 @@ const CertificateBuilder: React.FC<CertificateBuilderProps> = ({ template, onSav
                         onClick={() => setSelectedId(el.id)}
                         onTap={() => setSelectedId(el.id)}
                         onTransformEnd={handleTransformEnd}
+                      />
+                    );
+                  }
+                  if (el.type === 'image') {
+                    return (
+                      <URLImage
+                        key={el.id}
+                        {...el}
+                        onSelect={() => setSelectedId(el.id)}
                       />
                     );
                   }
