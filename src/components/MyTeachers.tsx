@@ -96,6 +96,11 @@ const MyTeachers: React.FC<MyTeachersProps> = ({ user }) => {
                   <div className="mt-4">
                     <h3 className="text-lg font-bold text-foreground group-hover:text-secondary transition-colors">{teacher.name}</h3>
                     <p className="text-xs text-muted font-medium uppercase tracking-wider mt-0.5">{teacher.qualification || 'Instructor'}</p>
+                    {teacher.bio && (
+                      <p className="mt-3 text-xs text-muted line-clamp-2 italic leading-relaxed">
+                        "{teacher.bio}"
+                      </p>
+                    )}
                   </div>
 
                   <div className="mt-6 space-y-3">

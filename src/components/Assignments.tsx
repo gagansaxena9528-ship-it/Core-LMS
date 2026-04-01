@@ -201,10 +201,19 @@ const Assignments: React.FC<AssignmentsProps> = ({ user }) => {
       return matchesCourse && matchesBatch;
     }
     if (user.role === 'teacher') {
-      return a.teacherId === user.uid;
+      // Teacher sees assignments they created OR assignments for batches they are assigned to
+      const teacherBatches = batches.filter(b => 
+        b.teacherId === user.uid || (b.teacherIds && b.teacherIds.includes(user.uid))
+      ).map(b => b.id);
+      
+      const isCreator = a.teacherId === user.uid;
+      const isBatchTeacher = a.batchId && teacherBatches.includes(a.batchId);
+      const isGeneral = !a.batchId;
+      
+      return isCreator || isBatchTeacher || isGeneral;
     }
     return true;
-  }), [assignments, user.role, user.uid, currentStudent]);
+  }), [assignments, user.role, user.uid, currentStudent, batches]);
 
   const filteredSubmissions = useMemo(() => submissions.filter(s => {
     if (user.role === 'admin' || user.role === 'teacher') return true;

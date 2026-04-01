@@ -13,7 +13,7 @@ import {
   Bell
 } from 'lucide-react';
 import { subscribeToCollection, subscribeToQuery } from '../services/firestore';
-import { Course, User, LiveClass, Assignment, Exam, Attendance, Certificate, Teacher } from '../types';
+import { Course, User, Student, LiveClass, Assignment, Exam, Attendance, Certificate, Teacher } from '../types';
 import { useNavigate } from 'react-router-dom';
 
 interface StudentDashboardProps {
@@ -32,87 +32,84 @@ const StudentDashboard: React.FC<StudentDashboardProps> = ({ user }) => {
   const [notifications, setNotifications] = useState<any[]>([]);
 
   useEffect(() => {
-    // Fetch enrolled courses
-    const unsubCourses = subscribeToCollection('courses', (data) => {
-      const studentCourseId = (user as any).courseId;
-      if (studentCourseId || user.course) {
-        setCourses(data.filter(c => c.id === studentCourseId || c.title === user.course));
-      } else {
-        setCourses([]);
-      }
+    // Fetch latest student data and all related data
+    const unsubUsers = subscribeToCollection('users', (usersData) => {
+      const currentStudent = usersData.find(u => u.uid === user.uid) as Student;
+      if (!currentStudent) return;
+
+      // 1. Fetch enrolled courses
+      const unsubCourses = subscribeToCollection('courses', (coursesData) => {
+        if (currentStudent.courseId || currentStudent.course) {
+          setCourses(coursesData.filter(c => c.id === currentStudent.courseId || c.title === currentStudent.course));
+        } else {
+          setCourses([]);
+        }
+      });
+
+      // 2. Fetch notifications
+      const unsubNotifs = subscribeToCollection('notifications', (notifsData) => {
+        setNotifications(notifsData.filter(n => 
+          n.type === 'All' || 
+          (n.type === 'Course' && n.targetId === currentStudent.courseId) || 
+          (n.type === 'Batch' && n.targetId === currentStudent.batchId) ||
+          (n.type === 'Individual' && n.targetId === user.uid)
+        ).slice(0, 3));
+      });
+
+      // 3. Fetch live classes for user's batch
+      const unsubLive = subscribeToCollection('live_classes', (liveData) => {
+        if (currentStudent.batchId) {
+          setLiveClasses(liveData.filter(c => c.batchId === currentStudent.batchId && c.status !== 'Completed'));
+        }
+      });
+
+      // 4. Fetch assignments
+      const unsubAssignments = subscribeToCollection('assignments', (assignmentsData) => {
+        setAssignments(assignmentsData.filter(a => 
+          a.status === 'Active' && 
+          (a.courseId === currentStudent.courseId || a.batchId === currentStudent.batchId)
+        ));
+      });
+
+      // 5. Fetch teachers info
+      const studentTeacherId = currentStudent.teacherId;
+      const studentTeacherIds = currentStudent.teacherIds || [];
+      const teachers = usersData.filter(u => 
+        u.role === 'teacher' && 
+        (u.uid === studentTeacherId || studentTeacherIds.includes(u.uid))
+      ) as Teacher[];
+      setAssignedTeachers(teachers);
+
+      return () => {
+        unsubCourses();
+        unsubNotifs();
+        unsubLive();
+        unsubAssignments();
+      };
     });
 
-    // Fetch notifications
-    const unsubNotifs = subscribeToCollection('notifications', (data) => {
-      const student = user as any;
-      setNotifications(data.filter(n => 
-        n.type === 'All' || 
-        (n.type === 'Course' && n.targetId === student.courseId) || 
-        (n.type === 'Batch' && n.targetId === student.batchId) ||
-        (n.type === 'Individual' && n.targetId === user.uid)
-      ).slice(0, 3));
-    });
-
-    // Fetch live classes for user's batch
-    const unsubLive = subscribeToCollection('live_classes', (data) => {
-      if (user.batch) {
-        setLiveClasses(data.filter(c => c.status !== 'Completed'));
-      }
-    });
-
-    // Fetch assignments
-    const unsubAssignments = subscribeToCollection('assignments', (data) => {
-      const studentCourseId = (user as any).courseId;
-      const studentBatchId = (user as any).batchId;
-      setAssignments(data.filter(a => 
-        a.status === 'Active' && 
-        (a.courseId === studentCourseId || a.batchId === studentBatchId)
-      ));
-    });
-
-    // Fetch exams
+    // 6. Fetch exams (not dependent on student profile for now, but could be)
     const unsubExams = subscribeToCollection('exams', (data) => {
       setExams(data.filter(e => e.status === 'Active'));
     });
 
-    // Fetch attendance for this student
+    // 7. Fetch attendance for this student
     const unsubAttendance = subscribeToCollection('attendance', (data) => {
       setAttendance(data.filter(a => a.studentId === user.uid));
     });
 
-    // Fetch certificates
+    // 8. Fetch certificates
     const unsubCertificates = subscribeToCollection('certificates', (data) => {
       setCertificates(data.filter(c => c.studentId === user.uid));
     });
 
-    // Fetch teachers info
-    const unsubTeachers = subscribeToCollection('users', (data) => {
-      // Find the current student's data in the collection to get the most up-to-date teacher assignments
-      const currentStudent = data.find(u => u.uid === user.uid);
-      if (!currentStudent) return;
-
-      const studentTeacherId = (currentStudent as any).teacherId;
-      const studentTeacherIds = (currentStudent as any).teacherIds || [];
-      
-      const teachers = data.filter(u => 
-        u.role === 'teacher' && 
-        (u.uid === studentTeacherId || studentTeacherIds.includes(u.uid))
-      ) as Teacher[];
-      
-      setAssignedTeachers(teachers);
-    });
-
     return () => {
-      unsubCourses();
-      unsubLive();
-      unsubAssignments();
+      unsubUsers();
       unsubExams();
       unsubAttendance();
       unsubCertificates();
-      unsubTeachers();
-      unsubNotifs();
     };
-  }, [user]);
+  }, [user.uid]);
 
   const attendanceRate = attendance.length > 0 
     ? Math.round((attendance.filter(a => a.status === 'Present').length / attendance.length) * 100)

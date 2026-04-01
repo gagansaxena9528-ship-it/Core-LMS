@@ -37,6 +37,17 @@ const AttendanceComponent: React.FC<AttendanceProps> = ({ user }) => {
   const [success, setSuccess] = useState(false);
 
   useEffect(() => {
+    const unsubUsers = subscribeToCollection('users', (data) => {
+      setStudents(data.filter(u => u.role === 'student') as Student[]);
+      
+      if (user.role === 'student') {
+        const currentStudent = data.find(u => u.uid === user.uid) as Student;
+        if (currentStudent && currentStudent.batchId) {
+          setSelectedBatchId(currentStudent.batchId);
+        }
+      }
+    });
+
     const unsubBatches = subscribeToCollection('batches', (data) => {
       if (user.role === 'teacher') {
         setBatches(data.filter(b => 
@@ -49,29 +60,21 @@ const AttendanceComponent: React.FC<AttendanceProps> = ({ user }) => {
       }
     });
     const unsubCourses = subscribeToCollection('courses', setCourses);
-    const unsubStudents = subscribeToCollection('users', (data) => {
-      setStudents(data.filter(u => u.role === 'student') as Student[]);
-    });
     const unsubAttendance = subscribeToCollection('attendance', setAttendanceRecords);
 
     return () => {
+      unsubUsers();
       unsubBatches();
       unsubCourses();
-      unsubStudents();
       unsubAttendance();
     };
   }, [user.uid, user.role]);
 
   useEffect(() => {
-    if (user.role === 'student') {
-      const student = user as any;
-      if (student.batchId) {
-        setSelectedBatchId(student.batchId);
-      }
-    } else if (batches.length > 0 && !selectedBatchId) {
+    if (user.role !== 'student' && batches.length > 0 && !selectedBatchId) {
       setSelectedBatchId(batches[0].id);
     }
-  }, [batches, user.role, (user as any).batchId]);
+  }, [batches, user.role]);
 
   const filteredStudents = students.filter(s => {
     if (user.role === 'student') return s.uid === user.uid;
