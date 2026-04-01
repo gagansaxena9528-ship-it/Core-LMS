@@ -116,6 +116,7 @@ async function startServer() {
       coursesCount INTEGER,
       batchesCount INTEGER,
       studentsCount INTEGER,
+      teacherIds TEXT,
       createdAt DATETIME DEFAULT CURRENT_TIMESTAMP
     );
 
@@ -163,7 +164,8 @@ async function startServer() {
     { name: 'rating', type: 'REAL' },
     { name: 'coursesCount', type: 'INTEGER' },
     { name: 'batchesCount', type: 'INTEGER' },
-    { name: 'studentsCount', type: 'INTEGER' }
+    { name: 'studentsCount', type: 'INTEGER' },
+    { name: 'teacherIds', type: 'TEXT' }
   ];
 
   for (const col of columnsToAdd) {
@@ -495,6 +497,9 @@ async function startServer() {
           }
           if (rest.documents) {
             try { rest.documents = JSON.parse(rest.documents); } catch (e) {}
+          }
+          if (rest.teacherIds) {
+            try { rest.teacherIds = JSON.parse(rest.teacherIds); } catch (e) {}
           }
           return rest;
         }));

@@ -27,7 +27,7 @@ const StudentDashboard: React.FC<StudentDashboardProps> = ({ user }) => {
   const [exams, setExams] = useState<Exam[]>([]);
   const [attendance, setAttendance] = useState<Attendance[]>([]);
   const [certificates, setCertificates] = useState<Certificate[]>([]);
-  const [teacher, setTeacher] = useState<Teacher | null>(null);
+  const [assignedTeachers, setAssignedTeachers] = useState<Teacher[]>([]);
 
   useEffect(() => {
     // Fetch enrolled courses
@@ -72,22 +72,18 @@ const StudentDashboard: React.FC<StudentDashboardProps> = ({ user }) => {
       setCertificates(data.filter(c => c.studentId === user.uid));
     });
 
-    // Fetch teacher info if available
-    if ((user as any).teacherId) {
-      const unsubTeacher = subscribeToCollection('users', (data) => {
-        const t = data.find(u => u.uid === (user as any).teacherId && u.role === 'teacher');
-        if (t) setTeacher(t as Teacher);
-      });
-      return () => {
-        unsubCourses();
-        unsubLive();
-        unsubAssignments();
-        unsubExams();
-        unsubAttendance();
-        unsubCertificates();
-        unsubTeacher();
-      };
-    }
+    // Fetch teachers info
+    const unsubTeachers = subscribeToCollection('users', (data) => {
+      const studentTeacherId = (user as any).teacherId;
+      const studentTeacherIds = (user as any).teacherIds || [];
+      
+      const teachers = data.filter(u => 
+        u.role === 'teacher' && 
+        (u.uid === studentTeacherId || studentTeacherIds.includes(u.uid))
+      ) as Teacher[];
+      
+      setAssignedTeachers(teachers);
+    });
 
     return () => {
       unsubCourses();
@@ -96,6 +92,7 @@ const StudentDashboard: React.FC<StudentDashboardProps> = ({ user }) => {
       unsubExams();
       unsubAttendance();
       unsubCertificates();
+      unsubTeachers();
     };
   }, [user]);
 
@@ -104,7 +101,7 @@ const StudentDashboard: React.FC<StudentDashboardProps> = ({ user }) => {
     : 100;
 
   const upcomingEvents = [
-    ...liveClasses.map(c => ({ icon: <Video size={16} />, title: `Live: ${c.title}`, sub: `${c.date} ${c.time}`, color: 'var(--color-primary)', type: 'live' })),
+    ...liveClasses.map(c => ({ icon: <Video size={16} />, title: `Live: ${c.title}`, sub: `${c.date} ${c.startTime}`, color: 'var(--color-primary)', type: 'live' })),
     ...exams.map(e => ({ icon: <FileText size={16} />, title: `Exam: ${e.title}`, sub: `Duration: ${e.duration}m`, color: 'var(--color-warning)', type: 'exam' })),
     ...assignments.map(a => ({ icon: <Calendar size={16} />, title: `Task: ${a.title}`, sub: `Due: ${a.dueDate}`, color: 'var(--color-secondary)', type: 'assignment' })),
   ].sort((a, b) => a.sub.localeCompare(b.sub)).slice(0, 5);
@@ -144,20 +141,24 @@ const StudentDashboard: React.FC<StudentDashboardProps> = ({ user }) => {
         />
       </div>
 
-      {teacher && (
-        <div className="bg-card border border-border rounded-2xl p-4 flex items-center gap-4">
-          <div className="w-12 h-12 rounded-full bg-muted/30 flex items-center justify-center text-secondary font-bold text-lg overflow-hidden border border-border">
-            {teacher.av ? (
-              <img src={teacher.av} alt={teacher.name} className="w-full h-full object-cover" />
-            ) : (
-              teacher.name ? teacher.name[0] : 'T'
-            )}
-          </div>
-          <div>
-            <div className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">Assigned Teacher</div>
-            <div className="text-sm font-bold text-foreground">{teacher.name}</div>
-            <div className="text-[11px] text-secondary">{teacher.email}</div>
-          </div>
+      {assignedTeachers.length > 0 && (
+        <div className="flex flex-wrap gap-4 mb-8">
+          {assignedTeachers.map(teacher => (
+            <div key={teacher.uid} className="bg-card border border-border p-4 rounded-2xl flex items-center gap-4 min-w-[240px]">
+              <div className="w-12 h-12 rounded-xl bg-secondary/10 flex items-center justify-center text-secondary font-bold text-lg overflow-hidden">
+                {teacher.profilePhoto ? (
+                  <img src={teacher.profilePhoto} alt={teacher.name} className="w-full h-full object-cover" />
+                ) : (
+                  teacher.name ? teacher.name[0] : 'T'
+                )}
+              </div>
+              <div>
+                <div className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">Assigned Teacher</div>
+                <div className="text-sm font-bold text-foreground">{teacher.name}</div>
+                <div className="text-[11px] text-secondary">{teacher.email}</div>
+              </div>
+            </div>
+          ))}
         </div>
       )}
 
@@ -179,7 +180,7 @@ const StudentDashboard: React.FC<StudentDashboardProps> = ({ user }) => {
                     <div className="h-full bg-gradient-to-r from-secondary to-accent" style={{ width: `${(user as any).progress || 0}%` }} />
                   </div>
                   <div className="flex justify-between mt-2 text-[11px] text-muted-foreground">
-                    <span>{course.modules?.length || 0} Modules</span>
+                    <span>{(course as any).modules?.length || 0} Modules</span>
                     <span>{(user as any).progress || 0}% complete</span>
                   </div>
                 </div>

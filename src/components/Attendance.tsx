@@ -39,7 +39,11 @@ const AttendanceComponent: React.FC<AttendanceProps> = ({ user }) => {
   useEffect(() => {
     const unsubBatches = subscribeToCollection('batches', (data) => {
       if (user.role === 'teacher') {
-        setBatches(data.filter(b => b.teacherId === user.uid || b.assistantTeacherId === user.uid));
+        setBatches(data.filter(b => 
+          b.teacherId === user.uid || 
+          b.assistantTeacherId === user.uid || 
+          (b.teacherIds && b.teacherIds.includes(user.uid))
+        ));
       } else {
         setBatches(data);
       }
