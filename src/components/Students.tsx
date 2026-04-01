@@ -85,7 +85,10 @@ const Students: React.FC<StudentsProps> = ({ user }) => {
       const allStudents = data.filter(u => u.role === 'student');
       setTeachers(data.filter(u => u.role === 'teacher'));
       if (user?.role === 'teacher') {
-        setStudents(allStudents.filter(s => s.teacherId === user.uid));
+        setStudents(allStudents.filter(s => 
+          s.teacherId === user.uid || 
+          (s.teacherIds && s.teacherIds.includes(user.uid))
+        ));
       } else {
         setStudents(allStudents);
       }
@@ -318,7 +321,8 @@ const Students: React.FC<StudentsProps> = ({ user }) => {
           pendingAmount: feeNum - paid,
           courseId: selectedCourse?.id || '',
           batchId: selectedBatch?.id || '',
-          teacherId: formData.teacherId || selectedBatch?.teacherId || ''
+          teacherId: formData.teacherId || selectedBatch?.teacherId || '',
+          teacherIds: selectedBatch?.teacherIds || (selectedBatch?.teacherId ? [selectedBatch.teacherId] : [])
         });
         
         // Send update notification
@@ -345,7 +349,8 @@ const Students: React.FC<StudentsProps> = ({ user }) => {
             pendingAmount: feeNum,
             courseId: selectedCourse?.id || '',
             batchId: selectedBatch?.id || '',
-            teacherId: formData.teacherId || selectedBatch?.teacherId || ''
+            teacherId: formData.teacherId || selectedBatch?.teacherId || '',
+            teacherIds: selectedBatch?.teacherIds || (selectedBatch?.teacherId ? [selectedBatch.teacherId] : [])
           });
 
           // Send welcome email
@@ -561,6 +566,15 @@ const Students: React.FC<StudentsProps> = ({ user }) => {
                             <Key size={16} />
                           </button>
                         </>
+                      )}
+                      {user?.role === 'admin' && (
+                        <button 
+                          onClick={() => handleDelete(s.uid)}
+                          className="p-2 hover:bg-destructive/10 text-destructive rounded-lg transition-colors" 
+                          title="Delete Student"
+                        >
+                          <Trash2 size={16} />
+                        </button>
                       )}
                     </div>
                   </td>

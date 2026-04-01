@@ -30,11 +30,19 @@ const TeacherDashboard: React.FC<TeacherDashboardProps> = ({ user }) => {
 
   useEffect(() => {
     const unsubCourses = subscribeToQuery('courses', 'teacherId', '==', user.uid, setCourses);
-    const unsubBatches = subscribeToQuery('batches', 'teacherId', '==', user.uid, setBatches);
+    const unsubBatches = subscribeToCollection('batches', (data) => {
+      setBatches(data.filter(b => 
+        b.teacherId === user.uid || 
+        b.assistantTeacherId === user.uid || 
+        (b.teacherIds && b.teacherIds.includes(user.uid))
+      ));
+    });
     
-    // In a real app, we'd query students assigned to this teacher's batches
-    const unsubStudents = subscribeToCollection('students', (data) => {
-      setStudents(data.filter(s => s.teacherId === user.uid));
+    const unsubStudents = subscribeToCollection('users', (data) => {
+      setStudents(data.filter(s => 
+        s.role === 'student' && 
+        (s.teacherId === user.uid || (s.teacherIds && s.teacherIds.includes(user.uid)))
+      ));
     });
 
     const unsubLiveClasses = subscribeToQuery('live-classes', 'teacherId', '==', user.uid, (data: LiveClass[]) => {

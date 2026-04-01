@@ -53,6 +53,17 @@ const Courses: React.FC<CoursesProps> = ({ user }) => {
   const [search, setSearch] = useState('');
   const [showModal, setShowModal] = useState(false);
   const [activeTab, setActiveTab] = useState<'basic' | 'details' | 'structure' | 'settings' | 'students'>('basic');
+  const [selectedCourseDetails, setSelectedCourseDetails] = useState<Course | null>(null);
+  const [viewingModules, setViewingModules] = useState<Module[]>([]);
+
+  useEffect(() => {
+    if (selectedCourseDetails) {
+      const unsubModules = subscribeToCollection('modules', (data) => {
+        setViewingModules(data.filter(m => m.courseId === selectedCourseDetails.id));
+      });
+      return () => unsubModules();
+    }
+  }, [selectedCourseDetails]);
   const [editingCourse, setEditingCourse] = useState<Course | null>(null);
   const [loading, setLoading] = useState(false);
 
@@ -395,10 +406,10 @@ const Courses: React.FC<CoursesProps> = ({ user }) => {
                 </div>
                 {user?.role === 'student' ? (
                   <button 
-                    onClick={() => navigate(`/course-player/${c.id}`)}
+                    onClick={() => setSelectedCourseDetails(c)}
                     className="bg-secondary hover:bg-secondary/90 text-white px-4 py-2 rounded-xl font-bold text-xs flex items-center gap-2 transition-all active:scale-95"
                   >
-                    <PlayCircle size={16} /> Start Learning
+                    <BookOpen size={16} /> View Details
                   </button>
                 ) : (
                   <div className="flex gap-2">
@@ -1100,6 +1111,75 @@ const Courses: React.FC<CoursesProps> = ({ user }) => {
                   className="px-6 bg-muted/50 border border-border text-foreground rounded-xl font-bold text-sm hover:bg-muted transition-colors"
                 >
                   Cancel
+                </button>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+      {/* Course Details Modal for Students */}
+      <AnimatePresence>
+        {selectedCourseDetails && (
+          <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+            <motion.div 
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setSelectedCourseDetails(null)}
+              className="absolute inset-0 bg-background/70 backdrop-blur-sm"
+            />
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 20 }}
+              className="relative w-full max-w-2xl bg-card border border-border rounded-2xl shadow-2xl overflow-hidden"
+            >
+              <div className="p-6 border-b border-border flex items-center justify-between">
+                <h3 className="text-xl font-extrabold font-syne">{selectedCourseDetails.title}</h3>
+                <button onClick={() => setSelectedCourseDetails(null)} className="p-2 hover:bg-destructive/10 text-muted hover:text-destructive rounded-full transition-colors">
+                  <X size={20} />
+                </button>
+              </div>
+              <div className="p-6 overflow-y-auto max-h-[60vh] space-y-6">
+                <div>
+                  <h4 className="text-xs font-bold text-muted uppercase tracking-widest mb-2">Description</h4>
+                  <p className="text-sm text-foreground leading-relaxed">{selectedCourseDetails.description}</p>
+                </div>
+                <div>
+                  <h4 className="text-xs font-bold text-muted uppercase tracking-widest mb-4">Course Modules</h4>
+                  <div className="space-y-3">
+                    {viewingModules.length > 0 ? viewingModules.map((m, i) => (
+                      <div key={m.id} className="flex items-center gap-4 p-4 bg-muted/5 border border-border rounded-xl">
+                        <div className="w-8 h-8 rounded-lg bg-secondary/10 text-secondary flex items-center justify-center font-bold text-xs">
+                          {i + 1}
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <div className="text-sm font-bold text-foreground truncate">{m.title}</div>
+                          <div className="text-[11px] text-muted-foreground mt-0.5">{m.description?.slice(0, 60)}...</div>
+                        </div>
+                        <div className="text-[11px] font-bold text-muted">24:35</div>
+                      </div>
+                    )) : (
+                      <p className="text-center py-8 text-sm text-muted">No modules added yet.</p>
+                    )}
+                  </div>
+                </div>
+              </div>
+              <div className="p-6 border-t border-border flex gap-3">
+                <button 
+                  onClick={() => setSelectedCourseDetails(null)}
+                  className="flex-1 px-4 py-3 rounded-xl border border-border text-sm font-bold hover:bg-muted/10 transition-colors"
+                >
+                  Close
+                </button>
+                <button 
+                  onClick={() => {
+                    navigate(`/course-player/${selectedCourseDetails.id}`);
+                    setSelectedCourseDetails(null);
+                  }}
+                  className="flex-1 px-4 py-3 rounded-xl bg-secondary text-white text-sm font-bold hover:bg-secondary/90 transition-colors shadow-lg shadow-secondary/20"
+                >
+                  Start Learning
                 </button>
               </div>
             </motion.div>

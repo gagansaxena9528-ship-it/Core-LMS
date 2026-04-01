@@ -66,6 +66,7 @@ const Batches: React.FC<BatchesProps> = ({ user }) => {
     name: '',
     courseId: '',
     teacherId: '',
+    teacherIds: [] as string[],
     assistantTeacherId: '',
     maxStudents: 30,
     startDate: '',
@@ -96,7 +97,11 @@ const Batches: React.FC<BatchesProps> = ({ user }) => {
   useEffect(() => {
     const unsubBatches = subscribeToCollection('batches', (data) => {
       if (user?.role === 'teacher') {
-        setBatches(data.filter(b => b.teacherId === user.uid || b.assistantTeacherId === user.uid));
+        setBatches(data.filter(b => 
+          b.teacherId === user.uid || 
+          b.assistantTeacherId === user.uid || 
+          (b.teacherIds && b.teacherIds.includes(user.uid))
+        ));
       } else {
         setBatches(data);
       }
@@ -220,6 +225,7 @@ const Batches: React.FC<BatchesProps> = ({ user }) => {
       name: batch.name,
       courseId: batch.courseId,
       teacherId: batch.teacherId,
+      teacherIds: batch.teacherIds || [batch.teacherId].filter(Boolean),
       assistantTeacherId: batch.assistantTeacherId || '',
       maxStudents: batch.maxStudents || 30,
       startDate: batch.startDate || '',
@@ -344,6 +350,7 @@ const Batches: React.FC<BatchesProps> = ({ user }) => {
       name: '',
       courseId: '',
       teacherId: '',
+      teacherIds: [],
       assistantTeacherId: '',
       maxStudents: 30,
       startDate: '',
@@ -560,29 +567,29 @@ const Batches: React.FC<BatchesProps> = ({ user }) => {
                       </div>
                     </div>
 
-                    <div className="grid grid-cols-2 gap-4">
-                      <div className="space-y-2">
-                        <label className="text-[11px] font-bold text-muted uppercase tracking-wider">Main Teacher</label>
-                        <select 
-                          required
-                          className="w-full bg-muted/10 border border-border rounded-xl px-4 py-2.5 text-sm outline-none focus:border-secondary transition-colors text-foreground"
-                          value={formData.teacherId}
-                          onChange={(e) => setFormData({...formData, teacherId: e.target.value})}
-                        >
-                          <option value="" className="bg-card">Assign Teacher</option>
-                          {teachers.map(t => <option key={t.uid} value={t.uid} className="bg-card">{t.name}</option>)}
-                        </select>
-                      </div>
-                      <div className="space-y-2">
-                        <label className="text-[11px] font-bold text-muted uppercase tracking-wider">Assistant Teacher</label>
-                        <select 
-                          className="w-full bg-muted/10 border border-border rounded-xl px-4 py-2.5 text-sm outline-none focus:border-secondary transition-colors text-foreground"
-                          value={formData.assistantTeacherId}
-                          onChange={(e) => setFormData({...formData, assistantTeacherId: e.target.value})}
-                        >
-                          <option value="" className="bg-card">None</option>
-                          {teachers.map(t => <option key={t.uid} value={t.uid} className="bg-card">{t.name}</option>)}
-                        </select>
+                    <div className="space-y-2">
+                      <label className="text-[11px] font-bold text-muted uppercase tracking-wider">Assign Teachers</label>
+                      <div className="grid grid-cols-2 gap-2 max-h-[120px] overflow-y-auto p-2 border border-border rounded-xl bg-muted/5">
+                        {teachers.map(t => (
+                          <label key={t.uid} className="flex items-center gap-2 p-2 hover:bg-muted/10 rounded-lg cursor-pointer transition-colors">
+                            <input 
+                              type="checkbox"
+                              className="rounded border-border text-secondary focus:ring-secondary"
+                              checked={formData.teacherIds.includes(t.uid)}
+                              onChange={(e) => {
+                                const newIds = e.target.checked 
+                                  ? [...formData.teacherIds, t.uid]
+                                  : formData.teacherIds.filter(id => id !== t.uid);
+                                setFormData({
+                                  ...formData, 
+                                  teacherIds: newIds,
+                                  teacherId: newIds[0] || '' // Set first as primary
+                                });
+                              }}
+                            />
+                            <span className="text-xs text-foreground truncate">{t.name}</span>
+                          </label>
+                        ))}
                       </div>
                     </div>
 

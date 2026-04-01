@@ -11,12 +11,14 @@ import {
   Download,
   MoreVertical,
   Search,
-  Filter
+  Filter,
+  Eye
 } from 'lucide-react';
 import { subscribeToCollection, addDoc, updateDoc } from '../services/firestore';
 import { sendEmail, getNewRecordTemplate, getUpdateNotificationTemplate } from '../services/emailService';
 import { Assignment, AssignmentSubmission, User, Student } from '../types';
 import { motion, AnimatePresence } from 'framer-motion';
+import { cn } from '../lib/utils';
 
 interface AssignmentsProps {
   user: User;
@@ -121,6 +123,24 @@ const Assignments: React.FC<AssignmentsProps> = ({ user }) => {
     }
     return true;
   });
+
+  const filteredSubmissions = submissions.filter(s => {
+    if (user.role === 'admin' || user.role === 'teacher') return true;
+    if (user.role === 'student') {
+      return s.studentId === user.uid || s.isVisibleToBatch;
+    }
+    return false;
+  });
+
+  const handleToggleVisibility = async (submission: AssignmentSubmission) => {
+    try {
+      await updateDoc('submissions', submission.id, {
+        isVisibleToBatch: !submission.isVisibleToBatch
+      });
+    } catch (err) {
+      console.error('Failed to toggle visibility:', err);
+    }
+  };
 
   const mySubmissions = submissions.filter(s => s.studentId === user.uid);
   const completedCount = mySubmissions.length;
@@ -254,22 +274,42 @@ const Assignments: React.FC<AssignmentsProps> = ({ user }) => {
             </div>
           </Card>
 
-          <Card title="Recent Submissions">
+          <Card title={isAdminOrTeacher ? "Recent Submissions" : "Batch Submissions"}>
             <div className="space-y-4 mt-2">
-              {submissions.slice(0, 5).map((s) => (
+              {filteredSubmissions.slice(0, 10).map((s) => (
                 <div key={s.id} className="flex items-center gap-3 p-3 bg-muted/10 rounded-xl border border-border">
                   <div className="w-8 h-8 rounded-full bg-secondary/10 text-secondary flex items-center justify-center font-bold text-[10px]">
                     {s.studentName.charAt(0)}
                   </div>
                   <div className="flex-1 min-w-0">
                     <div className="text-[12px] font-medium text-foreground truncate">{s.studentName}</div>
-                    <div className="text-[10px] text-muted mt-0.5">Submitted 2h ago</div>
+                    <div className="text-[10px] text-muted mt-0.5">
+                      {s.isVisibleToBatch && <span className="text-success font-bold mr-2">Public</span>}
+                      Submitted {new Date(s.submissionDate).toLocaleDateString()}
+                    </div>
                   </div>
-                  <button className="p-1.5 hover:bg-secondary/10 rounded-lg text-secondary">
-                    <Download size={14} />
-                  </button>
+                  <div className="flex items-center gap-1">
+                    {isAdminOrTeacher && (
+                      <button 
+                        onClick={() => handleToggleVisibility(s)}
+                        className={cn(
+                          "p-1.5 rounded-lg transition-colors",
+                          s.isVisibleToBatch ? "text-success bg-success/10" : "text-muted hover:text-foreground hover:bg-muted/20"
+                        )}
+                        title={s.isVisibleToBatch ? "Make Private" : "Make Public to Batch"}
+                      >
+                        <Eye size={14} />
+                      </button>
+                    )}
+                    <button className="p-1.5 hover:bg-secondary/10 rounded-lg text-secondary">
+                      <Download size={14} />
+                    </button>
+                  </div>
                 </div>
               ))}
+              {filteredSubmissions.length === 0 && (
+                <p className="text-center py-4 text-xs text-muted">No submissions yet</p>
+              )}
             </div>
           </Card>
         </div>

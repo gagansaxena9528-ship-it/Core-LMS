@@ -24,7 +24,8 @@ export interface Student extends User {
   profilePhoto?: string;
   courseId?: string;
   batchId?: string;
-  teacherId?: string;
+  teacherId?: string; // Primary teacher
+  teacherIds?: string[]; // Multiple teachers
   progress: number;
   fee: number;
   paid: number;
@@ -230,9 +231,11 @@ export interface Batch {
   id: string;
   name: string;
   courseId: string;
-  teacherId: string;
+  teacherId: string; // Keep for backward compatibility or primary teacher
+  teacherIds?: string[]; // Support for multiple teachers
   assistantTeacherId?: string;
   studentsCount: number;
+  studentIds?: string[];
   maxStudents: number;
   startDate: string;
   endDate: string;
@@ -290,6 +293,7 @@ export interface AssignmentSubmission {
   marks?: number;
   feedback?: string;
   status: 'Submitted' | 'Checked' | 'Pending';
+  isVisibleToBatch?: boolean; // Visibility control
 }
 
 export interface Result {
